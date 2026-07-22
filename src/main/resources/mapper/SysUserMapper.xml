@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.symptom.mapper.SysUserMapper">
+    <select id="findByUsername" resultType="SysUser">
+        SELECT * FROM sys_user WHERE username = #{username}
+    </select>
+    <select id="findAll" resultType="SysUser">
+        SELECT * FROM sys_user ORDER BY id
+    </select>
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO sys_user (username, password, role, real_name) VALUES (#{username}, #{password}, #{role}, #{realName})
+    </insert>
+    <update id="update">
+        UPDATE sys_user SET password = #{password}, role = #{role}, real_name = #{realName} WHERE id = #{id}
+    </update>
+    <delete id="delete">
+        DELETE FROM sys_user WHERE id = #{id}
+    </delete>
+</mapper>

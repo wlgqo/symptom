@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout('系统管理', ~{::content})}">
+<body>
+<div th:fragment="content">
+    <div class="tab-nav" id="adminTabs">
+        <div class="tab-item active" data-tab="users">用户管理</div>
+        <div class="tab-item" data-tab="models">模型配置</div>
+        <div class="tab-item" data-tab="logs">操作日志</div>
+    </div>
+
+    <div class="tab-content active" id="tab-users">
+        <div class="card-panel">
+            <h5>用户列表</h5>
+            <table class="data-table">
+                <thead><tr><th>用户名</th><th>姓名</th><th>角色</th><th>操作</th></tr></thead>
+                <tbody>
+                    <tr th:each="u : ${users}">
+                        <td th:text="${u.username}"></td>
+                        <td th:text="${u.realName}"></td>
+                        <td th:text="${u.role}"></td>
+                        <td>
+                            <a th:if="${u.username != 'admin'}" th:href="@{/admin/user/delete/{id}(id=${u.id})}"
+                               style="color:#c0392b;" onclick="return confirm('确认删除？')">删除</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="card-panel">
+            <h5>添加用户</h5>
+            <form method="post" action="/admin/user/save" style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:12px;align-items:end;">
+                <div><label>用户名</label><input type="text" name="username" required style="width:100%;padding:8px;border:1px solid #dee2e6;border-radius:4px;"></div>
+                <div><label>密码</label><input type="password" name="password" required style="width:100%;padding:8px;border:1px solid #dee2e6;border-radius:4px;"></div>
+                <div><label>角色</label>
+                    <select name="role" style="width:100%;padding:8px;border:1px solid #dee2e6;border-radius:4px;">
+                        <option value="业务人员">业务人员</option>
+                        <option value="浏览人员">浏览人员</option>
+                        <option value="管理员">管理员</option>
+                    </select>
+                </div>
+                <div><label>姓名</label><input type="text" name="realName" style="width:100%;padding:8px;border:1px solid #dee2e6;border-radius:4px;"></div>
+                <button type="submit" class="btn-primary-custom">添加</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="tab-content" id="tab-models">
+        <div class="card-panel">
+            <h5>预警模型配置</h5>
+            <table class="data-table">
+                <thead><tr><th>模型名称</th><th>类型</th><th>症候群</th><th>参数配置</th><th>状态</th></tr></thead>
+                <tbody>
+                    <tr th:each="m : ${models}">
+                        <td th:text="${m.modelName}"></td>
+                        <td th:text="${m.modelType}"></td>
+                        <td th:text="${m.syndromeType}"></td>
+                        <td><code th:text="${m.configJson}" style="font-size:12px;"></code></td>
+                        <td th:text="${m.enabled == 1 ? '启用' : '禁用'}"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="tab-content" id="tab-logs">
+        <div class="card-panel">
+            <h5>操作日志</h5>
+            <table class="data-table">
+                <thead><tr><th>时间</th><th>用户</th><th>操作</th><th>IP</th></tr></thead>
+                <tbody>
+                    <tr th:each="log : ${logs}">
+                        <td th:text="${#dates.format(log.createdAt, 'yyyy-MM-dd HH:mm:ss')}"></td>
+                        <td th:text="${log.username}"></td>
+                        <td th:text="${log.operation}"></td>
+                        <td th:text="${log.ip}"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        document.querySelectorAll('#adminTabs .tab-item').forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('#adminTabs .tab-item').forEach(function(t) { t.classList.remove('active'); });
+                document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
+                tab.classList.add('active');
+                document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+            });
+        });
+    </script>
+</div>
+</body>
+</html>

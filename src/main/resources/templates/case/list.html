@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout('主动监测病例管理', ~{::content})}">
+<body>
+<div th:fragment="content">
+    <form class="search-form" method="get" action="/case/list">
+        <div class="form-row">
+            <div><label>患者姓名</label><input type="text" name="patientName" th:value="${params.patientName}"></div>
+            <div><label>主索引号</label><input type="text" name="mainIndex" th:value="${params.mainIndex}"></div>
+            <div><label>性别</label>
+                <select name="gender">
+                    <option value="">全部</option>
+                    <option value="男" th:selected="${params.gender == '男'}">男</option>
+                    <option value="女" th:selected="${params.gender == '女'}">女</option>
+                </select>
+            </div>
+            <div><label>现住址行政区划</label><input type="text" name="district" th:value="${params.district}"></div>
+        </div>
+        <div class="form-row">
+            <div><label>病例类型</label>
+                <select name="caseType">
+                    <option value="">全部</option>
+                    <option value="确诊病例" th:selected="${params.caseType == '确诊病例'}">确诊病例</option>
+                    <option value="疑似病例" th:selected="${params.caseType == '疑似病例'}">疑似病例</option>
+                </select>
+            </div>
+            <div><label>症候群类型</label>
+                <select name="syndromeType">
+                    <option value="">全部</option>
+                    <option value="发热呼吸道症候群" th:selected="${params.syndromeType == '发热呼吸道症候群'}">发热呼吸道症候群</option>
+                    <option value="发热伴出血症候群" th:selected="${params.syndromeType == '发热伴出血症候群'}">发热伴出血症候群</option>
+                    <option value="发热伴腹泻症候群" th:selected="${params.syndromeType == '发热伴腹泻症候群'}">发热伴腹泻症候群</option>
+                </select>
+            </div>
+            <div><label>年龄范围</label>
+                <div style="display:flex;gap:4px;">
+                    <input type="number" name="ageMin" placeholder="最小" th:value="${params.ageMin}" style="width:50%;">
+                    <input type="number" name="ageMax" placeholder="最大" th:value="${params.ageMax}" style="width:50%;">
+                </div>
+            </div>
+            <div><label>病例发现方式</label>
+                <select name="discoverType">
+                    <option value="">全部</option>
+                    <option value="主动监测" th:selected="${params.discoverType == '主动监测'}">主动监测</option>
+                    <option value="医院报告" th:selected="${params.discoverType == '医院报告'}">医院报告</option>
+                    <option value="社区筛查" th:selected="${params.discoverType == '社区筛查'}">社区筛查</option>
+                    <option value="学校报告" th:selected="${params.discoverType == '学校报告'}">学校报告</option>
+                </select>
+            </div>
+        </div>
+        <div>
+            <button type="submit" class="btn-primary-custom">查询</button>
+            <a href="/case/export" class="btn-outline-custom" style="text-decoration:none;margin-left:8px;">导出数据</a>
+        </div>
+    </form>
+
+    <div class="card-panel">
+        <h5>病例列表（共 <span th:text="${cases.size()}">0</span> 条）</h5>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>主索引号</th><th>姓名</th><th>性别</th><th>年龄</th>
+                    <th>症候群类型</th><th>地区</th><th>诊断</th><th>风险等级</th><th>报告日期</th><th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="c : ${cases}">
+                    <td th:text="${c.mainIndex}"></td>
+                    <td th:text="${c.patientName}"></td>
+                    <td th:text="${c.gender}"></td>
+                    <td th:text="${c.age}"></td>
+                    <td th:text="${c.syndromeType}"></td>
+                    <td th:text="${c.district}"></td>
+                    <td th:text="${c.diagnosis}"></td>
+                    <td>
+                        <span th:if="${c.riskLevel}"
+                              th:class="${c.riskLevel == '高风险' ? 'badge-level badge-high' : (c.riskLevel == '中风险' ? 'badge-level badge-medium' : 'badge-level badge-low')}"
+                              th:text="${c.riskLevel}"></span>
+                    </td>
+                    <td th:text="${#dates.format(c.reportDate, 'yyyy-MM-dd')}"></td>
+                    <td>
+                        <a th:href="@{/case/detail/{id}(id=${c.id})}" style="color:#1a6fc4;margin-right:8px;">查看</a>
+                        <a th:if="${session.currentUser.role != '浏览人员'}" th:href="@{/case/edit/{id}(id=${c.id})}" style="color:#e67e22;">修改</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+</body>
+</html>

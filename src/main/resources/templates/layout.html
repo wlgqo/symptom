@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:fragment="layout(pageTitle, content)">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle}">症候群主动监测预警演示系统</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+</head>
+<body>
+<div class="app-layout">
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <h3>症候群主动监测<br>预警演示系统</h3>
+            <small>传染病监测平台</small>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">总览</div>
+            <div class="nav-item"><a href="/" th:classappend="${activeMenu == 'dashboard' ? 'active' : ''}"><span>📊</span><span>首页驾驶舱</span></a></div>
+
+            <div class="nav-section">监测预警</div>
+            <div class="nav-item"><a href="/respiratory" th:classappend="${activeMenu == 'respiratory' ? 'active' : ''}"><span>🫁</span><span>发热呼吸道症候群</span></a></div>
+            <div class="nav-item"><a href="/hemorrhage" th:classappend="${activeMenu == 'hemorrhage' ? 'active' : ''}"><span>🩸</span><span>发热伴出血症候群</span></a></div>
+            <div class="nav-item"><a href="/diarrhea" th:classappend="${activeMenu == 'diarrhea' ? 'active' : ''}"><span>💧</span><span>发热伴腹泻症候群</span></a></div>
+
+            <div class="nav-section">数据管理</div>
+            <div class="nav-item"><a href="/search" th:classappend="${activeMenu == 'search' ? 'active' : ''}"><span>🔍</span><span>条件树搜索</span></a></div>
+            <div class="nav-item"><a href="/case/list" th:classappend="${activeMenu == 'case' ? 'active' : ''}"><span>📋</span><span>病例管理</span></a></div>
+
+            <div class="nav-section" th:if="${session.currentUser != null and session.currentUser.role == '管理员'}">系统</div>
+            <div class="nav-item" th:if="${session.currentUser != null and session.currentUser.role == '管理员'}">
+                <a href="/admin" th:classappend="${activeMenu == 'admin' ? 'active' : ''}"><span>⚙️</span><span>系统管理</span></a>
+            </div>
+        </nav>
+    </aside>
+    <div class="main-content">
+        <div class="top-bar">
+            <h4 th:text="${pageTitle != null ? pageTitle : '首页驾驶舱'}">页面标题</h4>
+            <div class="user-info">
+                <span th:text="${session.currentUser.realName}">用户</span>
+                <span class="role-badge" th:text="${session.currentUser.role}">角色</span>
+                <a href="/logout" style="color:#dc3545;text-decoration:none;font-size:13px;">退出</a>
+            </div>
+        </div>
+        <div class="page-content" th:replace="${content}">内容区域</div>
+    </div>
+</div>
+</body>
+</html>

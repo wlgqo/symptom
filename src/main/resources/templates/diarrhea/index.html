@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout('发热伴腹泻症候群病例风险管理', ~{::content})}">
+<body>
+<div th:fragment="content">
+    <div class="stat-cards">
+        <div class="stat-card">
+            <div class="label">病例总数</div>
+            <div class="value" th:text="${cases.size()}">0</div>
+        </div>
+        <div class="stat-card danger">
+            <div class="label">高风险病例</div>
+            <div class="value" th:text="${highRiskCases.size()}">0</div>
+        </div>
+    </div>
+
+    <div class="card-panel" th:if="${!highRiskCases.isEmpty()}">
+        <h5>高风险病例快速筛查</h5>
+        <table class="data-table">
+            <thead><tr><th>姓名</th><th>年龄</th><th>诊断</th><th>风险等级</th><th>风险分析依据</th><th>操作</th></tr></thead>
+            <tbody>
+                <tr th:each="c : ${highRiskCases}">
+                    <td th:text="${c.patientName}"></td>
+                    <td th:text="${c.age}"></td>
+                    <td th:text="${c.diagnosis}"></td>
+                    <td><span class="badge-level badge-high" th:text="${c.riskLevel}"></span></td>
+                    <td th:text="${c.riskReason}"></td>
+                    <td><a th:href="@{/diarrhea/case/{id}(id=${c.id})}" class="btn-outline-custom" style="text-decoration:none;padding:4px 12px;font-size:12px;">查看详情</a></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card-panel">
+        <h5>全部病例列表</h5>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>主索引号</th><th>姓名</th><th>性别</th><th>年龄</th>
+                    <th>症状</th><th>诊断</th><th>风险等级</th><th>报告日期</th><th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="c : ${cases}">
+                    <td th:text="${c.mainIndex}"></td>
+                    <td th:text="${c.patientName}"></td>
+                    <td th:text="${c.gender}"></td>
+                    <td th:text="${c.age}"></td>
+                    <td th:text="${c.symptoms != null ? #strings.listJoin(c.symptoms, '、') : ''}"></td>
+                    <td th:text="${c.diagnosis}"></td>
+                    <td>
+                        <span th:class="${c.riskLevel == '高风险' ? 'badge-level badge-high' : (c.riskLevel == '中风险' ? 'badge-level badge-medium' : 'badge-level badge-low')}"
+                              th:text="${c.riskLevel}"></span>
+                    </td>
+                    <td th:text="${#dates.format(c.reportDate, 'yyyy-MM-dd')}"></td>
+                    <td><a th:href="@{/diarrhea/case/{id}(id=${c.id})}" class="btn-outline-custom" style="text-decoration:none;padding:4px 12px;font-size:12px;">详情</a></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+</body>
+</html>
