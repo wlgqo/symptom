@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout('发热伴出血症候群重症死亡监测', ~{::content})}">
+<body>
+<div th:fragment="content">
+    <div class="stat-cards">
+        <div class="stat-card">
+            <div class="label">病例总数</div>
+            <div class="value" th:text="${stats.total}">0</div>
+        </div>
+        <div class="stat-card warning">
+            <div class="label">重症病例</div>
+            <div class="value" th:text="${stats.severe}">0</div>
+        </div>
+        <div class="stat-card danger">
+            <div class="label">死亡病例</div>
+            <div class="value" th:text="${stats.death}">0</div>
+        </div>
+        <div class="stat-card danger">
+            <div class="label">重症率</div>
+            <div class="value" th:text="${stats.severeRate + '%'}">0%</div>
+        </div>
+        <div class="stat-card danger">
+            <div class="label">死亡率</div>
+            <div class="value" th:text="${stats.deathRate + '%'}">0%</div>
+        </div>
+    </div>
+
+    <div class="grid-2">
+        <div class="card-panel">
+            <h5>重症率时间变化趋势</h5>
+            <div id="severeTrendChart" class="chart-container"></div>
+        </div>
+        <div class="card-panel">
+            <h5>死亡率时间变化趋势</h5>
+            <div id="deathTrendChart" class="chart-container"></div>
+        </div>
+    </div>
+
+    <div class="grid-2">
+        <div class="card-panel">
+            <h5>重症患者列表</h5>
+            <table class="data-table">
+                <thead><tr><th>姓名</th><th>性别</th><th>年龄</th><th>诊断</th><th>地区</th><th>操作</th></tr></thead>
+                <tbody>
+                    <tr th:each="c : ${severeCases}">
+                        <td th:text="${c.patientName}"></td>
+                        <td th:text="${c.gender}"></td>
+                        <td th:text="${c.age}"></td>
+                        <td th:text="${c.diagnosis}"></td>
+                        <td th:text="${c.district}"></td>
+                        <td><a th:href="@{/hemorrhage/case/{id}(id=${c.id})}" class="btn-outline-custom" style="text-decoration:none;padding:4px 12px;font-size:12px;">详情</a></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="card-panel">
+            <h5>死亡患者列表</h5>
+            <table class="data-table">
+                <thead><tr><th>姓名</th><th>性别</th><th>年龄</th><th>诊断</th><th>地区</th><th>操作</th></tr></thead>
+                <tbody>
+                    <tr th:each="c : ${deathCases}">
+                        <td th:text="${c.patientName}"></td>
+                        <td th:text="${c.gender}"></td>
+                        <td th:text="${c.age}"></td>
+                        <td th:text="${c.diagnosis}"></td>
+                        <td th:text="${c.district}"></td>
+                        <td><a th:href="@{/hemorrhage/case/{id}(id=${c.id})}" class="btn-outline-custom" style="text-decoration:none;padding:4px 12px;font-size:12px;">详情</a></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        var stats = /*[[${stats}]]*/ {};
+        var severeChart = echarts.init(document.getElementById('severeTrendChart'));
+        severeChart.setOption({
+            tooltip: { trigger: 'axis' },
+            xAxis: { type: 'category', data: (stats.severeTrend||[]).map(function(d){return d.month;}) },
+            yAxis: { type: 'value', name: '重症率(%)' },
+            series: [{ type: 'line', smooth: true, itemStyle: { color: '#e67e22' },
+                data: (stats.severeTrend||[]).map(function(d){return d.rate;}) }]
+        });
+        var deathChart = echarts.init(document.getElementById('deathTrendChart'));
+        deathChart.setOption({
+            tooltip: { trigger: 'axis' },
+            xAxis: { type: 'category', data: (stats.deathTrend||[]).map(function(d){return d.month;}) },
+            yAxis: { type: 'value', name: '死亡率(%)' },
+            series: [{ type: 'line', smooth: true, itemStyle: { color: '#c0392b' },
+                data: (stats.deathTrend||[]).map(function(d){return d.rate;}) }]
+        });
+        window.addEventListener('resize', function(){ severeChart.resize(); deathChart.resize(); });
+    </script>
+</div>
+</body>
+</html>

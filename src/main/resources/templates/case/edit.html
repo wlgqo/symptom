@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout('修改病例', ~{::content})}">
+<body>
+<div th:fragment="content">
+    <div style="margin-bottom:16px;">
+        <a th:href="@{/case/detail/{id}(id=${caseInfo.id})}" class="btn-outline-custom" style="text-decoration:none;">← 返回详情</a>
+    </div>
+
+    <div class="card-panel">
+        <h5>修改病例信息</h5>
+        <form method="post" action="/case/update">
+            <input type="hidden" name="id" th:value="${caseInfo.id}">
+            <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+                <div><label>姓名</label><input type="text" name="patientName" th:value="${caseInfo.patientName}" style="width:100%;padding:8px;border:1px solid #dee2e6;border-radius:4px;"></div>
+                <div><label>性别</label>
+                    <select name="gender" style="width:100%;padding:8px;border:1px solid #dee2e6;border-radius:4px;">
+                        <option value="男" th:selected="${caseInfo.gender == '男'}">男</option>
+                        <option value="女" th:selected="${caseInfo.gender == '女'}">女</option>
+                    </select>
+                </div>
+                <div><label>年龄</label><input type="number" name="age" th:value="${caseInfo.age}" style="width:100%;padding:8px;border:1px solid #dee2e6;border-radius:4px;"></div>
+                <div><label>职业</label><input type="text" name="occupation" th:value="${caseInfo.occupation}" style="width:100%;padding:8px;border:1px solid #dee2e6;border-radius:4px;"></div>
+                <div><label>行政区划</label><input type="text" name="district" th:value="${caseInfo.district}" style="width:100%;padding:8px;border:1px solid #dee2e6;border-radius:4px;"></div>
+                <div><label>地址</label><input type="text" name="address" th:value="${caseInfo.address}" style="width:100%;padding:8px;border:1px solid #dee2e6;border-radius:4px;"></div>
+                <div><label>诊断</label><input type="text" name="diagnosis" th:value="${caseInfo.diagnosis}" style="width:100%;padding:8px;border:1px solid #dee2e6;border-radius:4px;"></div>
+                <div><label>转归</label>
+                    <select name="outcome" style="width:100%;padding:8px;border:1px solid #dee2e6;border-radius:4px;">
+                        <option value="治愈" th:selected="${caseInfo.outcome == '治愈'}">治愈</option>
+                        <option value="好转" th:selected="${caseInfo.outcome == '好转'}">好转</option>
+                        <option value="治疗中" th:selected="${caseInfo.outcome == '治疗中'}">治疗中</option>
+                        <option value="死亡" th:selected="${caseInfo.outcome == '死亡'}">死亡</option>
+                    </select>
+                </div>
+                <div><label>风险等级</label>
+                    <select name="riskLevel" style="width:100%;padding:8px;border:1px solid #dee2e6;border-radius:4px;">
+                        <option value="低风险" th:selected="${caseInfo.riskLevel == '低风险'}">低风险</option>
+                        <option value="中风险" th:selected="${caseInfo.riskLevel == '中风险'}">中风险</option>
+                        <option value="高风险" th:selected="${caseInfo.riskLevel == '高风险'}">高风险</option>
+                    </select>
+                </div>
+                <div><label>就诊医院</label><input type="text" name="hospital" th:value="${caseInfo.hospital}" style="width:100%;padding:8px;border:1px solid #dee2e6;border-radius:4px;"></div>
+            </div>
+            <input type="hidden" name="caseType" th:value="${caseInfo.caseType}">
+            <input type="hidden" name="discoverType" th:value="${caseInfo.discoverType}">
+            <input type="hidden" name="isSevere" th:value="${caseInfo.isSevere}">
+            <input type="hidden" name="isDeath" th:value="${caseInfo.isDeath}">
+            <input type="hidden" name="feverTemp" th:value="${caseInfo.feverTemp}">
+            <input type="hidden" name="clinicalJson" th:value="${caseInfo.clinicalJson}">
+            <input type="hidden" name="labJson" th:value="${caseInfo.labJson}">
+            <input type="hidden" name="treatmentJson" th:value="${caseInfo.treatmentJson}">
+            <input type="hidden" name="riskReason" th:value="${caseInfo.riskReason}">
+            <button type="submit" class="btn-primary-custom">保存修改</button>
+        </form>
+    </div>
+</div>
+</body>
+</html>

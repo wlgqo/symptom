@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout('症候群主题库条件树搜索', ~{::content})}">
+<body>
+<div th:fragment="content">
+    <div class="card-panel">
+        <h5>条件树搜索</h5>
+        <p style="color:#6c757d;font-size:13px;margin-bottom:16px;">
+            通过可视化方式组合症状、人群、时间、地域、临床指标等条件，生成符合条件的数据集。
+            示例：(发热 AND 咳嗽) OR (发热 AND 腹泻) AND 年龄 &gt; 60
+        </p>
+
+        <div style="margin-bottom:12px;">
+            <label>条件组合逻辑：</label>
+            <select id="logicSelect" style="padding:6px 12px;border:1px solid #dee2e6;border-radius:4px;">
+                <option value="AND">AND（全部满足）</option>
+                <option value="OR">OR（满足任一）</option>
+            </select>
+        </div>
+
+        <div class="condition-tree" id="conditionTree">
+            <div class="condition-group" id="conditions">
+                <div class="condition-row">
+                    <select class="cond-type">
+                        <option value="symptom">症状条件</option>
+                        <option value="age">年龄条件</option>
+                        <option value="gender">性别条件</option>
+                        <option value="district">地域条件</option>
+                        <option value="syndrome">症候群类型</option>
+                        <option value="fever">体温条件</option>
+                        <option value="risk">风险等级</option>
+                        <option value="date">时间条件</option>
+                    </select>
+                    <select class="cond-operator" style="display:none;">
+                        <option value="=">=</option>
+                        <option value=">">&gt;</option>
+                        <option value="<">&lt;</option>
+                        <option value=">=">&gt;=</option>
+                        <option value="<=">&lt;=</option>
+                    </select>
+                    <input class="cond-value" placeholder="条件值" style="flex:1;">
+                    <button class="btn-outline-custom remove-btn" style="padding:4px 10px;font-size:12px;">删除</button>
+                </div>
+            </div>
+            <div style="margin-top:12px;">
+                <button class="btn-outline-custom" id="addCondition">+ 添加条件</button>
+                <button class="btn-primary-custom" id="searchBtn" style="margin-left:8px;">执行搜索</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card-panel" id="resultPanel" style="display:none;">
+        <h5>搜索结果 <span id="resultCount" style="color:#1a6fc4;"></span></h5>
+        <div id="generatedSql" style="font-size:12px;color:#6c757d;margin-bottom:12px;padding:8px;background:#f8f9fa;border-radius:4px;"></div>
+        <table class="data-table" id="resultTable">
+            <thead>
+                <tr><th>主索引号</th><th>姓名</th><th>性别</th><th>年龄</th><th>症候群</th><th>症状</th><th>诊断</th><th>风险等级</th></tr>
+            </thead>
+            <tbody id="resultBody"></tbody>
+        </table>
+    </div>
+
+    <script>
+        var symptomValues = ['发热','咳嗽','腹泻','出血','咽痛','流涕','气促','呼吸困难','腹痛','呕吐'];
+        var syndromeValues = ['发热呼吸道症候群','发热伴出血症候群','发热伴腹泻症候群'];
+        var genderValues = ['男','女'];
+        var riskValues = ['高风险','中风险','低风险'];
+
+        function createConditionRow() {
+            var row = document.createElement('div');
+            row.className = 'condition-row';
+            row.innerHTML = '<select class="cond-type">' +
+                '<option value="symptom">症状条件</option><option value="age">年龄条件</option>' +
+                '<option value="gender">性别条件</option><option value="district">地域条件</option>' +
+                '<option value="syndrome">症候群类型</option><option value="fever">体温条件</option>' +
+                '<option value="risk">风险等级</option><option value="date">时间条件</option></select>' +
+                '<select class="cond-operator" style="display:none;"><option value="=">=</option><option value=">">&gt;</option>' +
+                '<option value="<">&lt;</option><option value=">=">&gt;=</option><option value="<=">&lt;=</option></select>' +
+                '<input class="cond-value" placeholder="条件值" style="flex:1;">' +
+                '<button class="btn-outline-custom remove-btn" style="padding:4px 10px;font-size:12px;">删除</button>';
+            bindRowEvents(row);
+            return row;
+        }
+
+        function bindRowEvents(row) {
+            var typeSelect = row.querySelector('.cond-type');
+            var opSelect = row.querySelector('.cond-operator');
+            var valueInput = row.querySelector('.cond-value');
+
+            typeSelect.addEventListener('change', function() {
+                var type = typeSelect.value;
+                opSelect.style.display = ['age','fever','date'].indexOf(type) >= 0 ? '' : 'none';
+                updateValueInput(type, valueInput);
+            });
+
+            row.querySelector('.remove-btn').addEventListener('click', function() {
+                if (document.querySelectorAll('.condition-row').length > 1) row.remove();
+            });
+        }
+
+        function updateValueInput(type, input) {
+            var parent = input.parentNode;
+            var old = input;
+            var el;
+            if (type === 'symptom') {
+                el = document.createElement('select');
+                el.className = 'cond-value';
+                el.style.flex = '1';
+                symptomValues.forEach(function(v) { var o = document.createElement('option'); o.value = v; o.text = v; el.appendChild(o); });
+            } else if (type === 'syndrome') {
+                el = document.createElement('select');
+                el.className = 'cond-value';
+                el.style.flex = '1';
+                syndromeValues.forEach(function(v) { var o = document.createElement('option'); o.value = v; o.text = v; el.appendChild(o); });
+            } else if (type === 'gender') {
+                el = document.createElement('select');
+                el.className = 'cond-value';
+                el.style.flex = '1';
+                genderValues.forEach(function(v) { var o = document.createElement('option'); o.value = v; o.text = v; el.appendChild(o); });
+            } else if (type === 'risk') {
+                el = document.createElement('select');
+                el.className = 'cond-value';
+                el.style.flex = '1';
+                riskValues.forEach(function(v) { var o = document.createElement('option'); o.value = v; o.text = v; el.appendChild(o); });
+            } else {
+                el = document.createElement('input');
+                el.className = 'cond-value';
+                el.style.flex = '1';
+                el.placeholder = type === 'age' ? '如: 60' : (type === 'date' ? '如: 2026-03-01' : '输入条件值');
+            }
+            parent.replaceChild(el, old);
+        }
+
+        document.querySelectorAll('.condition-row').forEach(bindRowEvents);
+        document.getElementById('addCondition').addEventListener('click', function() {
+            document.getElementById('conditions').appendChild(createConditionRow());
+        });
+
+        document.getElementById('searchBtn').addEventListener('click', function() {
+            var conditions = [];
+            document.querySelectorAll('.condition-row').forEach(function(row) {
+                conditions.push({
+                    type: row.querySelector('.cond-type').value,
+                    operator: row.querySelector('.cond-operator').style.display !== 'none' ? row.querySelector('.cond-operator').value : '=',
+                    value: row.querySelector('.cond-value').value
+                });
+            });
+
+            fetch('/search/execute', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ conditions: conditions, logic: document.getElementById('logicSelect').value })
+            }).then(function(r) { return r.json(); }).then(function(data) {
+                document.getElementById('resultPanel').style.display = 'block';
+                document.getElementById('resultCount').textContent = '(共 ' + data.count + ' 条)';
+                document.getElementById('generatedSql').textContent = '查询条件: ' + data.sql;
+                var tbody = document.getElementById('resultBody');
+                tbody.innerHTML = '';
+                (data.cases || []).forEach(function(c) {
+                    var tr = document.createElement('tr');
+                    tr.innerHTML = '<td>' + (c.mainIndex||'') + '</td><td>' + (c.patientName||'') + '</td>' +
+                        '<td>' + (c.gender||'') + '</td><td>' + (c.age||'') + '</td>' +
+                        '<td>' + (c.syndromeType||'') + '</td><td>' + ((c.symptoms||[]).join('、')) + '</td>' +
+                        '<td>' + (c.diagnosis||'') + '</td><td>' + (c.riskLevel||'') + '</td>';
+                    tbody.appendChild(tr);
+                });
+            });
+        });
+    </script>
+</div>
+</body>
+</html>

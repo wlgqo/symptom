@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout('首页驾驶舱', ~{::content})}">
+<body>
+<div th:fragment="content">
+    <div class="stat-cards">
+        <div class="stat-card">
+            <div class="label">症候群病例总数</div>
+            <div class="value" th:text="${stats.totalCases}">0</div>
+        </div>
+        <div class="stat-card info">
+            <div class="label">今日新增病例</div>
+            <div class="value" th:text="${stats.todayCases}">0</div>
+        </div>
+        <div class="stat-card warning">
+            <div class="label">待处置预警</div>
+            <div class="value" th:text="${stats.warningCount}">0</div>
+        </div>
+        <div class="stat-card danger">
+            <div class="label">高风险病例</div>
+            <div class="value" th:text="${stats.highRiskCases}">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="label">呼吸道症候群</div>
+            <div class="value" th:text="${stats.respiratoryCases}">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="label">出血症候群</div>
+            <div class="value" th:text="${stats.hemorrhageCases}">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="label">腹泻症候群</div>
+            <div class="value" th:text="${stats.diarrheaCases}">0</div>
+        </div>
+    </div>
+
+    <div class="grid-2">
+        <div class="card-panel">
+            <h5>病例月度趋势</h5>
+            <div id="trendChart" class="chart-container"></div>
+        </div>
+        <div class="card-panel">
+            <h5>地区分布</h5>
+            <div id="districtChart" class="chart-container"></div>
+        </div>
+    </div>
+
+    <div class="card-panel">
+        <h5>最新预警信号</h5>
+        <table class="data-table">
+            <thead>
+                <tr><th>时间</th><th>症候群</th><th>级别</th><th>内容</th><th>状态</th></tr>
+            </thead>
+            <tbody>
+                <tr th:each="w : ${recentWarnings}">
+                    <td th:text="${#dates.format(w.warningTime, 'yyyy-MM-dd HH:mm')}"></td>
+                    <td th:text="${w.syndromeType}"></td>
+                    <td><span th:class="${w.warningLevel == '红色' ? 'badge-level badge-red' : 'badge-level badge-orange'}" th:text="${w.warningLevel}"></span></td>
+                    <td th:text="${w.warningContent}"></td>
+                    <td th:text="${w.status}"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script th:inline="javascript">
+        var timeData = /*[[${timeData}]]*/ {};
+        var districtData = /*[[${districtData}]]*/ [];
+
+        var trendChart = echarts.init(document.getElementById('trendChart'));
+        trendChart.setOption({
+            tooltip: { trigger: 'axis' },
+            xAxis: { type: 'category', data: timeData.labels || [] },
+            yAxis: { type: 'value', name: '病例数' },
+            series: [{ name: '病例数', type: 'line', smooth: true, areaStyle: { opacity: 0.3 },
+                itemStyle: { color: '#1a6fc4' }, data: timeData.values || [] }]
+        });
+
+        var districtChart = echarts.init(document.getElementById('districtChart'));
+        districtChart.setOption({
+            tooltip: { trigger: 'item' },
+            series: [{ type: 'pie', radius: ['40%', '70%'],
+                data: (districtData || []).map(function(d) { return { name: d.name, value: d.value }; }),
+                emphasis: { itemStyle: { shadowBlur: 10 } }
+            }]
+        });
+
+        window.addEventListener('resize', function() { trendChart.resize(); districtChart.resize(); });
+    </script>
+</div>
+</body>
+</html>

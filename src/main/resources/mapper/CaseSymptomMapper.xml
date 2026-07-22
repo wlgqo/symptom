@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.symptom.mapper.CaseSymptomMapper">
+    <select id="findByCaseId" resultType="string">
+        SELECT symptom_name FROM case_symptom WHERE case_id = #{caseId}
+    </select>
+    <select id="findAllByCaseId" resultType="CaseSymptom">
+        SELECT * FROM case_symptom WHERE case_id = #{caseId}
+    </select>
+    <insert id="insert">
+        INSERT INTO case_symptom (case_id, symptom_name) VALUES (#{caseId}, #{symptomName})
+    </insert>
+    <delete id="deleteByCaseId">
+        DELETE FROM case_symptom WHERE case_id = #{caseId}
+    </delete>
+</mapper>
