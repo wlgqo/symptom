@@ -55,12 +55,41 @@ function initRegionHospitalCascade() {
     });
 }
 
+function maskIdCard(idCard) {
+    if (!idCard) return '-';
+    var v = String(idCard).trim();
+    if (v.length <= 8) return v.charAt(0) + '****' + v.charAt(v.length - 1);
+    return v.substring(0, 4) + '**********' + v.substring(v.length - 4);
+}
+
+function maskPhone(phone) {
+    if (!phone) return '-';
+    var v = String(phone).trim();
+    if (v.length < 7) return v.charAt(0) + '****';
+    return v.substring(0, 3) + '****' + v.substring(v.length - 4);
+}
+
 function renderMedicalRecordSummary(medicalJson, treatmentJson) {
     var el = document.getElementById('medicalRecordSummary');
     if (!el) return;
     try {
         var medical = typeof medicalJson === 'string' ? JSON.parse(medicalJson) : (medicalJson || {});
         var html = '<div class="detail-grid">';
+        if (medical.idCard) {
+            html += '<div class="detail-item"><span class="label">证件号</span><span class="value">' + esc(maskIdCard(medical.idCard)) + '</span></div>';
+        }
+        if (medical.phone) {
+            html += '<div class="detail-item"><span class="label">手机号</span><span class="value">' + esc(maskPhone(medical.phone)) + '</span></div>';
+        }
+        if (medical.westernDiagnosis) {
+            html += '<div class="detail-item"><span class="label">西医诊断</span><span class="value">' + esc(medical.westernDiagnosis) + '</span></div>';
+        }
+        if (medical.tcmDiagnosis) {
+            html += '<div class="detail-item"><span class="label">中医诊断</span><span class="value">' + esc(medical.tcmDiagnosis) + '</span></div>';
+        }
+        if (medical.infectiousDiagnosis) {
+            html += '<div class="detail-item"><span class="label">传染病诊断</span><span class="value">' + esc(medical.infectiousDiagnosis) + '</span></div>';
+        }
         html += '<div class="detail-item full-width"><span class="label">主诉</span><span class="value">' + esc(medical.chiefComplaint || '-') + '</span></div>';
         html += '<div class="detail-item full-width"><span class="label">现病史</span><span class="value">' + esc(medical.presentIllness || '-') + '</span></div>';
         html += '<div class="detail-item full-width"><span class="label">体格检查</span><span class="value">' + esc(medical.physicalExam || '-') + '</span></div>';
@@ -155,6 +184,14 @@ function renderPatientProfile(profileJson, medicalJson) {
             (tagsHtml ? '<div class="tag-list" style="margin-top:12px;">' + tagsHtml + '</div>' : '');
 
         if (timelineEl) {
+            var originalHtml = '<div class="detail-grid" style="margin-bottom:16px;padding:12px;background:#f0f9ff;border-radius:6px;border:1px solid #bae6fd;">';
+            originalHtml += '<div class="detail-item"><span class="label">证件号</span><span class="value">' + esc(medical.idCard || '-') + '</span></div>';
+            originalHtml += '<div class="detail-item"><span class="label">手机号</span><span class="value">' + esc(medical.phone || '-') + '</span></div>';
+            originalHtml += '<div class="detail-item"><span class="label">西医诊断</span><span class="value">' + esc(medical.westernDiagnosis || '-') + '</span></div>';
+            originalHtml += '<div class="detail-item"><span class="label">中医诊断</span><span class="value">' + esc(medical.tcmDiagnosis || '-') + '</span></div>';
+            originalHtml += '<div class="detail-item full-width"><span class="label">传染病诊断</span><span class="value">' + esc(medical.infectiousDiagnosis || '-') + '</span></div>';
+            originalHtml += '</div>';
+
             var items = [];
             (medical.visits || []).forEach(function(v) {
                 items.push({date: v.date, title: v.type + ' - ' + (v.dept || ''), desc: v.doctor ? '接诊医生：' + v.doctor : ''});
@@ -171,9 +208,9 @@ function renderPatientProfile(profileJson, medicalJson) {
             items.sort(function(a, b) { return (a.date || '').localeCompare(b.date || ''); });
 
             if (items.length === 0) {
-                timelineEl.innerHTML = '<p class="empty-state">暂无诊疗活动记录</p>';
+                timelineEl.innerHTML = originalHtml + '<p class="empty-state">暂无诊疗活动记录</p>';
             } else {
-                timelineEl.innerHTML = '<div class="timeline">' + items.map(function(item) {
+                timelineEl.innerHTML = originalHtml + '<div class="timeline">' + items.map(function(item) {
                     return '<div class="timeline-item' + (item.death ? ' death' : '') + '">' +
                         '<div class="timeline-date">' + item.date + '</div>' +
                         '<div class="timeline-title">' + item.title + '</div>' +

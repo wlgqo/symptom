@@ -9,6 +9,7 @@ import com.symptom.service.CaseService;
 import com.symptom.service.DataScopeService;
 import com.symptom.service.FilterOptionService;
 import com.symptom.util.CaseMedicalRecordBuilder;
+import com.symptom.util.SensitiveDataUtil;
 import com.symptom.util.FilterViewHelper;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -132,11 +133,12 @@ public class CaseController {
         response.getOutputStream().write(new byte[]{(byte) 0xEF, (byte) 0xBB, (byte) 0xBF});
 
         PrintWriter writer = response.getWriter();
-        writer.println("主索引号,姓名,性别,年龄,病例类型,症候群类型,地区,诊断,风险等级,报告日期");
+        writer.println("主索引号,姓名,性别,年龄,证件号,手机号,病例类型,症候群类型,地区,诊断,风险等级,报告日期");
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         for (CaseInfo c : cases) {
-            writer.printf("%s,%s,%s,%d,%s,%s,%s,%s,%s,%s%n",
+            writer.printf("%s,%s,%s,%d,%s,%s,%s,%s,%s,%s,%s,%s%n",
                     c.getMainIndex(), c.getPatientName(), c.getGender(), c.getAge(),
+                    SensitiveDataUtil.maskIdCard(c.getIdCard()), SensitiveDataUtil.maskPhone(c.getPhone()),
                     c.getCaseType(), c.getSyndromeType(), c.getDistrict(),
                     c.getDiagnosis(), c.getRiskLevel(),
                     c.getReportDate() != null ? sdf.format(c.getReportDate()) : "");

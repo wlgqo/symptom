@@ -26,8 +26,8 @@
                 <span><strong th:text="${caseInfo.gender}"></strong> · <strong th:text="${caseInfo.age}"></strong>岁</span>
                 <span>职业：<strong th:text="${caseInfo.occupation}"></strong></span>
                 <span>主索引：<strong th:text="${caseInfo.mainIndex}"></strong></span>
-                <span th:if="${caseInfo.idCard}">身份证：<strong th:text="${caseInfo.idCard}"></strong></span>
-                <span th:if="${caseInfo.phone}">电话：<strong th:text="${caseInfo.phone}"></strong></span>
+                <span th:if="${caseInfo.idCard}">身份证：<strong th:text="${T(com.symptom.util.SensitiveDataUtil).maskIdCard(caseInfo.idCard)}"></strong></span>
+                <span th:if="${caseInfo.phone}">电话：<strong th:text="${T(com.symptom.util.SensitiveDataUtil).maskPhone(caseInfo.phone)}"></strong></span>
             </div>
         </div>
     </div>

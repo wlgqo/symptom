@@ -126,6 +126,8 @@ public class SyndromeMonitorController {
         model.addAttribute("mapDistrictData", mapDistrictData);
         model.addAttribute("chengduDistricts", FilterOptionService.getChengduDistricts());
         model.addAttribute("prefectureCities", new ArrayList<>(FilterOptionService.getCityAdcodeMap().keySet()));
+        model.addAttribute("districtGeoMap", FilterOptionService.getDistrictGeoNameMap());
+        model.addAttribute("cityCentralDistrict", FilterOptionService.getCityCentralDistrictMap());
 
         model.addAttribute("pageTitle", meta.syndromeType + "监测预警");
         model.addAttribute("breadcrumb", meta.syndromeType);

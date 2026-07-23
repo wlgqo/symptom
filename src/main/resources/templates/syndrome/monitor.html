@@ -440,23 +440,17 @@
             tbody.innerHTML = rows || '<tr><td colspan="3" style="text-align:center;color:#999;">暂无数据</td></tr>';
         })();
 
-        var nameAlias = {
-            '成都市': '成都市', '绵阳市': '绵阳市', '德阳市': '德阳市', '宜宾市': '宜宾市',
-            '乐山市': '乐山市', '南充市': '南充市', '泸州市': '泸州市'
-        };
-        var cityToGeoName = {
-            '绵阳市': '涪城区', '德阳市': '旌阳区', '宜宾市': '翠屏区',
-            '乐山市': '市中区', '南充市': '顺庆区', '泸州市': '江阳区'
-        };
-        function mapRegionName(name) { return nameAlias[name] || name; }
+        var districtGeoMap = /*[[${districtGeoMap}]]*/ {};
+        var cityCentralDistrict = /*[[${cityCentralDistrict}]]*/ {};
+        function mapRegionName(name) { return districtGeoMap[name] || name; }
 
         function buildMapDataFromDistricts(source) {
             var valueMap = {};
             (source || []).forEach(function(d) {
                 var key = mapRegionName(d.name);
                 valueMap[key] = (valueMap[key] || 0) + (d.value || 0);
-                if (mapLevel === 'city' && mapCity && d.name === mapCity && cityToGeoName[mapCity]) {
-                    valueMap[cityToGeoName[mapCity]] = (valueMap[cityToGeoName[mapCity]] || 0) + (d.value || 0);
+                if (mapLevel === 'city' && mapCity && d.name === mapCity && cityCentralDistrict[mapCity]) {
+                    valueMap[cityCentralDistrict[mapCity]] = (valueMap[cityCentralDistrict[mapCity]] || 0) + (d.value || 0);
                 }
             });
             return valueMap;
@@ -495,10 +489,20 @@
             window.location.search = params.toString();
         }
 
+        var geoToDistrict = {};
+        Object.keys(districtGeoMap || {}).forEach(function(k) {
+            geoToDistrict[districtGeoMap[k]] = k;
+        });
+
+        function resolveDistrictName(name) {
+            return geoToDistrict[name] || name;
+        }
+
         function handleMapClick(name, rawName) {
+            var drillName = resolveDistrictName(name);
             if (mapLevel === 'province') {
-                if (prefectureCities.indexOf(name) >= 0 || name === '成都市') {
-                    drillDistrict(name);
+                if (prefectureCities.indexOf(drillName) >= 0 || drillName === '成都市') {
+                    drillDistrict(drillName);
                 }
                 return;
             }

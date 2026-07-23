@@ -28,9 +28,21 @@ public final class CaseMedicalRecordBuilder {
     }
 
     public static String effectiveMedicalRecordJson(CaseInfo caseInfo) {
+        JSONObject medical;
         if (caseInfo.getMedicalRecordJson() != null && !caseInfo.getMedicalRecordJson().trim().isEmpty()) {
-            return caseInfo.getMedicalRecordJson();
+            try {
+                medical = JSON.parseObject(caseInfo.getMedicalRecordJson());
+            } catch (Exception e) {
+                medical = new JSONObject();
+            }
+        } else {
+            medical = JSON.parseObject(buildDefaultMedicalRecord(caseInfo));
         }
+        enrichMedicalRecord(medical, caseInfo);
+        return medical.toJSONString();
+    }
+
+    private static String buildDefaultMedicalRecord(CaseInfo caseInfo) {
         String symptoms = caseInfo.getSymptoms() != null ? String.join("、", caseInfo.getSymptoms()) : "发热";
         String reportDate = formatDate(caseInfo.getReportDate());
         String admissionDate = formatDate(caseInfo.getAdmissionDate() != null ? caseInfo.getAdmissionDate() : caseInfo.getReportDate());
@@ -64,6 +76,91 @@ public final class CaseMedicalRecordBuilder {
         }
 
         return JSON.toJSONString(medical);
+    }
+
+    private static void enrichMedicalRecord(JSONObject medical, CaseInfo caseInfo) {
+        if (isBlank(medical.getString("westernDiagnosis"))) {
+            medical.put("westernDiagnosis", inferWesternDiagnosis(caseInfo));
+        }
+        if (isBlank(medical.getString("tcmDiagnosis"))) {
+            medical.put("tcmDiagnosis", inferTcmDiagnosis(caseInfo));
+        }
+        if (isBlank(medical.getString("infectiousDiagnosis"))) {
+            medical.put("infectiousDiagnosis", inferInfectiousDiagnosis(caseInfo));
+        }
+        if (caseInfo.getIdCard() != null && !caseInfo.getIdCard().trim().isEmpty()) {
+            medical.put("idCard", caseInfo.getIdCard().trim());
+        }
+        if (caseInfo.getPhone() != null && !caseInfo.getPhone().trim().isEmpty()) {
+            medical.put("phone", caseInfo.getPhone().trim());
+        }
+    }
+
+    private static boolean isBlank(String value) {
+        return value == null || value.trim().isEmpty();
+    }
+
+    private static String inferWesternDiagnosis(CaseInfo c) {
+        if (c.getDiagnosis() != null && !c.getDiagnosis().trim().isEmpty()) {
+            return c.getDiagnosis().trim();
+        }
+        return "待查";
+    }
+
+    private static String inferTcmDiagnosis(CaseInfo c) {
+        String syndrome = c.getSyndromeType();
+        if (syndrome == null) {
+            return "发热待辨";
+        }
+        if (syndrome.contains("呼吸道")) {
+            return "风热袭肺";
+        }
+        if (syndrome.contains("腹泻")) {
+            return "湿热下注";
+        }
+        if (syndrome.contains("出血")) {
+            return "血热妄行";
+        }
+        if (syndrome.contains("出疹")) {
+            return "风热犯表";
+        }
+        if (syndrome.contains("脑炎")) {
+            return "热入营血";
+        }
+        return "邪伏膜原";
+    }
+
+    private static String inferInfectiousDiagnosis(CaseInfo c) {
+        String diag = c.getDiagnosis();
+        if (diag == null || diag.trim().isEmpty()) {
+            return "待排除传染病";
+        }
+        String d = diag.trim();
+        if (d.contains("流感")) {
+            return "流行性感冒";
+        }
+        if (d.contains("肺炎") && !d.contains("非传染")) {
+            return "社区获得性肺炎";
+        }
+        if (d.contains("诺如")) {
+            return "诺如病毒感染";
+        }
+        if (d.contains("痢疾")) {
+            return "细菌性痢疾";
+        }
+        if (d.contains("出血热")) {
+            return "肾综合征出血热（疑似）";
+        }
+        if (d.contains("麻疹") || d.contains("风疹") || d.contains("猩红热")) {
+            return d;
+        }
+        if (d.contains("脑炎") || d.contains("脑膜炎")) {
+            return d;
+        }
+        if (d.contains("上呼吸道") || d.contains("支气管炎") || d.contains("肠胃炎") || d.contains("待查") || d.contains("不明")) {
+            return "非传染病";
+        }
+        return "待排除传染病";
     }
 
     private static String buildChiefComplaint(CaseInfo c, String symptoms) {
