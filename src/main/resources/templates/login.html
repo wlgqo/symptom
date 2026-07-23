@@ -1,102 +1,114 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>登录 - 症候群主动监测预警系统</title>
+    <title>登录 - 症候群监测管理系统</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body class="login-body">
 <div class="login-page">
-    <aside class="login-brand-panel">
-        <svg class="login-bg-svg" viewBox="0 0 800 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-            <defs>
-                <linearGradient id="lg1" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stop-color="#1677ff" stop-opacity="0.18"/>
-                    <stop offset="100%" stop-color="#1677ff" stop-opacity="0"/>
-                </linearGradient>
-            </defs>
-            <circle cx="120" cy="140" r="90" fill="url(#lg1)"/>
-            <circle cx="680" cy="200" r="120" fill="rgba(22,119,255,0.08)"/>
-            <circle cx="640" cy="720" r="160" fill="rgba(22,119,255,0.06)"/>
-            <path d="M0 520 Q200 460 400 520 T800 500" stroke="rgba(255,255,255,0.08)" stroke-width="2" fill="none"/>
-            <path d="M0 600 Q250 540 500 600 T800 580" stroke="rgba(255,255,255,0.05)" stroke-width="1.5" fill="none"/>
-            <g opacity="0.12" stroke="#fff" stroke-width="1.5" fill="none">
-                <rect x="80" y="320" width="48" height="48" rx="6"/>
-                <path d="M104 332v24M92 344h24"/>
-                <rect x="200" y="400" width="40" height="40" rx="4"/>
-                <path d="M220 412v16M212 420h16"/>
-            </g>
-            <g opacity="0.1" fill="none" stroke="#fff" stroke-width="1.2">
-                <path d="M560 380c0-22 18-40 40-40s40 18 40 40-18 40-40 40"/>
-                <path d="M600 360v-20M600 420v20M580 400h-20M620 400h20"/>
-            </g>
-            <g opacity="0.08">
-                <polyline points="100,680 160,620 220,650 300,560 380,600 460,520 540,580 620,500 700,540" fill="none" stroke="#69b1ff" stroke-width="2"/>
-                <circle cx="160" cy="620" r="4" fill="#69b1ff"/>
-                <circle cx="300" cy="560" r="4" fill="#69b1ff"/>
-                <circle cx="460" cy="520" r="4" fill="#69b1ff"/>
-                <circle cx="620" cy="500" r="4" fill="#69b1ff"/>
-            </g>
-        </svg>
 
+    <section class="login-brand-panel">
         <div class="login-brand-inner">
-            <div class="login-org-badge">
-                <svg class="login-org-icon" viewBox="0 0 40 40" fill="none" aria-hidden="true">
-                    <rect width="40" height="40" rx="4" fill="rgba(255,255,255,0.12)"/>
-                    <path d="M20 8v24M8 20h24" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
-                </svg>
-                <span>四川省疾病预防控制中心</span>
-            </div>
-            <p class="login-system-tag">SSEW · 症候群监测预警平台</p>
-            <h1 class="login-system-name">症候群主动监测<br>预警系统</h1>
-            <p class="login-system-en">Syndrome Surveillance &amp; Early Warning System</p>
-            <div class="login-divider"></div>
-            <ul class="login-capabilities">
-                <li>传染病症候群实时监测与识别</li>
-                <li>三间分布分析与预警模型计算</li>
-                <li>病例全流程管理与主题库检索</li>
-                <li>预警信号生成与联动处置</li>
-            </ul>
-        </div>
-        <div class="login-brand-footer">
-            <span>遵循国家传染病监测技术规范</span>
-        </div>
-    </aside>
-
-    <main class="login-form-panel">
-        <div class="login-form-box">
-            <div class="login-form-header">
-                <div class="login-form-logo">
-                    <svg viewBox="0 0 48 48" width="48" height="48" aria-hidden="true">
-                        <rect width="48" height="48" rx="10" fill="#e6f4ff"/>
-                        <path d="M24 10v28M10 24h28" stroke="#1677ff" stroke-width="2.5" stroke-linecap="round"/>
+            <div class="login-logo">
+                <div class="login-logo-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                        <path d="M12 3v18"/>
+                        <path d="M3 12h18"/>
+                        <circle cx="12" cy="12" r="8"/>
                     </svg>
                 </div>
-                <h2>用户登录</h2>
-                <p>症候群主动监测预警系统</p>
+                <div>
+                    <div class="login-logo-title">症候群监测管理系统</div>
+                    <div class="login-logo-subtitle">SYNDROMIC SURVEILLANCE MANAGEMENT SYSTEM</div>
+                </div>
+            </div>
+
+            <div class="login-brand-main">
+                <h1>公共卫生智能监测<br>与<span>风险预警平台</span></h1>
+                <p>面向公共卫生监测业务，融合多源医疗数据，实现症状监测、症候群识别、趋势分析与风险预警，为疾病防控和公共卫生决策提供数据支撑。</p>
+            </div>
+
+            <div class="login-concept-list">
+                <div class="login-concept"><span class="login-concept-dot"></span>症状监测</div>
+                <div class="login-concept"><span class="login-concept-dot"></span>症候群分析</div>
+                <div class="login-concept"><span class="login-concept-dot"></span>趋势研判</div>
+                <div class="login-concept"><span class="login-concept-dot"></span>风险预警</div>
+            </div>
+
+            <div class="login-brand-slogan">
+                <span class="login-brand-slogan-line"></span>
+                <span>监测理念</span>
+                <strong>早发现 · 早识别 · 早研判 · 早预警</strong>
+            </div>
+        </div>
+
+        <div class="login-brand-footer">
+            四川省疾病预防控制中心 · 公共卫生智能监测与预警平台
+        </div>
+    </section>
+
+    <section class="login-form-panel">
+        <div class="login-form-box">
+            <div class="login-form-header">
+                <h2>欢迎登录</h2>
+                <p>登录系统开展症候群监测与分析工作</p>
             </div>
 
             <div th:if="${error}" class="login-alert" th:text="${error}"></div>
 
             <form method="post" action="/login" class="login-form">
                 <div class="login-field">
-                    <label for="username">用户名</label>
-                    <input type="text" id="username" name="username" class="form-control" placeholder="请输入用户名" required autofocus autocomplete="username">
+                    <label class="login-form-label" for="username">账号</label>
+                    <div class="login-input-wrapper">
+                        <span class="login-input-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <circle cx="12" cy="8" r="4"/>
+                                <path d="M4 21c1-4 3.5-6 8-6s7 2 8 6"/>
+                            </svg>
+                        </span>
+                        <input type="text" id="username" name="username" class="login-form-input"
+                               placeholder="请输入账号" required autofocus autocomplete="username">
+                    </div>
                 </div>
-                <div class="login-field">
-                    <label for="password">密码</label>
-                    <input type="password" id="password" name="password" class="form-control" placeholder="请输入密码" required autocomplete="current-password">
-                </div>
-                <button type="submit" class="btn-login">登 录</button>
-            </form>
 
-            <div class="login-form-footer">
-                <span>症候群主动监测预警系统 V1.0</span>
-                <span>技术支持：传染病监测信息科</span>
-            </div>
+                <div class="login-field">
+                    <label class="login-form-label" for="password">密码</label>
+                    <div class="login-input-wrapper">
+                        <span class="login-input-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <rect x="4" y="10" width="16" height="11" rx="2"/>
+                                <path d="M8 10V7a4 4 0 018 0v3"/>
+                            </svg>
+                        </span>
+                        <input type="password" id="password" name="password" class="login-form-input"
+                               placeholder="请输入密码" required autocomplete="current-password">
+                    </div>
+                </div>
+
+                <div class="login-options">
+                    <label class="login-remember">
+                        <input type="checkbox" name="remember">
+                        <span>记住账号</span>
+                    </label>
+                    <span class="login-forget">忘记密码？</span>
+                </div>
+
+                <button type="submit" class="btn-login">登 录</button>
+
+                <div class="login-security-tip">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                        <path d="M12 3l8 4v5c0 4.8-3.4 7.9-8 9-4.6-1.1-8-4.2-8-9V7l8-4z"/>
+                        <path d="m8.5 12 2.3 2.3 4.7-5"/>
+                    </svg>
+                    数据安全加密传输
+                </div>
+            </form>
         </div>
-    </main>
+
+        <div class="login-page-footer">© 2026 症候群监测管理系统</div>
+    </section>
 </div>
 </body>
 </html>
