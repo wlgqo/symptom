@@ -198,10 +198,18 @@ a:hover { color: var(--primary-dark); }
 .login-input-icon {
     position: absolute;
     left: 14px;
-    font-size: 15px;
-    opacity: 0.45;
+    width: 18px;
+    height: 18px;
+    color: #a0aec0;
     pointer-events: none;
-    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.login-input-icon svg {
+    width: 18px;
+    height: 18px;
 }
 
 .login-box .form-control,
