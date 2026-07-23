@@ -32,18 +32,21 @@ public class SyndromeMonitorController {
     private final SyndromeConfigService syndromeConfigService;
     private final DataScopeService dataScopeService;
     private final FilterOptionService filterOptionService;
+    private final MapScopeService mapScopeService;
 
     public SyndromeMonitorController(CaseService caseService, AnalysisService analysisService,
                                      WarningService warningService,
                                      SyndromeConfigService syndromeConfigService,
                                      DataScopeService dataScopeService,
-                                     FilterOptionService filterOptionService) {
+                                     FilterOptionService filterOptionService,
+                                     MapScopeService mapScopeService) {
         this.caseService = caseService;
         this.analysisService = analysisService;
         this.warningService = warningService;
         this.syndromeConfigService = syndromeConfigService;
         this.dataScopeService = dataScopeService;
         this.filterOptionService = filterOptionService;
+        this.mapScopeService = mapScopeService;
     }
 
     @GetMapping({"/respiratory", "/hemorrhage", "/diarrhea", "/rash", "/encephalitis", "/fuo"})
@@ -116,6 +119,14 @@ public class SyndromeMonitorController {
         SysUser user = (SysUser) session.getAttribute("currentUser");
         Map<String, Object> filter = buildFilter(session, meta.syndromeType, district, hospital, startDate, endDate, days);
 
+        MapScopeService.MapViewContext mapView = mapScopeService.resolve(user, dataScopeService, district);
+        List<Map<String, Object>> mapDistrictData = analysisService.getMapDistrictDistribution(filter, mapView.getLevel());
+        boolean provinceMap = "province".equals(mapView.getLevel());
+        model.addAttribute("mapView", mapView);
+        model.addAttribute("mapDistrictData", mapDistrictData);
+        model.addAttribute("chengduDistricts", FilterOptionService.getChengduDistricts());
+        model.addAttribute("prefectureCities", new ArrayList<>(FilterOptionService.getCityAdcodeMap().keySet()));
+
         model.addAttribute("pageTitle", meta.syndromeType + "监测预警");
         model.addAttribute("breadcrumb", meta.syndromeType);
         model.addAttribute("syndromeCode", code);
@@ -130,7 +141,7 @@ public class SyndromeMonitorController {
         model.addAttribute("timeDataDay", analysisService.getTimeDistribution(filter, "day"));
         model.addAttribute("timeDataWeek", analysisService.getTimeDistribution(filter, "week"));
         model.addAttribute("timeDataMonth", analysisService.getTimeDistribution(filter, "month"));
-        model.addAttribute("districtData", analysisService.getDistrictDistribution(filter));
+        model.addAttribute("districtData", provinceMap ? mapDistrictData : analysisService.getDistrictDistribution(filter));
         model.addAttribute("populationData", analysisService.getPopulationDistribution(filter));
         model.addAttribute("clinicalData", analysisService.getClinicalFeatures(filter));
         model.addAttribute("severeDeathData", analysisService.getSevereDeathStats(filter));

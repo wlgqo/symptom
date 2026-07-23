@@ -19,6 +19,18 @@ public class FilterOptionService {
             "绵阳市", "德阳市", "宜宾市", "乐山市", "南充市", "泸州市"
     ));
 
+    private static final Map<String, String> CITY_ADCODE = new LinkedHashMap<>();
+
+    static {
+        CITY_ADCODE.put("成都市", "510100");
+        CITY_ADCODE.put("绵阳市", "510700");
+        CITY_ADCODE.put("德阳市", "510600");
+        CITY_ADCODE.put("宜宾市", "511500");
+        CITY_ADCODE.put("乐山市", "511100");
+        CITY_ADCODE.put("南充市", "511300");
+        CITY_ADCODE.put("泸州市", "510500");
+    }
+
     private static final Map<String, List<String>> HOSPITALS_BY_DISTRICT = new LinkedHashMap<>();
 
     static {
@@ -57,6 +69,18 @@ public class FilterOptionService {
 
     public static List<String> getProvincialDistricts() {
         return PROVINCIAL_DISTRICTS;
+    }
+
+    public static boolean isPrefectureCity(String name) {
+        return name != null && CITY_ADCODE.containsKey(name.trim());
+    }
+
+    public static String getCityAdcode(String city) {
+        return CITY_ADCODE.get(city);
+    }
+
+    public static Map<String, String> getCityAdcodeMap() {
+        return CITY_ADCODE;
     }
 
     public List<String> getDistricts() {

@@ -19,13 +19,16 @@ public class AnalysisService {
     private final CaseInfoMapper caseInfoMapper;
     private final MonitorIndicatorService monitorIndicatorService;
     private final WarningRecordMapper warningRecordMapper;
+    private final MapScopeService mapScopeService;
 
     public AnalysisService(CaseInfoMapper caseInfoMapper,
                            MonitorIndicatorService monitorIndicatorService,
-                           WarningRecordMapper warningRecordMapper) {
+                           WarningRecordMapper warningRecordMapper,
+                           MapScopeService mapScopeService) {
         this.caseInfoMapper = caseInfoMapper;
         this.monitorIndicatorService = monitorIndicatorService;
         this.warningRecordMapper = warningRecordMapper;
+        this.mapScopeService = mapScopeService;
     }
 
     public Map<String, Object> getTimeDistribution(Map<String, Object> filter, String groupBy) {
@@ -100,6 +103,11 @@ public class AnalysisService {
 
     public List<Map<String, Object>> getDistrictDistribution(Map<String, Object> filter) {
         return caseInfoMapper.countByDistrict(filter);
+    }
+
+    public List<Map<String, Object>> getMapDistrictDistribution(Map<String, Object> filter, String mapLevel) {
+        List<Map<String, Object>> raw = caseInfoMapper.countByDistrict(filter);
+        return mapScopeService.aggregateMapData(raw, mapLevel);
     }
 
     public Map<String, Object> getPopulationDistribution(Map<String, Object> filter) {

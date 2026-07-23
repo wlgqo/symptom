@@ -58,12 +58,25 @@
     <!-- 三间分布 -->
     <div class="tab-content" th:classappend="${activeTab == 'distribution' ? ' active' : ''}" id="tab-distribution">
         <div class="map-breadcrumb">
-            <a th:href="@{'/' + ${syndromeCode}(startDate=${filterStartDate}, endDate=${filterEndDate}, days=${filterDays})}">全市</a>
-            <span th:if="${filterDistrict != null and filterDistrict != ''}">
+            <a th:href="@{'/' + ${syndromeCode}(startDate=${filterStartDate}, endDate=${filterEndDate}, days=${filterDays})}"
+               th:text="${mapView.breadcrumbRoot}">全省</a>
+            <span th:if="${mapView.level == 'city' and mapView.city != null}">
+                <span class="sep">/</span>
+                <a th:if="${filterDistrict != null and filterDistrict != '' and filterDistrict != mapView.city}"
+                   th:href="@{'/' + ${syndromeCode}(district=${mapView.city}, startDate=${filterStartDate}, endDate=${filterEndDate}, days=${filterDays})}"
+                   th:text="${mapView.city}">成都市</a>
+                <span th:if="${filterDistrict == null or filterDistrict == '' or filterDistrict == mapView.city}"
+                      class="current" th:text="${mapView.city}">成都市</span>
+            </span>
+            <span th:if="${filterDistrict != null and filterDistrict != '' and filterDistrict != mapView.city and mapView.level == 'city'}">
                 <span class="sep">/</span>
                 <span class="current" th:text="${filterDistrict}">区县</span>
             </span>
-            <a th:if="${filterDistrict != null and filterDistrict != ''}"
+            <span th:if="${filterDistrict != null and filterDistrict != '' and mapView.level == 'province'}">
+                <span class="sep">/</span>
+                <span class="current" th:text="${filterDistrict}">地区</span>
+            </span>
+            <a th:if="${mapView.level == 'city' or (filterDistrict != null and filterDistrict != '')}"
                th:href="@{'/' + ${syndromeCode}(startDate=${filterStartDate}, endDate=${filterEndDate}, days=${filterDays})}"
                class="btn-outline-sm" style="margin-left:12px;font-size:12px;">返回上级</a>
         </div>
@@ -82,7 +95,7 @@
                 <div id="ageChart" class="chart-container chart-compact"></div>
             </div>
             <div class="card-panel dist-map-panel">
-                <h5>空间分布地图 <span class="panel-action">成都市 · 点击下钻</span></h5>
+                <h5>空间分布地图 <span class="panel-action" th:text="${mapView.title + ' · 点击下钻'}">地图</span></h5>
                 <div id="mapChart" class="chart-container chart-map"></div>
             </div>
             <div class="card-panel dist-side-panel">
@@ -309,6 +322,13 @@
         var severeDeathData = /*[[${severeDeathData}]]*/ {};
         var riskData = /*[[${riskData}]]*/ {};
         var historicalTrend = /*[[${historicalTrend}]]*/ {};
+        var mapLevel = /*[[${mapView.level}]]*/ 'city';
+        var mapGeoUrl = /*[[${mapView.geoUrl}]]*/ 'https://geo.datav.aliyun.com/areas_v3/bound/510100_full.json';
+        var mapRegisterKey = /*[[${mapView.mapKey}]]*/ 'chengdu';
+        var mapCity = /*[[${mapView.city}]]*/ '成都市';
+        var mapDistrictData = /*[[${mapDistrictData}]]*/ [];
+        var chengduDistricts = /*[[${chengduDistricts}]]*/ [];
+        var prefectureCities = /*[[${prefectureCities}]]*/ [];
 
         document.querySelectorAll('#mainTabs .tab-item').forEach(function(tab) {
             tab.addEventListener('click', function() {
@@ -420,8 +440,52 @@
             tbody.innerHTML = rows || '<tr><td colspan="3" style="text-align:center;color:#999;">暂无数据</td></tr>';
         })();
 
-        var nameAlias = {};
-        function mapRegionName(name) { return name; }
+        var nameAlias = {
+            '成都市': '成都市', '绵阳市': '绵阳市', '德阳市': '德阳市', '宜宾市': '宜宾市',
+            '乐山市': '乐山市', '南充市': '南充市', '泸州市': '泸州市'
+        };
+        var cityToGeoName = {
+            '绵阳市': '涪城区', '德阳市': '旌阳区', '宜宾市': '翠屏区',
+            '乐山市': '市中区', '南充市': '顺庆区', '泸州市': '江阳区'
+        };
+        function mapRegionName(name) { return nameAlias[name] || name; }
+
+        function buildMapDataFromDistricts(source) {
+            var valueMap = {};
+            (source || []).forEach(function(d) {
+                var key = mapRegionName(d.name);
+                valueMap[key] = (valueMap[key] || 0) + (d.value || 0);
+                if (mapLevel === 'city' && mapCity && d.name === mapCity && cityToGeoName[mapCity]) {
+                    valueMap[cityToGeoName[mapCity]] = (valueMap[cityToGeoName[mapCity]] || 0) + (d.value || 0);
+                }
+            });
+            return valueMap;
+        }
+
+        function mergeGeoFeatures(geo, valueMap) {
+            var result = [];
+            var features = (geo && geo.features) ? geo.features : [];
+            features.forEach(function(f) {
+                var name = f.properties && f.properties.name ? f.properties.name : '';
+                if (!name) return;
+                var val = valueMap[name] != null ? valueMap[name] : 0;
+                result.push({ name: name, value: val, rawName: name });
+            });
+            Object.keys(valueMap).forEach(function(k) {
+                if (!result.some(function(r) { return r.name === k; })) {
+                    result.push({ name: k, value: valueMap[k], rawName: k });
+                }
+            });
+            return result;
+        }
+
+        function colorByValue(val, max) {
+            if (!max || max <= 0) return '#e8f4fc';
+            var colors = ['#e8f4fc', '#cfe9fc', '#a8d8f8', '#7cc4f2', '#4da8e8', '#1d8fd6'];
+            if (val <= 0) return colors[0];
+            var idx = Math.min(colors.length - 1, Math.ceil((val / max) * (colors.length - 1)));
+            return colors[idx];
+        }
 
         function drillDistrict(name) {
             if (!name) return;
@@ -431,51 +495,48 @@
             window.location.search = params.toString();
         }
 
+        function handleMapClick(name, rawName) {
+            if (mapLevel === 'province') {
+                if (prefectureCities.indexOf(name) >= 0 || name === '成都市') {
+                    drillDistrict(name);
+                }
+                return;
+            }
+            if (mapCity === '成都市' && chengduDistricts.indexOf(name) >= 0) {
+                drillDistrict(name);
+            }
+        }
+
         var mapChart = trackChart(echarts.init(document.getElementById('mapChart')));
-        var mapData = (districtData || []).map(function(d) {
-            return { name: mapRegionName(d.name), value: d.value, rawName: d.name };
-        });
-        var mapMax = Math.max.apply(null, mapData.map(function(d){return d.value;}).concat([10]));
-        fetch('https://geo.datav.aliyun.com/areas_v3/bound/510100_full.json')
+        var valueMap = buildMapDataFromDistricts(mapDistrictData);
+        fetch(mapGeoUrl)
             .then(function(r) { return r.json(); })
             .then(function(geo) {
-                echarts.registerMap('chengdu', geo);
+                var mapData = mergeGeoFeatures(geo, valueMap);
+                var mapMax = Math.max.apply(null, mapData.map(function(d){return d.value;}).concat([1]));
+                echarts.registerMap(mapRegisterKey, geo);
                 mapChart.setOption({
                     tooltip: {
                         trigger: 'item',
                         formatter: function(p) {
-                            var name = (p.data && p.data.rawName) ? p.data.rawName : p.name;
-                            var val = (p.data && p.data.value != null) ? p.data.value : (p.value || 0);
+                            var name = p.name;
+                            var val = (p.data && p.data.value != null) ? p.data.value : 0;
                             return name + '<br/>病例数：<strong style="color:#1677ff;">' + val + '</strong> 例';
-                        }
-                    },
-                    visualMap: {
-                        min: 0,
-                        max: mapMax,
-                        left: 8,
-                        bottom: 8,
-                        itemWidth: 10,
-                        itemHeight: 72,
-                        text: ['多', '少'],
-                        textStyle: { fontSize: 10, color: '#64748b' },
-                        inRange: {
-                            color: ['#f0f9ff', '#bae6fd', '#7dd3fc', '#38bdf8', '#0284c7', '#0369a1']
                         }
                     },
                     series: [{
                         type: 'map',
-                        map: 'chengdu',
+                        map: mapRegisterKey,
                         roam: true,
                         data: mapData,
                         itemStyle: {
                             borderColor: '#fff',
                             borderWidth: 1.2,
-                            shadowColor: 'rgba(15, 23, 42, 0.08)',
-                            shadowBlur: 6
+                            areaColor: '#e8f4fc'
                         },
                         label: {
                             show: true,
-                            fontSize: 10,
+                            fontSize: mapLevel === 'province' ? 9 : 10,
                             color: '#334155',
                             formatter: function(p) { return p.name; }
                         },
@@ -487,7 +548,7 @@
                                 color: '#0c4a6e'
                             },
                             itemStyle: {
-                                areaColor: '#0ea5e9',
+                                areaColor: '#38bdf8',
                                 borderColor: '#fff',
                                 borderWidth: 2,
                                 shadowBlur: 10,
@@ -495,10 +556,22 @@
                             }
                         }
                     }]
+                }, true);
+                mapChart.setOption({
+                    series: [{
+                        data: mapData.map(function(d) {
+                            return {
+                                name: d.name,
+                                value: d.value,
+                                rawName: d.rawName,
+                                itemStyle: { areaColor: colorByValue(d.value, mapMax) }
+                            };
+                        })
+                    }]
                 });
                 mapChart.on('click', function(p) {
-                    var raw = p.data && p.data.rawName ? p.data.rawName : p.name;
-                    drillDistrict(raw);
+                    var name = p.name;
+                    handleMapClick(name, p.data && p.data.rawName ? p.data.rawName : name);
                 });
             })
             .catch(function() {

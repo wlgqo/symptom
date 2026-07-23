@@ -26,6 +26,7 @@ public final class FilterViewHelper {
                 dataScopeService.resolveHospital(hospital, user),
                 startDate, endDate, days);
         dataScopeService.applyCaseScope(params, user);
+        com.symptom.service.MapScopeService.expandCityDistrictParam(params);
         return params;
     }
 
