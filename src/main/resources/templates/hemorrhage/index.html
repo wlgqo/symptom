@@ -16,7 +16,7 @@
 
     <div class="quick-links">
         <a href="/case/list?syndromeType=发热伴出血症候群" class="quick-link">全部病例</a>
-        <a href="/search" class="quick-link">条件树搜索</a>
+        <a href="/search" class="quick-link">主题库检索</a>
         <a href="/respiratory" class="quick-link">呼吸道监测</a>
     </div>
 
@@ -118,7 +118,7 @@
             grid: { left: 50, right: 20, top: 30, bottom: 30 },
             xAxis: { type: 'category', data: (stats.severeTrend||[]).map(function(d){return d.month;}) },
             yAxis: { type: 'value', name: '重症率(%)' },
-            series: [{ type: 'line', smooth: true, itemStyle: { color: '#d69e2e' }, areaStyle: { opacity: 0.1 },
+            series: [{ type: 'line', smooth: true, itemStyle: { color: '#faad14' }, areaStyle: { opacity: 0.06 },
                 data: (stats.severeTrend||[]).map(function(d){return d.rate;}) }]
         });
         var deathChart = echarts.init(document.getElementById('deathTrendChart'));
@@ -127,7 +127,7 @@
             grid: { left: 50, right: 20, top: 30, bottom: 30 },
             xAxis: { type: 'category', data: (stats.deathTrend||[]).map(function(d){return d.month;}) },
             yAxis: { type: 'value', name: '死亡率(%)' },
-            series: [{ type: 'line', smooth: true, itemStyle: { color: '#c53030' }, areaStyle: { opacity: 0.1 },
+            series: [{ type: 'line', smooth: true, itemStyle: { color: '#ff4d4f' }, areaStyle: { opacity: 0.06 },
                 data: (stats.deathTrend||[]).map(function(d){return d.rate;}) }]
         });
         window.addEventListener('resize', function(){ severeChart.resize(); deathChart.resize(); });

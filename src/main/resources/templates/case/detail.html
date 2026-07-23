@@ -8,7 +8,7 @@
         <a th:if="${caseInfo != null and caseInfo.syndromeType == '发热呼吸道症候群'}" href="/respiratory" class="quick-link">呼吸道监测</a>
         <a th:if="${caseInfo != null and caseInfo.syndromeType == '发热伴出血症候群'}" href="/hemorrhage" class="quick-link">出血症候群监测</a>
         <a th:if="${caseInfo != null and caseInfo.syndromeType == '发热伴腹泻症候群'}" href="/diarrhea" class="quick-link">腹泻症候群风险</a>
-        <a th:href="@{/search}" class="quick-link">条件树搜索</a>
+        <a th:href="@{/search}" class="quick-link">主题库检索</a>
         <a th:if="${caseInfo != null and session.currentUser.role != '浏览人员'}" th:href="@{/case/edit/{id}(id=${caseInfo.id})}" class="quick-link highlight">修改病例</a>
     </div>
 

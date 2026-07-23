@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout('首页驾驶舱', ~{::content})}">
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout('监测工作台', ~{::content})}">
 <body>
 <div th:fragment="content">
     <div class="workflow-bar">
@@ -20,7 +20,7 @@
         <a href="/respiratory" class="quick-link">呼吸道监测 →</a>
         <a href="/hemorrhage" class="quick-link">出血重症死亡 →</a>
         <a href="/diarrhea" class="quick-link">腹泻风险管理 →</a>
-        <a href="/search" class="quick-link">条件树搜索 →</a>
+        <a href="/search" class="quick-link">主题库检索 →</a>
         <a href="/case/list" class="quick-link highlight">病例管理 →</a>
     </div>
 
@@ -28,7 +28,7 @@
         <div class="stat-card clickable" onclick="location.href='/case/list'">
             <div class="label">症候群病例总数</div>
             <div class="value" th:text="${stats.totalCases}">0</div>
-            <div class="sub">点击查看全部病例</div>
+            <div class="sub">查看全部病例</div>
         </div>
         <div class="stat-card info clickable" onclick="location.href='/case/list'">
             <div class="label">今日新增病例</div>
@@ -37,7 +37,7 @@
         <div class="stat-card warning clickable" onclick="location.href='/respiratory#tab-disposal'">
             <div class="label">待处置预警</div>
             <div class="value" th:text="${stats.warningCount}">0</div>
-            <div class="sub">点击进入预警处置</div>
+            <div class="sub">进入预警处置</div>
         </div>
         <div class="stat-card danger clickable" onclick="location.href='/case/list?syndromeType='">
             <div class="label">高风险病例</div>
@@ -114,14 +114,14 @@
             grid: { left: 50, right: 20, top: 30, bottom: 30 },
             xAxis: { type: 'category', data: timeData.labels || [], axisLine: { lineStyle: { color: '#e2e8f0' } } },
             yAxis: { type: 'value', name: '病例数', splitLine: { lineStyle: { color: '#f0f4f8' } } },
-            series: [{ name: '病例数', type: 'line', smooth: true, areaStyle: { opacity: 0.15, color: '#2b6cb0' },
-                itemStyle: { color: '#2b6cb0' }, lineStyle: { width: 2 }, data: timeData.values || [] }]
+            series: [{ name: '病例数', type: 'line', smooth: true, areaStyle: { opacity: 0.08, color: '#1677ff' },
+                itemStyle: { color: '#1677ff' }, lineStyle: { width: 2 }, data: timeData.values || [] }]
         });
 
         var districtChart = echarts.init(document.getElementById('districtChart'));
         districtChart.setOption({
             tooltip: { trigger: 'item' },
-            color: ['#2b6cb0', '#38a169', '#d69e2e', '#4299e1', '#805ad5', '#e53e3e'],
+            color: ['#1677ff', '#52c41a', '#faad14', '#13c2c2', '#722ed1', '#ff4d4f'],
             series: [{ type: 'pie', radius: ['42%', '68%'],
                 data: (districtData || []).map(function(d) { return { name: d.name, value: d.value }; }),
                 label: { fontSize: 12 },

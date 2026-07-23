@@ -37,7 +37,7 @@ public class DashboardController {
 
     @GetMapping("/")
     public String dashboard(Model model) {
-        model.addAttribute("pageTitle", "首页驾驶舱");
+        model.addAttribute("pageTitle", "监测工作台");
         Map<String, Object> stats = caseService.getDashboardStats();
         stats.put("warningCount", warningRecordMapper.countPending());
         model.addAttribute("stats", stats);

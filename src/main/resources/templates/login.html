@@ -3,38 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>登录 - 症候群主动监测预警演示系统</title>
+    <title>登录 - 症候群主动监测预警系统</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body class="login-body">
 <div class="login-page">
-    <div class="login-bg-pattern"></div>
-    <div class="login-bg-glow login-bg-glow-1"></div>
-    <div class="login-bg-glow login-bg-glow-2"></div>
-
-    <div class="login-container">
-        <header class="login-header">
-            <div class="login-logo">
-                <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                    <rect width="48" height="48" rx="12" fill="url(#logoGrad)"/>
-                    <path d="M24 12v24M12 24h24" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
-                    <circle cx="24" cy="24" r="14" stroke="rgba(255,255,255,0.35)" stroke-width="1.5"/>
-                    <defs>
-                        <linearGradient id="logoGrad" x1="0" y1="0" x2="48" y2="48">
-                            <stop stop-color="#38a169"/>
-                            <stop offset="1" stop-color="#2b6cb0"/>
-                        </linearGradient>
-                    </defs>
+    <aside class="login-brand-panel">
+        <div class="login-brand-inner">
+            <div class="login-org-badge">
+                <svg class="login-org-icon" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+                    <rect width="40" height="40" rx="4" fill="rgba(255,255,255,0.12)"/>
+                    <path d="M20 8v24M8 20h24" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
                 </svg>
+                <span>疾病预防控制中心</span>
             </div>
-            <h1 class="login-system-name">症候群主动监测预警演示系统</h1>
-            <p class="login-system-desc">传染病症候群主动监测业务平台</p>
-        </header>
+            <h1 class="login-system-name">症候群主动监测<br>预警系统</h1>
+            <p class="login-system-en">Syndrome Surveillance &amp; Early Warning System</p>
+            <div class="login-divider"></div>
+            <ul class="login-capabilities">
+                <li>传染病症候群实时监测与识别</li>
+                <li>三间分布分析与预警模型计算</li>
+                <li>病例全流程管理与主题库检索</li>
+                <li>预警信号生成与联动处置</li>
+            </ul>
+        </div>
+        <div class="login-brand-footer">
+            <span>遵循国家传染病监测技术规范</span>
+        </div>
+    </aside>
 
-        <div class="login-card">
-            <div class="login-card-head">
+    <main class="login-form-panel">
+        <div class="login-form-box">
+            <div class="login-form-header">
                 <h2>用户登录</h2>
-                <p>请使用演示账号登录系统</p>
+                <p>请输入您的系统账号和密码</p>
             </div>
 
             <div th:if="${error}" class="login-alert" th:text="${error}"></div>
@@ -42,44 +44,21 @@
             <form method="post" action="/login" class="login-form">
                 <div class="login-field">
                     <label for="username">用户名</label>
-                    <div class="login-input-wrap">
-                        <span class="login-input-icon" aria-hidden="true">
-                            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10 10a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm0 2c-4.42 0-8 1.79-8 4v1h16v-1c0-2.21-3.58-4-8-4z"/></svg>
-                        </span>
-                        <input type="text" id="username" name="username" class="form-control" placeholder="请输入用户名" required autofocus>
-                    </div>
+                    <input type="text" id="username" name="username" class="form-control" placeholder="请输入用户名" required autofocus autocomplete="username">
                 </div>
                 <div class="login-field">
                     <label for="password">密码</label>
-                    <div class="login-input-wrap">
-                        <span class="login-input-icon" aria-hidden="true">
-                            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M5 8V6a5 5 0 0 1 10 0v2h1a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h1zm2 0h6V6a3 3 0 0 0-6 0v2z"/></svg>
-                        </span>
-                        <input type="password" id="password" name="password" class="form-control" placeholder="请输入密码" required>
-                    </div>
+                    <input type="password" id="password" name="password" class="form-control" placeholder="请输入密码" required autocomplete="current-password">
                 </div>
                 <button type="submit" class="btn-login">登 录</button>
             </form>
 
-            <div class="login-demo">
-                <div class="login-demo-title">演示账号</div>
-                <table class="login-demo-table">
-                    <thead>
-                        <tr><th>角色</th><th>用户名</th><th>密码</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr><td>管理员</td><td>admin</td><td>admin123</td></tr>
-                        <tr><td>业务人员</td><td>business</td><td>business123</td></tr>
-                        <tr><td>浏览人员</td><td>viewer</td><td>viewer123</td></tr>
-                    </tbody>
-                </table>
+            <div class="login-form-footer">
+                <span>症候群主动监测预警系统 V1.0</span>
+                <span>技术支持：传染病监测信息科</span>
             </div>
         </div>
-
-        <footer class="login-footer">
-            <span>症候群监测 · 预警分析 · 病例管理 · 数据可视化</span>
-        </footer>
-    </div>
+    </main>
 </div>
 </body>
 </html>

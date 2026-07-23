@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout('症候群主题库条件树搜索', ~{::content})}">
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout('主题库条件检索', ~{::content})}">
 <body>
 <div th:fragment="content">
     <div class="quick-links">
@@ -10,7 +10,7 @@
     </div>
 
     <div class="card-panel">
-        <h5>条件树搜索</h5>
+        <h5>主题库条件检索</h5>
         <p style="color:#6c757d;font-size:13px;margin-bottom:16px;">
             通过可视化方式组合症状、人群、时间、地域、临床指标等条件，生成符合条件的数据集。
             示例：(发热 AND 咳嗽) OR (发热 AND 腹泻) AND 年龄 &gt; 60

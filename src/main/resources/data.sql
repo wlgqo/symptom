@@ -1,4 +1,4 @@
--- 初始化演示数据
+-- 初始化业务数据
 DELETE FROM report_card;
 DELETE FROM case_modify_log;
 DELETE FROM case_symptom;
@@ -9,7 +9,7 @@ DELETE FROM syndrome_config;
 DELETE FROM operation_log;
 DELETE FROM sys_user;
 
--- 重置自增ID，确保演示数据ID从1开始
+-- 重置自增ID
 DELETE FROM sqlite_sequence WHERE name IN ('case_info', 'case_symptom', 'warning_record', 'case_modify_log', 'report_card', 'warning_model', 'syndrome_config', 'operation_log', 'sys_user');
 
 -- 用户数据

@@ -14,7 +14,7 @@
 
     <div class="quick-links">
         <a href="/case/list?syndromeType=发热呼吸道症候群" class="quick-link">查看全部病例</a>
-        <a href="/search" class="quick-link">条件树搜索</a>
+        <a href="/search" class="quick-link">主题库检索</a>
         <a th:if="${syndromeConfig != null}" href="/admin" class="quick-link">症候群配置</a>
     </div>
 
@@ -176,7 +176,7 @@
                 tooltip: { trigger: 'axis' },
                 xAxis: { type: 'category', data: data.labels || [] },
                 yAxis: { type: 'value', name: '病例数' },
-                series: [{ type: 'bar', itemStyle: { color: '#2b6cb0' }, data: data.values || [] }]
+                series: [{ type: 'bar', itemStyle: { color: '#1677ff' }, data: data.values || [] }]
             });
         }
         renderTimeChart(timeDataDay);
@@ -195,7 +195,7 @@
             tooltip: { trigger: 'axis' },
             xAxis: { type: 'category', data: (districtData||[]).map(function(d){return d.name;}) },
             yAxis: { type: 'value' },
-            series: [{ type: 'bar', itemStyle: { color: '#38a169' }, data: (districtData||[]).map(function(d){return d.value;}) }]
+            series: [{ type: 'bar', itemStyle: { color: '#52c41a' }, data: (districtData||[]).map(function(d){return d.value;}) }]
         });
 
         function makePieChart(id, data) {
