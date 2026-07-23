@@ -435,17 +435,65 @@
         var mapData = (districtData || []).map(function(d) {
             return { name: mapRegionName(d.name), value: d.value, rawName: d.name };
         });
+        var mapMax = Math.max.apply(null, mapData.map(function(d){return d.value;}).concat([10]));
         fetch('https://geo.datav.aliyun.com/areas_v3/bound/510100_full.json')
             .then(function(r) { return r.json(); })
             .then(function(geo) {
                 echarts.registerMap('chengdu', geo);
                 mapChart.setOption({
-                    tooltip: { trigger: 'item', formatter: function(p) { return (p.data && p.data.rawName ? p.data.rawName : p.name) + ': ' + (p.value || 0) + '例'; } },
-                    visualMap: { min: 0, max: Math.max.apply(null, mapData.map(function(d){return d.value;}).concat([10])), left: 8, bottom: 8, itemWidth: 10, itemHeight: 60, text: ['高','低'], textStyle: { fontSize: 10 }, inRange: { color: ['#e6f4ff','#1677ff'] } },
+                    tooltip: {
+                        trigger: 'item',
+                        formatter: function(p) {
+                            var name = (p.data && p.data.rawName) ? p.data.rawName : p.name;
+                            var val = (p.data && p.data.value != null) ? p.data.value : (p.value || 0);
+                            return name + '<br/>病例数：<strong style="color:#1677ff;">' + val + '</strong> 例';
+                        }
+                    },
+                    visualMap: {
+                        min: 0,
+                        max: mapMax,
+                        left: 8,
+                        bottom: 8,
+                        itemWidth: 10,
+                        itemHeight: 72,
+                        text: ['多', '少'],
+                        textStyle: { fontSize: 10, color: '#64748b' },
+                        inRange: {
+                            color: ['#f0f9ff', '#bae6fd', '#7dd3fc', '#38bdf8', '#0284c7', '#0369a1']
+                        }
+                    },
                     series: [{
-                        type: 'map', map: 'chengdu', roam: true, label: { show: false, fontSize: 9 },
+                        type: 'map',
+                        map: 'chengdu',
+                        roam: true,
                         data: mapData,
-                        emphasis: { label: { show: true } }
+                        itemStyle: {
+                            borderColor: '#fff',
+                            borderWidth: 1.2,
+                            shadowColor: 'rgba(15, 23, 42, 0.08)',
+                            shadowBlur: 6
+                        },
+                        label: {
+                            show: true,
+                            fontSize: 10,
+                            color: '#334155',
+                            formatter: function(p) { return p.name; }
+                        },
+                        emphasis: {
+                            label: {
+                                show: true,
+                                fontSize: 11,
+                                fontWeight: 'bold',
+                                color: '#0c4a6e'
+                            },
+                            itemStyle: {
+                                areaColor: '#0ea5e9',
+                                borderColor: '#fff',
+                                borderWidth: 2,
+                                shadowBlur: 10,
+                                shadowColor: 'rgba(2, 132, 199, 0.35)'
+                            }
+                        }
                     }]
                 });
                 mapChart.on('click', function(p) {
