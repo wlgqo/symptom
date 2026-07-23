@@ -3,38 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>登录 - 症候群主动监测预警系统</title>
+    <title>登录 - 症候群主动监测预警演示系统</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
-<body>
+<body class="login-body">
 <div class="login-page">
-    <div class="login-wrapper">
-        <div class="login-brand">
-            <h1>症候群主动监测<br>预警演示系统</h1>
-            <p>面向传染病监测预警业务场景，支持病例采集、症候群识别、风险分析、预警模型与病例全流程管理。</p>
-            <ul class="login-features">
-                <li>三类症候群监测预警（呼吸道 / 出血 / 腹泻）</li>
-                <li>7种预警模型与信号处置闭环</li>
-                <li>患者画像与原始病历关联查询</li>
-                <li>条件树组合搜索与病例管理</li>
-            </ul>
-        </div>
-        <div class="login-box">
-            <h2>系统登录</h2>
-            <p class="subtitle">传染病症候群主动监测业务平台</p>
-            <div th:if="${error}" class="alert-error" th:text="${error}"></div>
-            <form method="post" action="/login">
-                <input type="text" name="username" class="form-control" placeholder="用户名" required autofocus>
-                <input type="password" name="password" class="form-control" placeholder="密码" required>
+    <div class="login-bg-pattern"></div>
+    <div class="login-bg-glow login-bg-glow-1"></div>
+    <div class="login-bg-glow login-bg-glow-2"></div>
+
+    <div class="login-container">
+        <header class="login-header">
+            <div class="login-logo">
+                <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <rect width="48" height="48" rx="12" fill="url(#logoGrad)"/>
+                    <path d="M24 12v24M12 24h24" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+                    <circle cx="24" cy="24" r="14" stroke="rgba(255,255,255,0.35)" stroke-width="1.5"/>
+                    <defs>
+                        <linearGradient id="logoGrad" x1="0" y1="0" x2="48" y2="48">
+                            <stop stop-color="#38a169"/>
+                            <stop offset="1" stop-color="#2b6cb0"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+            </div>
+            <h1 class="login-system-name">症候群主动监测预警演示系统</h1>
+            <p class="login-system-desc">传染病症候群主动监测业务平台</p>
+        </header>
+
+        <div class="login-card">
+            <div class="login-card-head">
+                <h2>用户登录</h2>
+                <p>请使用演示账号登录系统</p>
+            </div>
+
+            <div th:if="${error}" class="login-alert" th:text="${error}"></div>
+
+            <form method="post" action="/login" class="login-form">
+                <div class="login-field">
+                    <label for="username">用户名</label>
+                    <div class="login-input-wrap">
+                        <span class="login-input-icon" aria-hidden="true">👤</span>
+                        <input type="text" id="username" name="username" class="form-control" placeholder="请输入用户名" required autofocus>
+                    </div>
+                </div>
+                <div class="login-field">
+                    <label for="password">密码</label>
+                    <div class="login-input-wrap">
+                        <span class="login-input-icon" aria-hidden="true">🔒</span>
+                        <input type="password" id="password" name="password" class="form-control" placeholder="请输入密码" required>
+                    </div>
+                </div>
                 <button type="submit" class="btn-login">登 录</button>
             </form>
-            <div class="login-hint">
-                <strong>演示账号</strong><br>
-                管理员：admin / admin123<br>
-                业务人员：business / business123<br>
-                浏览人员：viewer / viewer123
+
+            <div class="login-demo">
+                <div class="login-demo-title">演示账号</div>
+                <table class="login-demo-table">
+                    <thead>
+                        <tr><th>角色</th><th>用户名</th><th>密码</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>管理员</td><td>admin</td><td>admin123</td></tr>
+                        <tr><td>业务人员</td><td>business</td><td>business123</td></tr>
+                        <tr><td>浏览人员</td><td>viewer</td><td>viewer123</td></tr>
+                    </tbody>
+                </table>
             </div>
         </div>
+
+        <footer class="login-footer">
+            <span>症候群监测 · 预警分析 · 病例管理 · 数据可视化</span>
+        </footer>
     </div>
 </div>
 </body>
