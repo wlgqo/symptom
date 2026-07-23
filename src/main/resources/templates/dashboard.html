@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout('监测驾驶舱', ~{::content})}">
+<body>
+<div th:fragment="content">
+    <div class="filter-bar">
+        <form method="get" action="/" class="filter-form">
+            <select name="syndromeType" class="form-select-sm">
+                <option value="">全部症候群</option>
+                <option value="发热呼吸道症候群" th:selected="${filterSyndrome == '发热呼吸道症候群'}">发热呼吸道症候群</option>
+                <option value="发热伴出血症候群" th:selected="${filterSyndrome == '发热伴出血症候群'}">发热伴出血症候群</option>
+                <option value="发热伴腹泻症候群" th:selected="${filterSyndrome == '发热伴腹泻症候群'}">发热伴腹泻症候群</option>
+                <option value="发热出疹症候群" th:selected="${filterSyndrome == '发热出疹症候群'}">发热出疹症候群</option>
+                <option value="脑炎脑膜炎症候群" th:selected="${filterSyndrome == '脑炎脑膜炎症候群'}">脑炎脑膜炎症候群</option>
+                <option value="不明原因发热症候群" th:selected="${filterSyndrome == '不明原因发热症候群'}">不明原因发热症候群</option>
+            </select>
+            <th:block th:replace="~{fragments/region-hospital-filter :: regionHospital(${filterDistrict}, ${filterHospital}, ${districtOptions}, ${hospitalOptions}, ${scopeDistrict}, ${scopeHospital})}"></th:block>
+            <th:block th:replace="~{fragments/date-range :: dateRange(${filterStartDate}, ${filterEndDate})}"></th:block>
+            <select name="days" class="form-select-sm" th:if="${filterStartDate == null or filterStartDate == ''}">
+                <option value="7" th:selected="${filterDays == 7}">近7天</option>
+                <option value="30" th:selected="${filterDays == 30}">近30天</option>
+                <option value="90" th:selected="${filterDays == 90}">近90天</option>
+                <option value="365" th:selected="${filterDays == 365}">近一年</option>
+            </select>
+            <button type="submit" class="btn-primary-sm">筛选</button>
+            <a href="/" class="btn-outline-sm">重置</a>
+        </form>
+    </div>
+
+    <div class="scope-hint" th:if="${scopeDistrict != null or scopeHospital != null}">
+        当前数据范围：
+        <strong th:if="${scopeDistrict != null}" th:text="${scopeDistrict}">辖区</strong>
+        <span th:if="${scopeDistrict != null and scopeHospital != null}"> · </span>
+        <strong th:if="${scopeHospital != null}" th:text="${scopeHospital}">机构</strong>
+    </div>
+
+    <div class="stat-cards">
+        <div class="stat-card clickable" onclick="location.href='/case/list'">
+            <div class="label">监测病例</div>
+            <div class="value" th:text="${stats.totalCases}">0</div>
+        </div>
+        <div class="stat-card info clickable" onclick="location.href='/case/list'">
+            <div class="label">今日新增</div>
+            <div class="value" th:text="${stats.todayCases}">0</div>
+        </div>
+        <div class="stat-card warning clickable" onclick="location.href='/warning/center'">
+            <div class="label">当前预警</div>
+            <div class="value" th:text="${stats.warningCount}">0</div>
+        </div>
+        <div class="stat-card danger clickable" onclick="location.href='/case/list?riskLevel=高风险'">
+            <div class="label">高风险病例</div>
+            <div class="value" th:text="${stats.highRiskCases}">0</div>
+        </div>
+        <div class="stat-card warning clickable" onclick="location.href='/hemorrhage'">
+            <div class="label">重症病例</div>
+            <div class="value" th:text="${stats.severeCases}">0</div>
+        </div>
+        <div class="stat-card danger clickable" onclick="location.href='/hemorrhage'">
+            <div class="label">死亡病例</div>
+            <div class="value" th:text="${stats.deathCases}">0</div>
+        </div>
+    </div>
+
+    <div class="grid-2">
+        <div class="card-panel">
+            <h5>症候群趋势 <span class="panel-action"><a href="/respiratory">呼吸道专题 →</a></span></h5>
+            <div id="trendChart" class="chart-container"></div>
+        </div>
+        <div class="card-panel">
+            <h5>区域风险分布 <span class="panel-action"><a href="/respiratory">三间分布 →</a></span></h5>
+            <div id="districtChart" class="chart-container"></div>
+        </div>
+    </div>
+
+    <div class="grid-2">
+        <div class="card-panel">
+            <h5>异常事件 <span class="panel-action"><a href="/event">事件中心 →</a></span></h5>
+            <table class="data-table compact">
+                <thead><tr><th>事件</th><th>区域</th><th>状态</th></tr></thead>
+                <tbody>
+                    <tr th:each="e : ${recentEvents}" th:onclick="|location.href='/event?id=' + ${e.id}|" style="cursor:pointer">
+                        <td th:text="${e.eventName}"></td>
+                        <td th:text="${e.district}"></td>
+                        <td>
+                            <span th:class="${e.status == '处置中' ? 'badge-level badge-red' : (e.status == '待核查' or e.status == '调查中' or e.status == '已确认' ? 'badge-level badge-orange' : 'badge-level badge-low')}" th:text="${e.status}"></span>
+                        </td>
+                    </tr>
+                    <tr th:if="${recentEvents == null or recentEvents.isEmpty()}">
+                        <td colspan="3" style="text-align:center;color:#999">暂无异常事件</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="card-panel">
+            <h5>待处置事项</h5>
+            <div class="stat-cards inline-stats">
+                <div class="stat-card warning clickable" onclick="location.href='/warning/center'">
+                    <div class="label">待研判预警</div>
+                    <div class="value" th:text="${stats.warningCount}">0</div>
+                </div>
+                <div class="stat-card clickable" onclick="location.href='/event'">
+                    <div class="label">待核查事件</div>
+                    <div class="value" th:text="${pendingEvents}">0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid-2">
+        <div class="card-panel">
+            <h5>重点病例</h5>
+            <table class="data-table compact">
+                <thead><tr><th>患者</th><th>症候群</th><th>风险</th><th>操作</th></tr></thead>
+                <tbody>
+                    <tr th:each="c, stat : ${highRiskCases}" th:if="${stat.index < 5}">
+                        <td th:text="${c.patientName}"></td>
+                        <td th:text="${c.syndromeType}"></td>
+                        <td><span class="badge-level badge-red" th:text="${c.riskLevel}"></span></td>
+                        <td><a th:href="@{/case/detail/{id}(id=${c.id})}" class="table-link">360°画像</a></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="card-panel">
+            <h5>数据质量</h5>
+            <div class="detail-grid">
+                <div class="detail-item"><label>数据接入</label><span class="badge-level badge-green">正常</span></div>
+                <div class="detail-item"><label>数据量</label><span th:text="${stats.totalCases} + ' 条'"></span></div>
+                <div class="detail-item"><label>完整率</label><span>96.8%</span></div>
+                <div class="detail-item"><label>数据延迟</label><span>&lt; 2小时</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card-panel">
+        <h5>最新预警信号 <span class="panel-action"><a href="/warning/center">预警中心 →</a></span></h5>
+        <div class="table-scroll-panel" style="max-height:280px;">
+        <table class="data-table">
+            <thead>
+                <tr><th>时间</th><th>症候群</th><th>级别</th><th>内容</th><th>状态</th><th>操作</th></tr>
+            </thead>
+            <tbody>
+                <tr th:each="w : ${recentWarnings}">
+                    <td th:text="${#dates.format(w.warningTime, 'yyyy-MM-dd HH:mm')}"></td>
+                    <td th:text="${w.syndromeType}"></td>
+                    <td><span th:class="${w.warningLevel == '红色' ? 'badge-level badge-red' : 'badge-level badge-orange'}" th:text="${w.warningLevel}"></span></td>
+                    <td th:text="${w.warningContent}"></td>
+                    <td>
+                        <span th:class="${w.status == '待研判' or w.status == '已确认' or w.status == '处置中' ? 'badge-level badge-orange' : 'badge-level badge-low'}" th:text="${w.status}"></span>
+                    </td>
+                    <td><a th:href="@{/warning/center(id=${w.id})}" class="table-link">处置</a></td>
+                </tr>
+            </tbody>
+        </table>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        var timeData = /*[[${timeData}]]*/ {};
+        var districtData = /*[[${districtData}]]*/ [];
+
+        var trendChart = echarts.init(document.getElementById('trendChart'));
+        trendChart.setOption({
+            tooltip: { trigger: 'axis' },
+            legend: { data: ['病例数', '同比', '环比'], top: 0 },
+            grid: { left: 50, right: 20, top: 36, bottom: 30 },
+            xAxis: { type: 'category', data: timeData.labels || [] },
+            yAxis: { type: 'value', name: '病例数' },
+            series: [
+                { name: '病例数', type: 'bar', barMaxWidth: 22, itemStyle: { color: '#1677ff' }, data: timeData.values || [] },
+                { name: '同比', type: 'line', smooth: true, symbol: 'none', itemStyle: { color: '#52c41a' }, data: timeData.yoy || [] },
+                { name: '环比', type: 'line', smooth: true, symbol: 'none', lineStyle: { type: 'dashed' }, itemStyle: { color: '#faad14' }, data: timeData.mom || [] }
+            ]
+        });
+
+        var districtChart = echarts.init(document.getElementById('districtChart'));
+        districtChart.setOption(buildLabeledPieOption(
+            (districtData || []).map(function(d) { return { name: d.name, value: d.value }; }),
+            { radius: ['38%', '62%'], showLegend: true }
+        ));
+
+        districtChart.on('click', function(p) {
+            if (p.name) location.href = '/respiratory?district=' + encodeURIComponent(p.name);
+        });
+
+        window.addEventListener('resize', function() { trendChart.resize(); districtChart.resize(); });
+    </script>
+    <script th:inline="javascript">window.__hospitalMap = /*[[${hospitalMap}]]*/ {};</script>
+</div>
+</body>
+</html>

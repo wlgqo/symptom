@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 - 症候群监测管理系统</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="login-body">
+<div class="login-page">
+
+    <section class="login-brand-panel">
+        <div class="login-logo login-logo-top">
+            <div class="login-logo-icon login-logo-icon-cdc">
+                <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
+                    <path d="M24 3.5L41 11.8V23.5C41 33.6 33.2 41.8 24 44.5C14.8 41.8 7 33.6 7 23.5V11.8L24 3.5Z" fill="currentColor" opacity="0.95"/>
+                    <path d="M24 8.2L37 14.8V23.2C37 31.1 31.1 37.6 24 39.8C16.9 37.6 11 31.1 11 23.2V14.8L24 8.2Z" fill="#fff" opacity="0.18"/>
+                    <path d="M22.2 17.2H25.8V22.2H30.8V25.8H25.8V30.8H22.2V25.8H17.2V22.2H22.2V17.2Z" fill="#fff"/>
+                    <circle cx="33.5" cy="14.5" r="2.2" fill="#fff" opacity="0.9"/>
+                    <circle cx="14.5" cy="14.5" r="2.2" fill="#fff" opacity="0.9"/>
+                    <path d="M24 34.2C27.8 34.2 31 32.4 33 29.6" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity="0.75"/>
+                </svg>
+            </div>
+            <div>
+                <div class="login-logo-title">症候群监测管理系统</div>
+                <div class="login-logo-subtitle">CDC SYNDROMIC SURVEILLANCE SYSTEM</div>
+            </div>
+        </div>
+
+        <div class="login-brand-content">
+            <div class="login-slogan-stack">
+                <p class="login-slogan-line slogan-primary">
+                    <span class="login-slogan-accent"></span>
+                    <span>早发现 · 早识别 · 早研判 · 早预警</span>
+                </p>
+                <p class="login-slogan-line slogan-cyan">
+                    <span class="login-slogan-accent"></span>
+                    <span>多源感知 · 智能聚焦 · 实时预警</span>
+                </p>
+                <p class="login-slogan-line slogan-green">
+                    <span class="login-slogan-accent"></span>
+                    <span>全面监测 · 科学研判 · 极速响应</span>
+                </p>
+                <p class="login-slogan-line slogan-violet">
+                    <span class="login-slogan-accent"></span>
+                    <span>敏于捕捉 · 精于分析 · 快于处置</span>
+                </p>
+            </div>
+        </div>
+
+        <div class="login-brand-footer">
+            症候群监测管理系统 · 公共卫生智能监测与预警平台
+        </div>
+    </section>
+
+    <section class="login-form-panel">
+        <div class="login-form-box">
+            <div class="login-form-header">
+                <h2>欢迎登录</h2>
+                <p>登录系统开展症候群监测与分析工作</p>
+            </div>
+
+            <div th:if="${error}" class="login-alert" th:text="${error}"></div>
+
+            <form method="post" action="/login" class="login-form">
+                <div class="login-field">
+                    <label class="login-form-label" for="username">账号</label>
+                    <div class="login-input-wrapper">
+                        <span class="login-input-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <circle cx="12" cy="8" r="4"/>
+                                <path d="M4 21c1-4 3.5-6 8-6s7 2 8 6"/>
+                            </svg>
+                        </span>
+                        <input type="text" id="username" name="username" class="login-form-input"
+                               placeholder="请输入账号" required autofocus autocomplete="username">
+                    </div>
+                </div>
+
+                <div class="login-field">
+                    <label class="login-form-label" for="password">密码</label>
+                    <div class="login-input-wrapper">
+                        <span class="login-input-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <rect x="4" y="10" width="16" height="11" rx="2"/>
+                                <path d="M8 10V7a4 4 0 018 0v3"/>
+                            </svg>
+                        </span>
+                        <input type="password" id="password" name="password" class="login-form-input"
+                               placeholder="请输入密码" required autocomplete="current-password">
+                    </div>
+                </div>
+
+                <div class="login-options">
+                    <label class="login-remember">
+                        <input type="checkbox" name="remember">
+                        <span>记住账号</span>
+                    </label>
+                    <span class="login-forget">忘记密码？</span>
+                </div>
+
+                <button type="submit" class="btn-login">登 录</button>
+
+                <div class="login-security-tip">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                        <path d="M12 3l8 4v5c0 4.8-3.4 7.9-8 9-4.6-1.1-8-4.2-8-9V7l8-4z"/>
+                        <path d="m8.5 12 2.3 2.3 4.7-5"/>
+                    </svg>
+                    数据安全加密传输
+                </div>
+            </form>
+        </div>
+
+        <div class="login-page-footer">© 2026 症候群监测管理系统</div>
+    </section>
+</div>
+</body>
+</html>

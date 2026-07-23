@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.symptom.mapper.SymptomTermMapper">
+
+    <select id="findAll" resultType="SymptomTerm">
+        SELECT id, term_name as termName, synonyms, category, status, description
+        FROM symptom_term ORDER BY category, term_name
+    </select>
+
+    <select id="findById" resultType="SymptomTerm">
+        SELECT id, term_name as termName, synonyms, category, status, description
+        FROM symptom_term WHERE id = #{id}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO symptom_term (term_name, synonyms, category, status, description)
+        VALUES (#{termName}, #{synonyms}, #{category}, #{status}, #{description})
+    </insert>
+
+    <update id="update">
+        UPDATE symptom_term SET
+            term_name = #{termName},
+            synonyms = #{synonyms},
+            category = #{category},
+            status = #{status},
+            description = #{description}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM symptom_term WHERE id = #{id}
+    </delete>
+</mapper>

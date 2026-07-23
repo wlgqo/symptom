@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout('系统管理', ~{::content})}">
+<body>
+<div th:fragment="content">
+    <div class="tab-nav" id="adminTabs">
+        <div class="tab-item" data-tab="menu" th:classappend="${activeTab == 'menu' ? ' active' : ''}">菜单配置</div>
+        <div class="tab-item" data-tab="users" th:classappend="${activeTab == 'users' ? ' active' : ''}">用户配置</div>
+        <div class="tab-item" data-tab="roles" th:classappend="${activeTab == 'roles' ? ' active' : ''}">角色配置</div>
+        <div class="tab-item" data-tab="dict" th:classappend="${activeTab == 'dict' ? ' active' : ''}">字典项配置</div>
+        <div class="tab-item" data-tab="monitor" th:classappend="${activeTab == 'monitor' ? ' active' : ''}">系统监控</div>
+        <div class="tab-item" data-tab="notice" th:classappend="${activeTab == 'notice' ? ' active' : ''}">通知公告</div>
+    </div>
+
+    <div class="tab-content" id="tab-menu" th:classappend="${activeTab == 'menu' ? ' active' : ''}">
+        <div class="card-panel">
+            <h5>系统菜单配置</h5>
+            <table class="data-table">
+                <thead><tr><th>菜单名称</th><th>访问路径</th><th>状态</th></tr></thead>
+                <tbody>
+                    <tr th:each="m : ${menuItems}">
+                        <td th:text="${m.name}"></td>
+                        <td><code th:text="${m.path}"></code></td>
+                        <td><span class="badge-level badge-green" th:text="${m.status}"></span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="tab-content" id="tab-users" th:classappend="${activeTab == 'users' ? ' active' : ''}">
+        <div class="card-panel">
+            <h5>用户列表</h5>
+            <table class="data-table">
+                <thead><tr><th>用户名</th><th>姓名</th><th>角色</th><th>数据辖区</th><th>所属机构</th><th>操作</th></tr></thead>
+                <tbody>
+                    <tr th:each="u : ${users}">
+                        <td th:text="${u.username}"></td>
+                        <td th:text="${u.realName}"></td>
+                        <td><span class="badge-level badge-blue" th:text="${u.role}"></span></td>
+                        <td th:text="${u.districtScope != null ? u.districtScope : '全部'}">全部</td>
+                        <td th:text="${u.hospitalScope != null ? u.hospitalScope : '全部'}">全部</td>
+                        <td>
+                            <a th:if="${u.username != 'admin'}" th:href="@{/admin/user/delete/{id}(id=${u.id})}"
+                               style="color:#c53030;font-size:12px;" onclick="return confirm('确认删除？')">删除</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="card-panel">
+            <h5>添加用户</h5>
+            <form method="post" action="/admin/user/save" class="search-form" style="margin-bottom:0;">
+                <div class="form-row">
+                    <div><label>用户名</label><input type="text" name="username" required></div>
+                    <div><label>密码</label><input type="password" name="password" required></div>
+                    <div><label>角色</label>
+                        <select name="role">
+                            <option value="业务人员">业务人员</option>
+                            <option value="浏览人员">浏览人员</option>
+                            <option value="管理员">管理员</option>
+                        </select>
+                    </div>
+                    <div><label>姓名</label><input type="text" name="realName"></div>
+                    <div><label>数据辖区</label>
+                        <input type="text" name="districtScope" placeholder="管理员留空=全部；业务人员填区县名">
+                    </div>
+                    <div><label>所属机构</label>
+                        <input type="text" name="hospitalScope" placeholder="管理员留空=全部；业务人员填机构名">
+                    </div>
+                </div>
+                <p class="panel-desc" style="margin-bottom:12px;">演示账号：admin/admin123（管理员）、cdc_prov/cdc123（四川省·全省数据）、cdc01/cdc123（成都市·全市数据）、cdc02/cdc123（武侯区·辖区数据）</p>
+                <button type="submit" class="btn-primary-custom">添加用户</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="tab-content" id="tab-roles" th:classappend="${activeTab == 'roles' ? ' active' : ''}">
+        <div class="card-panel">
+            <h5>角色权限配置</h5>
+            <table class="data-table">
+                <thead><tr><th>角色名称</th><th>权限说明</th><th>用户数</th></tr></thead>
+                <tbody>
+                    <tr th:each="r : ${roles}">
+                        <td th:text="${r.name}"></td>
+                        <td th:text="${r.desc}"></td>
+                        <td th:text="${r.count}"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="tab-content" id="tab-dict" th:classappend="${activeTab == 'dict' ? ' active' : ''}">
+        <div class="card-panel">
+            <h5>数据字典配置</h5>
+            <table class="data-table">
+                <thead><tr><th>字典编码</th><th>字典名称</th><th>字典值</th></tr></thead>
+                <tbody>
+                    <tr th:each="d : ${dictItems}">
+                        <td><code th:text="${d.code}"></code></td>
+                        <td th:text="${d.name}"></td>
+                        <td th:text="${d.values}"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="tab-content" id="tab-monitor" th:classappend="${activeTab == 'monitor' ? ' active' : ''}">
+        <div class="stat-cards">
+            <div class="stat-card"><div class="label">在线用户</div><div class="value" th:text="${monitorStats.onlineUsers}">0</div></div>
+            <div class="stat-card info"><div class="label">今日登录</div><div class="value" th:text="${monitorStats.todayLogins}">0</div></div>
+            <div class="stat-card"><div class="label">数据库</div><div class="value" style="font-size:16px;" th:text="${monitorStats.dbStatus}">正常</div></div>
+            <div class="stat-card"><div class="label">接口服务</div><div class="value" style="font-size:16px;" th:text="${monitorStats.apiStatus}">正常</div></div>
+        </div>
+        <div class="card-panel">
+            <h5>系统运行状态</h5>
+            <div class="detail-grid">
+                <div class="detail-item"><label>数据同步</label><span class="badge-level badge-green" th:text="${monitorStats.dataSync}"></span></div>
+                <div class="detail-item"><label>内存使用</label><span th:text="${monitorStats.memoryUsage}"></span></div>
+                <div class="detail-item"><label>最近操作</label><span th:text="${#lists.size(logs)} + ' 条日志'"></span></div>
+            </div>
+        </div>
+        <div class="card-panel">
+            <h5>最近操作日志</h5>
+            <table class="data-table compact">
+                <thead><tr><th>时间</th><th>用户</th><th>操作</th><th>IP</th></tr></thead>
+                <tbody>
+                    <tr th:each="log, stat : ${logs}" th:if="${stat.index < 10}">
+                        <td th:text="${#dates.format(log.createdAt, 'yyyy-MM-dd HH:mm')}"></td>
+                        <td th:text="${log.username}"></td>
+                        <td th:text="${log.operation}"></td>
+                        <td th:text="${log.ip}"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="tab-content" id="tab-notice" th:classappend="${activeTab == 'notice' ? ' active' : ''}">
+        <div class="card-panel" th:each="n : ${notices}">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                <h5 style="margin:0;" th:text="${n.title}"></h5>
+                <span class="badge-level badge-green" th:text="${n.status}"></span>
+            </div>
+            <p class="panel-desc" th:text="${n.content}"></p>
+            <div style="font-size:12px;color:#718096;" th:text="${n.date}"></div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        var activeTab = /*[[${activeTab}]]*/ 'users';
+        document.querySelectorAll('#adminTabs .tab-item').forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                var tabId = tab.dataset.tab;
+                location.href = '/admin?tab=' + tabId;
+            });
+        });
+    </script>
+</div>
+</body>
+</html>

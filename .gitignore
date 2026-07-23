@@ -1,0 +1,10 @@
+target/
+data/
+*.db
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+.DS_Store
+apache-maven-3.9.9/

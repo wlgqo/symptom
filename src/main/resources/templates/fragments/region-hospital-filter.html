@@ -1,0 +1,17 @@
+<div th:fragment="regionHospital(district, hospital, districtOptions, hospitalOptions, scopeDistrict, scopeHospital)"
+     class="region-hospital-fields">
+    <label class="date-label">地区</label>
+    <select name="district" class="form-select-sm region-select" id="filterDistrict"
+            th:disabled="${scopeDistrict != null}">
+        <option value="" th:selected="${district == null or district == ''}">全部地区</option>
+        <option th:each="d : ${districtOptions}" th:value="${d}" th:text="${d}"
+                th:selected="${district == d or scopeDistrict == d}"></option>
+    </select>
+    <label class="date-label">机构</label>
+    <select name="hospital" class="form-select-sm hospital-select" id="filterHospital"
+            th:disabled="${scopeHospital != null}">
+        <option value="" th:selected="${hospital == null or hospital == ''}">全部机构</option>
+        <option th:each="h : ${hospitalOptions}" th:value="${h}" th:text="${h}"
+                th:selected="${hospital == h or scopeHospital == h}"></option>
+    </select>
+</div>

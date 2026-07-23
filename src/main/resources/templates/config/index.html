@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout('症候群配置', ~{::content})}">
+<body>
+<div th:fragment="content">
+    <div class="tab-nav" id="configTabs">
+        <div class="tab-item active" data-tab="symptom">症状术语配置</div>
+        <div class="tab-item" data-tab="syndrome">症候群识别规则</div>
+        <div class="tab-item" data-tab="model">预警模型配置</div>
+        <div class="tab-item" data-tab="indicator">监测指标</div>
+    </div>
+
+    <div class="tab-content active" id="tab-symptom">
+        <div class="grid-2">
+            <div class="card-panel">
+                <h5>症状术语与同义词</h5>
+                <p class="panel-desc">配置标准症状术语及其同义词，用于病例症状归一化与检索匹配。</p>
+                <table class="data-table compact">
+                    <thead><tr><th>标准术语</th><th>同义词</th><th>分类</th><th>状态</th><th>操作</th></tr></thead>
+                    <tbody>
+                        <tr th:each="t : ${symptomTerms}">
+                            <td th:text="${t.termName}"></td>
+                            <td th:text="${t.synonyms}" style="font-size:12px;color:#718096;"></td>
+                            <td th:text="${t.category}"></td>
+                            <td th:text="${t.status}"></td>
+                            <td>
+                                <button type="button" class="btn-outline-sm btn-sm edit-symptom-btn"
+                                        th:data-id="${t.id}" th:data-name="${t.termName}"
+                                        th:data-synonyms="${t.synonyms}" th:data-category="${t.category}"
+                                        th:data-status="${t.status}" th:data-desc="${t.description}">编辑</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-panel">
+                <h5 id="symptomFormTitle">新增症状术语</h5>
+                <form id="symptomForm" onsubmit="return false;">
+                    <input type="hidden" id="symptomTermId">
+                    <div class="form-group"><label>标准术语</label><input type="text" id="termName" class="form-select-sm" style="width:100%;" placeholder="如：发热"></div>
+                    <div class="form-group"><label>同义词（逗号分隔）</label><input type="text" id="termSynonyms" class="form-select-sm" style="width:100%;" placeholder="发烧,体温升高"></div>
+                    <div class="form-group"><label>分类</label><input type="text" id="termCategory" class="form-select-sm" style="width:100%;" placeholder="呼吸道症状"></div>
+                    <div class="form-group"><label>说明</label><textarea id="termDesc" class="form-textarea" rows="2"></textarea></div>
+                    <div class="form-group"><label>状态</label>
+                        <select id="termStatus" class="form-select-sm">
+                            <option value="启用">启用</option>
+                            <option value="停用">停用</option>
+                        </select>
+                    </div>
+                    <div class="btn-group" th:if="${session.currentUser.role == '管理员'}">
+                        <button type="button" class="btn-primary-sm" onclick="saveSymptom()">保存</button>
+                        <button type="button" class="btn-outline-sm" onclick="resetSymptomForm()">重置</button>
+                        <button type="button" class="btn-outline-sm" id="deleteSymptomBtn" style="display:none;" onclick="deleteSymptom()">删除</button>
+                    </div>
+                    <p th:if="${session.currentUser.role != '管理员'}" class="empty-hint">仅管理员可修改症状术语</p>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-content" id="tab-syndrome">
+        <div class="grid-2">
+            <div class="card-panel">
+                <h5>症候群列表</h5>
+                <table class="data-table">
+                    <thead><tr><th>编码</th><th>名称</th><th>状态</th><th>操作</th></tr></thead>
+                    <tbody>
+                        <tr th:each="s : ${syndromeConfigs}">
+                            <td th:text="${s.syndromeCode}"></td>
+                            <td th:text="${s.syndromeName}"></td>
+                            <td th:text="${s.status}"></td>
+                            <td><a th:href="@{/config(syndromeId=${s.id})}" class="table-link">编辑</a></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-panel" th:if="${selectedSyndrome != null}">
+                <h5>编辑症候群识别规则</h5>
+                <p class="panel-desc">通过勾选和填写条件组合识别症候群，无需编写技术代码。</p>
+                <form id="syndromeForm">
+                    <input type="hidden" id="syndromeId" th:value="${selectedSyndrome.id}">
+                    <input type="hidden" id="symptomRulesRaw" th:value="${selectedSyndrome.symptomRulesJson}">
+                    <input type="hidden" id="riskRulesRaw" th:value="${selectedSyndrome.riskRulesJson}">
+                    <input type="hidden" id="monitorModelRaw" th:value="${selectedSyndrome.monitorModelJson}">
+                    <div class="form-group"><label>症候群定义</label><textarea id="definition" class="form-textarea" th:text="${selectedSyndrome.definition}"></textarea></div>
+                    <div class="form-group"><label>条件组合方式</label>
+                        <select id="ruleLogic" class="form-select-sm" style="width:100%;">
+                            <option value="AND">同时满足（AND）</option>
+                            <option value="OR">满足其一（OR）</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>必备症状（逗号分隔）</label>
+                        <input type="text" id="requiredSymptoms" class="form-select-sm" style="width:100%;" placeholder="如：发热、腹泻"></div>
+                    <div class="form-group"><label>可选症状（满足其一，逗号分隔）</label>
+                        <input type="text" id="anySymptoms" class="form-select-sm" style="width:100%;" placeholder="如：咳嗽、咽痛、流涕"></div>
+                    <div class="form-group"><label>体征条件（逗号分隔）</label>
+                        <input type="text" id="anySigns" class="form-select-sm" style="width:100%;" placeholder="如：体温≥37.3℃"></div>
+                    <div class="form-group"><label>检验条件（逗号分隔）</label>
+                        <input type="text" id="anyLab" class="form-select-sm" style="width:100%;" placeholder="如：血小板降低"></div>
+                    <div class="form-group"><label>排除条件（逗号分隔）</label>
+                        <input type="text" id="excludeSymptoms" class="form-select-sm" style="width:100%;" placeholder="如：出血"></div>
+                    <div class="detail-section"><h6>风险分级因素</h6></div>
+                    <div class="form-group"><label>高风险因素（逗号分隔）</label>
+                        <input type="text" id="highRisk" class="form-select-sm" style="width:100%;" placeholder="如：年龄≥60、持续高热"></div>
+                    <div class="form-group"><label>中风险因素（逗号分隔）</label>
+                        <input type="text" id="mediumRisk" class="form-select-sm" style="width:100%;" placeholder="如：持续发热≥3天"></div>
+                    <div class="detail-section"><h6>关联监测模型与指标</h6></div>
+                    <div class="form-group"><label>关联预警模型（逗号分隔）</label>
+                        <input type="text" id="monitorModels" class="form-select-sm" style="width:100%;" placeholder="如：固定阈值模型、移动百分位模型"></div>
+                    <div class="form-group"><label>关联监测指标（逗号分隔）</label>
+                        <input type="text" id="monitorIndicators" class="form-select-sm" style="width:100%;" placeholder="如：日报告病例数、重症率"></div>
+                    <div class="form-group"><label>状态</label>
+                        <select id="syndromeStatus" class="form-select-sm">
+                            <option value="启用" th:selected="${selectedSyndrome.status == '启用'}">启用</option>
+                            <option value="停用" th:selected="${selectedSyndrome.status == '停用'}">停用</option>
+                        </select>
+                    </div>
+                    <button type="button" class="btn-primary-sm" th:if="${session.currentUser.role == '管理员'}" onclick="saveSyndrome()">保存</button>
+                    <p th:if="${session.currentUser.role != '管理员'}" class="empty-hint">仅管理员可修改症候群配置</p>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-content" id="tab-model">
+        <div class="grid-2">
+            <div class="card-panel">
+                <h5>预警模型列表</h5>
+                <table class="data-table compact">
+                    <thead><tr><th>模型</th><th>症候群</th><th>状态</th><th>操作</th></tr></thead>
+                    <tbody>
+                        <tr th:each="m : ${models}">
+                            <td>
+                                <div th:text="${m.modelName}" style="font-weight:500;"></div>
+                                <div th:text="${m.modelType}" style="font-size:11px;color:#718096;"></div>
+                            </td>
+                            <td th:text="${m.syndromeType}" style="font-size:12px;"></td>
+                            <td th:text="${m.enabled == 1 ? '启用' : '停用'}"></td>
+                            <td><a th:href="@{/config(modelId=${m.id})}" class="table-link">配置</a></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <a href="/warning/model" class="btn-outline-sm" style="margin-top:12px;">预警模型中心 →</a>
+            </div>
+            <div class="card-panel" th:if="${selectedModel != null}">
+                <h5 th:text="'编辑：' + ${selectedModel.modelName}">模型配置</h5>
+                <p class="panel-desc" th:text="${selectedModel.description}"></p>
+                <form id="modelForm" onsubmit="return false;">
+                    <input type="hidden" id="modelId" th:value="${selectedModel.id}">
+                    <input type="hidden" id="modelLevelRaw" th:value="${selectedModel.levelThresholdJson}">
+                    <input type="hidden" id="modelConfigRaw" th:value="${selectedModel.configJson}">
+                    <div class="form-group"><label>预警地区</label>
+                        <select id="modelRegion" class="form-select-sm" style="width:100%;">
+                            <option th:each="r : ${warningRegions}" th:value="${r}" th:text="${r}"
+                                    th:selected="${r == selectedModel.regionScope}"></option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>预警类型</label>
+                        <select id="modelWarningType" class="form-select-sm" style="width:100%;">
+                            <option th:each="t : ${warningTypes}" th:value="${t}" th:text="${t}"
+                                    th:selected="${t == selectedModel.warningType}"></option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>预警等级阈值</label>
+                        <div class="level-threshold-grid">
+                            <div class="level-threshold-row level-low">
+                                <label>低风险</label>
+                                <input type="number" id="modelLowCase" class="form-select-sm" placeholder="病例数≥" min="0">
+                                <input type="number" id="modelLowRise" class="form-select-sm" placeholder="上升比例≥%" min="0">
+                            </div>
+                            <div class="level-threshold-row level-mid">
+                                <label>中风险</label>
+                                <input type="number" id="modelMidCase" class="form-select-sm" placeholder="病例数≥" min="0">
+                                <input type="number" id="modelMidRise" class="form-select-sm" placeholder="上升比例≥%" min="0">
+                            </div>
+                            <div class="level-threshold-row level-high">
+                                <label>高风险</label>
+                                <input type="number" id="modelHighCase" class="form-select-sm" placeholder="病例数≥" min="0">
+                                <input type="number" id="modelHighRise" class="form-select-sm" placeholder="上升比例≥%" min="0">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group"><label>模型说明</label><textarea id="modelDesc" class="form-textarea" rows="3" th:text="${selectedModel.description}"></textarea></div>
+                    <div class="form-group">
+                        <label>模型运行参数</label>
+                        <p class="panel-desc" style="margin:0 0 8px;">以参数名和数值填写，系统自动保存。</p>
+                        <div id="modelConfigFields"></div>
+                        <button type="button" class="btn-outline-sm btn-sm" onclick="addConfigKvRow('modelConfigFields')">+ 添加参数</button>
+                    </div>
+                    <div class="form-group"><label>状态</label>
+                        <select id="modelEnabled" class="form-select-sm">
+                            <option value="1" th:selected="${selectedModel.enabled == 1}">启用</option>
+                            <option value="0" th:selected="${selectedModel.enabled == 0}">停用</option>
+                        </select>
+                    </div>
+                    <div class="detail-section" style="margin-top:12px;">
+                        <h6>关联监测指标</h6>
+                        <p class="panel-desc" style="margin:0;">模型运行后输出异常指数、观测值等指标，可在「监测指标」页签查看完整定义与阈值。</p>
+                    </div>
+                    <button type="button" class="btn-primary-sm" th:if="${session.currentUser.role == '管理员'}" onclick="saveModel()">保存模型配置</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-content" id="tab-indicator">
+        <div class="grid-2">
+            <div class="card-panel">
+                <h5>监测指标体系</h5>
+                <p class="panel-desc">涵盖规模、趋势、风险、重症、死亡、空间、临床等维度，支持按症候群关联。</p>
+                <div class="table-scroll-panel" style="max-height:520px;">
+                <table class="data-table compact">
+                    <thead><tr><th>编码</th><th>名称</th><th>分类</th><th>症候群</th><th>单位</th><th>状态</th><th>操作</th></tr></thead>
+                    <tbody>
+                        <tr th:each="ind : ${indicators}">
+                            <td th:text="${ind.indicatorCode}" style="font-size:11px;"></td>
+                            <td th:text="${ind.indicatorName}"></td>
+                            <td><span class="badge-level badge-blue" th:text="${ind.category}"></span></td>
+                            <td th:text="${ind.syndromeType != null ? ind.syndromeType : '通用'}" style="font-size:11px;"></td>
+                            <td th:text="${ind.unit}"></td>
+                            <td th:text="${ind.status}"></td>
+                            <td>
+                                <button type="button" class="btn-outline-sm btn-sm edit-indicator-btn"
+                                        th:data-id="${ind.id}" th:data-code="${ind.indicatorCode}"
+                                        th:data-name="${ind.indicatorName}" th:data-category="${ind.category}"
+                                        th:data-syndrome="${ind.syndromeType}" th:data-desc="${ind.description}"
+                                        th:data-formula="${ind.formula}" th:data-unit="${ind.unit}"
+                                        th:data-threshold="${ind.thresholdJson}" th:data-source="${ind.dataSource}"
+                                        th:data-status="${ind.status}" th:data-sort="${ind.sortOrder}">编辑</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                </div>
+            </div>
+            <div class="card-panel">
+                <h5 id="indicatorFormTitle">指标详情 / 新增</h5>
+                <form id="indicatorForm" onsubmit="return false;">
+                    <input type="hidden" id="indicatorId">
+                    <div class="form-group"><label>指标编码</label><input type="text" id="indicatorCode" class="form-select-sm" style="width:100%;"></div>
+                    <div class="form-group"><label>指标名称</label><input type="text" id="indicatorName" class="form-select-sm" style="width:100%;"></div>
+                    <div class="form-group"><label>分类</label>
+                        <select id="indicatorCategory" class="form-select-sm" style="width:100%;">
+                            <option>规模指标</option><option>趋势指标</option><option>风险指标</option>
+                            <option>重症指标</option><option>死亡指标</option><option>空间指标</option><option>临床指标</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>关联症候群（空=通用）</label><input type="text" id="indicatorSyndrome" class="form-select-sm" style="width:100%;" placeholder="如：发热呼吸道症候群"></div>
+                    <div class="form-group"><label>指标说明</label><textarea id="indicatorDesc" class="form-textarea" rows="2"></textarea></div>
+                    <div class="form-group"><label>计算公式</label><input type="text" id="indicatorFormula" class="form-select-sm" style="width:100%;"></div>
+                    <div class="form-group"><label>单位</label><input type="text" id="indicatorUnit" class="form-select-sm" style="width:100%;"></div>
+                    <div class="form-group"><label>预警阈值</label>
+                        <div class="level-threshold-grid" style="grid-template-columns:1fr 1fr 1fr;">
+                            <div><label style="font-size:12px;color:#718096;">关注线</label><input type="number" id="indicatorWarningThreshold" class="form-select-sm" style="width:100%;" placeholder="达到即提示"></div>
+                            <div><label style="font-size:12px;color:#718096;">告警线</label><input type="number" id="indicatorAlertThreshold" class="form-select-sm" style="width:100%;" placeholder="达到即告警"></div>
+                            <div><label style="font-size:12px;color:#718096;">基线值</label><input type="number" id="indicatorBaselineThreshold" class="form-select-sm" style="width:100%;" placeholder="可选"></div>
+                        </div>
+                    </div>
+                    <div class="form-group"><label>数据来源</label><input type="text" id="indicatorSource" class="form-select-sm" style="width:100%;"></div>
+                    <div class="form-group"><label>排序</label><input type="number" id="indicatorSort" class="form-select-sm" style="width:100%;" value="0"></div>
+                    <div class="form-group"><label>状态</label>
+                        <select id="indicatorStatus" class="form-select-sm"><option value="启用">启用</option><option value="停用">停用</option></select>
+                    </div>
+                    <div class="btn-group" th:if="${session.currentUser.role == '管理员'}">
+                        <button type="button" class="btn-primary-sm" onclick="saveIndicator()">保存</button>
+                        <button type="button" class="btn-outline-sm" onclick="resetIndicatorForm()">新增</button>
+                        <button type="button" class="btn-outline-sm" id="deleteIndicatorBtn" style="display:none;" onclick="deleteIndicator()">删除</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script th:src="@{/js/config-forms.js}"></script>
+    <script>
+        document.querySelectorAll('#configTabs .tab-item').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('#configTabs .tab-item').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+            });
+        });
+
+        document.querySelectorAll('.edit-symptom-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.getElementById('symptomFormTitle').textContent = '编辑症状术语';
+                document.getElementById('symptomTermId').value = btn.dataset.id;
+                document.getElementById('termName').value = btn.dataset.name || '';
+                document.getElementById('termSynonyms').value = btn.dataset.synonyms || '';
+                document.getElementById('termCategory').value = btn.dataset.category || '';
+                document.getElementById('termStatus').value = btn.dataset.status || '启用';
+                document.getElementById('termDesc').value = btn.dataset.desc || '';
+                document.getElementById('deleteSymptomBtn').style.display = 'inline-flex';
+            });
+        });
+
+        function resetSymptomForm() {
+            document.getElementById('symptomFormTitle').textContent = '新增症状术语';
+            document.getElementById('symptomTermId').value = '';
+            document.getElementById('termName').value = '';
+            document.getElementById('termSynonyms').value = '';
+            document.getElementById('termCategory').value = '';
+            document.getElementById('termStatus').value = '启用';
+            document.getElementById('termDesc').value = '';
+            document.getElementById('deleteSymptomBtn').style.display = 'none';
+        }
+
+        function saveSymptom() {
+            const id = document.getElementById('symptomTermId').value;
+            const data = {
+                id: id ? parseInt(id) : null,
+                termName: document.getElementById('termName').value,
+                synonyms: document.getElementById('termSynonyms').value,
+                category: document.getElementById('termCategory').value,
+                status: document.getElementById('termStatus').value,
+                description: document.getElementById('termDesc').value
+            };
+            fetch('/config/symptom/save', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            }).then(r => r.json()).then(d => { if (d.success) location.reload(); else alert('保存失败'); });
+        }
+
+        function deleteSymptom() {
+            const id = document.getElementById('symptomTermId').value;
+            if (!id || !confirm('确认删除该症状术语？')) return;
+            const formData = new FormData();
+            formData.append('id', id);
+            fetch('/config/symptom/delete', { method: 'POST', body: formData })
+                .then(r => r.json()).then(d => { if (d.success) location.reload(); });
+        }
+
+        function initConfigForms() {
+            var syndromeRules = document.getElementById('symptomRulesRaw');
+            if (syndromeRules && syndromeRules.value) {
+                var sr = parseSyndromeRules(syndromeRules.value);
+                document.getElementById('ruleLogic').value = sr.logic;
+                document.getElementById('requiredSymptoms').value = sr.requiredSymptoms;
+                document.getElementById('anySymptoms').value = sr.anySymptoms;
+                document.getElementById('anySigns').value = sr.anySigns;
+                document.getElementById('anyLab').value = sr.anyLab;
+                document.getElementById('excludeSymptoms').value = sr.exclude;
+            }
+            var riskRules = document.getElementById('riskRulesRaw');
+            if (riskRules && riskRules.value) {
+                var rr = parseRiskRules(riskRules.value);
+                document.getElementById('highRisk').value = rr.highRisk;
+                document.getElementById('mediumRisk').value = rr.mediumRisk;
+            }
+            var monitorRaw = document.getElementById('monitorModelRaw');
+            if (monitorRaw && monitorRaw.value) {
+                var mm = parseMonitorModel(monitorRaw.value);
+                document.getElementById('monitorModels').value = mm.models;
+                document.getElementById('monitorIndicators').value = mm.indicators;
+            }
+            var levelRaw = document.getElementById('modelLevelRaw');
+            if (levelRaw) fillLevelThresholds('model', levelRaw.value);
+            var configRaw = document.getElementById('modelConfigRaw');
+            if (configRaw) renderModelConfigFields('modelConfigFields', configRaw.value);
+        }
+        initConfigForms();
+
+        function saveSyndrome() {
+            var syndromeForm = document.getElementById('syndromeForm');
+            const data = {
+                id: parseInt(document.getElementById('syndromeId').value),
+                definition: document.getElementById('definition').value,
+                symptomRulesJson: buildSyndromeRules({
+                    logic: document.getElementById('ruleLogic'),
+                    requiredSymptoms: document.getElementById('requiredSymptoms'),
+                    anySymptoms: document.getElementById('anySymptoms'),
+                    anySigns: document.getElementById('anySigns'),
+                    anyLab: document.getElementById('anyLab'),
+                    exclude: document.getElementById('excludeSymptoms')
+                }),
+                riskRulesJson: buildRiskRules({
+                    highRisk: document.getElementById('highRisk'),
+                    mediumRisk: document.getElementById('mediumRisk')
+                }),
+                monitorModelJson: buildMonitorModel({
+                    monitorModels: document.getElementById('monitorModels'),
+                    monitorIndicators: document.getElementById('monitorIndicators')
+                }),
+                status: document.getElementById('syndromeStatus').value
+            };
+            fetch('/config/syndrome/update', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            }).then(r => r.json()).then(d => { alert(d.success ? '保存成功' : '保存失败'); });
+        }
+
+        function saveModel() {
+            const data = {
+                id: parseInt(document.getElementById('modelId').value),
+                regionScope: document.getElementById('modelRegion').value,
+                warningType: document.getElementById('modelWarningType').value,
+                levelThresholdJson: buildLevelThresholds('model'),
+                description: document.getElementById('modelDesc').value,
+                configJson: buildModelConfig('modelConfigFields'),
+                enabled: parseInt(document.getElementById('modelEnabled').value)
+            };
+            fetch('/config/model/update', {
+                method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data)
+            }).then(r => r.json()).then(d => { alert(d.success ? '模型配置已保存' : '保存失败'); });
+        }
+
+        document.querySelectorAll('.edit-indicator-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.getElementById('indicatorFormTitle').textContent = '编辑指标：' + btn.dataset.name;
+                document.getElementById('indicatorId').value = btn.dataset.id;
+                document.getElementById('indicatorCode').value = btn.dataset.code || '';
+                document.getElementById('indicatorName').value = btn.dataset.name || '';
+                document.getElementById('indicatorCategory').value = btn.dataset.category || '规模指标';
+                document.getElementById('indicatorSyndrome').value = btn.dataset.syndrome || '';
+                document.getElementById('indicatorDesc').value = btn.dataset.desc || '';
+                document.getElementById('indicatorFormula').value = btn.dataset.formula || '';
+                document.getElementById('indicatorUnit').value = btn.dataset.unit || '';
+                fillIndicatorThreshold({
+                    warningThreshold: document.getElementById('indicatorWarningThreshold'),
+                    alertThreshold: document.getElementById('indicatorAlertThreshold'),
+                    baselineThreshold: document.getElementById('indicatorBaselineThreshold')
+                }, btn.dataset.threshold || '');
+                document.getElementById('indicatorSource').value = btn.dataset.source || '';
+                document.getElementById('indicatorStatus').value = btn.dataset.status || '启用';
+                document.getElementById('indicatorSort').value = btn.dataset.sort || 0;
+                document.getElementById('deleteIndicatorBtn').style.display = 'inline-flex';
+            });
+        });
+
+        function resetIndicatorForm() {
+            document.getElementById('indicatorFormTitle').textContent = '新增指标';
+            document.getElementById('indicatorId').value = '';
+            ['indicatorCode','indicatorName','indicatorSyndrome','indicatorDesc','indicatorFormula','indicatorUnit','indicatorSource'].forEach(id => {
+                document.getElementById(id).value = '';
+            });
+            document.getElementById('indicatorWarningThreshold').value = '';
+            document.getElementById('indicatorAlertThreshold').value = '';
+            document.getElementById('indicatorBaselineThreshold').value = '';
+            document.getElementById('indicatorCategory').value = '规模指标';
+            document.getElementById('indicatorStatus').value = '启用';
+            document.getElementById('indicatorSort').value = 0;
+            document.getElementById('deleteIndicatorBtn').style.display = 'none';
+        }
+
+        function saveIndicator() {
+            const id = document.getElementById('indicatorId').value;
+            const data = {
+                id: id ? parseInt(id) : null,
+                indicatorCode: document.getElementById('indicatorCode').value,
+                indicatorName: document.getElementById('indicatorName').value,
+                category: document.getElementById('indicatorCategory').value,
+                syndromeType: document.getElementById('indicatorSyndrome').value || null,
+                description: document.getElementById('indicatorDesc').value,
+                formula: document.getElementById('indicatorFormula').value,
+                unit: document.getElementById('indicatorUnit').value,
+                thresholdJson: buildIndicatorThreshold({
+                    warningThreshold: document.getElementById('indicatorWarningThreshold'),
+                    alertThreshold: document.getElementById('indicatorAlertThreshold'),
+                    baselineThreshold: document.getElementById('indicatorBaselineThreshold')
+                }),
+                dataSource: document.getElementById('indicatorSource').value,
+                status: document.getElementById('indicatorStatus').value,
+                sortOrder: parseInt(document.getElementById('indicatorSort').value) || 0
+            };
+            fetch('/config/indicator/save', {
+                method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data)
+            }).then(r => r.json()).then(d => { if (d.success) location.reload(); else alert('保存失败'); });
+        }
+
+        function deleteIndicator() {
+            const id = document.getElementById('indicatorId').value;
+            if (!id || !confirm('确认删除该指标？')) return;
+            const formData = new FormData();
+            formData.append('id', id);
+            fetch('/config/indicator/delete', { method: 'POST', body: formData })
+                .then(r => r.json()).then(d => { if (d.success) location.reload(); });
+        }
+    </script>
+</div>
+</body>
+</html>

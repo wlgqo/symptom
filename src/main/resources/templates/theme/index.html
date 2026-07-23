@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout('症候群主题库', ~{::content})}">
+<body>
+<div th:fragment="content">
+    <div class="theme-layout">
+        <div class="theme-sidebar">
+            <div class="col-header">症候群主题</div>
+            <a th:each="t : ${themes}" th:href="@{/theme(id=${t.id})}"
+               th:class="${selected != null and selected.id == t.id ? 'theme-item active' : 'theme-item'}">
+                <div class="theme-code" th:text="${t.syndromeCode}">FRI</div>
+                <div class="theme-name" th:text="${t.syndromeName}">名称</div>
+                <div class="theme-status" th:text="${t.status}">启用</div>
+            </a>
+        </div>
+
+        <div class="theme-main" th:if="${selected != null}">
+            <div class="card-panel">
+                <h5 th:text="${selected.syndromeName}">主题名称</h5>
+                <p class="panel-desc" th:text="${selected.definition}"></p>
+                <div class="detail-grid">
+                    <div class="detail-item"><label>编码</label><span th:text="${selected.syndromeCode}"></span></div>
+                    <div class="detail-item"><label>状态</label><span th:text="${selected.status}"></span></div>
+                    <div class="detail-item"><label>纳入病例</label><span th:text="${caseCount} + ' 例'"></span></div>
+                </div>
+            </div>
+            <div class="card-panel">
+                <h5>识别规则（条件树）</h5>
+                <div class="condition-tree-display">
+                    <div class="tree-group"><span class="tree-logic">识别</span> 症状与体征条件</div>
+                    <pre class="rule-preview" th:text="${T(com.symptom.util.ConfigDisplayHelper).formatSyndromeRules(selected.symptomRulesJson)}"></pre>
+                    <div class="tree-group"><span class="tree-logic">风险</span> 分级因素</div>
+                    <pre class="rule-preview" th:text="${T(com.symptom.util.ConfigDisplayHelper).formatRiskRules(selected.riskRulesJson)}"></pre>
+                </div>
+                <div class="action-btns">
+                    <a th:href="@{/search(syndrome=${selected.syndromeName})}" class="btn-primary-sm">进入条件树分析</a>
+                    <a th:href="@{/respiratory}" th:if="${selected.syndromeCode == 'FRI'}" class="btn-outline-sm">进入专题分析</a>
+                    <a th:href="@{/hemorrhage}" th:if="${selected.syndromeCode == 'FBH'}" class="btn-outline-sm">进入专题分析</a>
+                    <a th:href="@{/diarrhea}" th:if="${selected.syndromeCode == 'FBD'}" class="btn-outline-sm">进入专题分析</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="theme-preview">
+            <div class="col-header">实时预览</div>
+            <div class="preview-stats">
+                <div class="preview-stat"><div class="label">符合条件</div><div class="value" id="previewCount" th:text="${caseCount}">0</div></div>
+                <div class="preview-stat danger"><div class="label">高风险</div><div class="value" id="previewHigh">-</div></div>
+                <div class="preview-stat warning"><div class="label">重症</div><div class="value" id="previewSevere">-</div></div>
+                <div class="preview-stat"><div class="label">死亡</div><div class="value" id="previewDeath">-</div></div>
+            </div>
+            <div class="col-header" style="margin-top:16px;">已保存查询</div>
+            <div th:each="q : ${savedQueries}" class="saved-query-item">
+                <span th:text="${q.queryName}">查询名</span>
+                <small th:text="${q.createdBy}"></small>
+            </div>
+            <div th:if="${savedQueries == null or savedQueries.isEmpty()}" class="empty-hint">暂无保存的查询</div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

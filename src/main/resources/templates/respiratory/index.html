@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout('发热呼吸道症候群监测预警', ~{::content})}">
+<body>
+<div th:fragment="content">
+    <div class="warning-flow">
+        <span class="step">病例数据采集</span><span class="arrow">→</span>
+        <span class="step">症候群识别</span><span class="arrow">→</span>
+        <span class="step">指标计算</span><span class="arrow">→</span>
+        <span class="step">预警模型分析</span><span class="arrow">→</span>
+        <span class="step">生成预警信号</span><span class="arrow">→</span>
+        <span class="step">通知干系人</span><span class="arrow">→</span>
+        <span class="step">查看处置结果</span>
+    </div>
+
+    <div class="quick-links">
+        <a href="/case/list?syndromeType=发热呼吸道症候群" class="quick-link">查看全部病例</a>
+        <a href="/search" class="quick-link">主题库检索</a>
+        <a th:if="${syndromeConfig != null}" href="/config" class="quick-link">症候群配置</a>
+    </div>
+
+    <div class="card-panel" th:if="${syndromeConfig != null}" style="margin-bottom:16px;">
+        <h5>症候群识别规则 <span class="panel-action"><span class="badge-level badge-blue" th:text="${syndromeConfig.syndromeCode}"></span></span></h5>
+        <p class="panel-desc" th:text="${syndromeConfig.definition}"></p>
+    </div>
+
+    <div class="tab-nav" id="mainTabs">
+        <div class="tab-item active" data-tab="distribution">三间分布分析</div>
+        <div class="tab-item" data-tab="clinical">临床特征分析</div>
+        <div class="tab-item" data-tab="warning">预警模型管理</div>
+        <div class="tab-item" data-tab="disposal">预警处置</div>
+    </div>
+
+    <!-- 三间分布 -->
+    <div class="tab-content active" id="tab-distribution">
+        <div class="card-panel">
+            <h5>时间分布分析</h5>
+            <div style="margin-bottom:12px;">
+                <button class="btn-outline-custom time-btn active" data-group="day">按日</button>
+                <button class="btn-outline-custom time-btn" data-group="week">按周</button>
+                <button class="btn-outline-custom time-btn" data-group="month">按月</button>
+            </div>
+            <div id="timeChart" class="chart-container"></div>
+        </div>
+        <div class="grid-2">
+            <div class="card-panel">
+                <h5>地区分布分析</h5>
+                <div id="districtChart" class="chart-container"></div>
+            </div>
+            <div class="card-panel">
+                <h5>人群分布 - 年龄</h5>
+                <div id="ageChart" class="chart-container"></div>
+            </div>
+        </div>
+        <div class="grid-2">
+            <div class="card-panel">
+                <h5>人群分布 - 性别</h5>
+                <div id="genderChart" class="chart-container"></div>
+            </div>
+            <div class="card-panel">
+                <h5>人群分布 - 职业</h5>
+                <div id="occupationChart" class="chart-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 临床特征 -->
+    <div class="tab-content" id="tab-clinical">
+        <div class="stat-cards">
+            <div class="stat-card danger">
+                <div class="label">发热比例</div>
+                <div class="value" th:text="${clinicalData.feverRate + '%'}">0%</div>
+            </div>
+            <div class="stat-card warning">
+                <div class="label">平均体温</div>
+                <div class="value" th:text="${clinicalData.avgTemp + '℃'}">0℃</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">病例总数</div>
+                <div class="value" th:text="${clinicalData.totalCases}">0</div>
+            </div>
+        </div>
+        <div class="card-panel">
+            <h5>诊断结果分布</h5>
+            <div id="diagnosisChart" class="chart-container"></div>
+        </div>
+        <div class="card-panel">
+            <h5>病例临床信息列表 <span class="panel-action"><a href="/case/list?syndromeType=发热呼吸道症候群">全部病例 →</a></span></h5>
+            <table class="data-table">
+                <thead><tr><th>姓名</th><th>年龄</th><th>体温</th><th>诊断</th><th>症状</th><th>转归</th><th>操作</th></tr></thead>
+                <tbody>
+                    <tr th:each="c : ${cases}">
+                        <td th:text="${c.patientName}"></td>
+                        <td th:text="${c.age}"></td>
+                        <td th:text="${c.feverTemp != null ? c.feverTemp + '℃' : '-'}"></td>
+                        <td th:text="${c.diagnosis}"></td>
+                        <td th:text="${c.symptoms != null ? #strings.listJoin(c.symptoms, '、') : ''}"></td>
+                        <td th:text="${c.outcome}"></td>
+                        <td><a th:href="@{/case/detail/{id}(id=${c.id})}" class="table-link">原始病历</a></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 预警模型 -->
+    <div class="tab-content" id="tab-warning">
+        <div class="card-panel">
+            <h5>预置预警模型</h5>
+            <table class="data-table">
+                <thead><tr><th>模型名称</th><th>模型类型</th><th>说明</th><th>状态</th><th>操作</th></tr></thead>
+                <tbody>
+                    <tr th:each="m : ${models}">
+                        <td th:text="${m.modelName}"></td>
+                        <td th:text="${m.modelType}"></td>
+                        <td th:text="${m.description}"></td>
+                        <td th:text="${m.enabled == 1 ? '启用' : '禁用'}"></td>
+                        <td><button class="btn-primary-custom btn-sm run-model-btn" th:data-id="${m.id}">运行分析</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div id="warningResult" class="card-panel" style="display:none;">
+            <h5>预警分析结果</h5>
+            <div id="warningResultContent"></div>
+        </div>
+    </div>
+
+    <!-- 预警处置 -->
+    <div class="tab-content" id="tab-disposal">
+        <div class="card-panel">
+            <h5>预警信号列表</h5>
+            <table class="data-table">
+                <thead><tr><th>时间</th><th>模型</th><th>级别</th><th>内容</th><th>状态</th><th>操作</th></tr></thead>
+                <tbody>
+                    <tr th:each="w : ${warnings}">
+                        <td th:text="${#dates.format(w.warningTime, 'yyyy-MM-dd HH:mm')}"></td>
+                        <td th:text="${w.modelName}"></td>
+                        <td><span th:class="${w.warningLevel == '红色' ? 'badge-level badge-red' : 'badge-level badge-orange'}" th:text="${w.warningLevel}"></span></td>
+                        <td th:text="${w.warningContent}"></td>
+                        <td>
+                            <span th:class="${w.status == '待研判' or w.status == '已确认' or w.status == '处置中' or w.status == '待处置' ? 'badge-level badge-orange' : 'badge-level badge-low'}" th:text="${w.status}"></span>
+                        </td>
+                        <td>
+                            <button th:if="${w.status == '待研判' or w.status == '待处置'}" class="btn-primary-custom btn-sm handle-btn"
+                                    th:data-id="${w.id}">处置</button>
+                            <span th:if="${w.status != '待研判' and w.status != '待处置'}" th:text="${w.handleResult}" style="font-size:12px;color:#718096;"></span>
+                            <a href="/case/list?syndromeType=发热呼吸道症候群" class="table-link" style="margin-left:8px;">关联病例</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        var timeDataDay = /*[[${timeDataDay}]]*/ {};
+        var timeDataWeek = /*[[${timeDataWeek}]]*/ {};
+        var timeDataMonth = /*[[${timeDataMonth}]]*/ {};
+        var districtData = /*[[${districtData}]]*/ [];
+        var populationData = /*[[${populationData}]]*/ {};
+        var clinicalData = /*[[${clinicalData}]]*/ {};
+
+        document.querySelectorAll('#mainTabs .tab-item').forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('#mainTabs .tab-item').forEach(function(t) { t.classList.remove('active'); });
+                document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
+                tab.classList.add('active');
+                document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+                if (tab.dataset.tab === 'distribution') setTimeout(resizeCharts, 100);
+            });
+        });
+
+        var timeChart = echarts.init(document.getElementById('timeChart'));
+        function renderTimeChart(data) {
+            timeChart.setOption({
+                tooltip: { trigger: 'axis' },
+                xAxis: { type: 'category', data: data.labels || [] },
+                yAxis: { type: 'value', name: '病例数' },
+                series: [{ type: 'bar', itemStyle: { color: '#1677ff' }, data: data.values || [] }]
+            });
+        }
+        renderTimeChart(timeDataDay);
+
+        document.querySelectorAll('.time-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.time-btn').forEach(function(b) { b.classList.remove('active'); });
+                btn.classList.add('active');
+                var map = { day: timeDataDay, week: timeDataWeek, month: timeDataMonth };
+                renderTimeChart(map[btn.dataset.group]);
+            });
+        });
+
+        var districtChart = echarts.init(document.getElementById('districtChart'));
+        districtChart.setOption({
+            tooltip: { trigger: 'axis' },
+            xAxis: { type: 'category', data: (districtData||[]).map(function(d){return d.name;}) },
+            yAxis: { type: 'value' },
+            series: [{ type: 'bar', itemStyle: { color: '#52c41a' }, data: (districtData||[]).map(function(d){return d.value;}) }]
+        });
+
+        function makePieChart(id, data) {
+            var chart = echarts.init(document.getElementById(id));
+            chart.setOption({
+                tooltip: { trigger: 'item' },
+                series: [{ type: 'pie', radius: '65%', data: (data||[]).map(function(d){return {name:d.name,value:d.value};}) }]
+            });
+            return chart;
+        }
+        var ageChart = makePieChart('ageChart', populationData.age);
+        var genderChart = makePieChart('genderChart', populationData.gender);
+        var occupationChart = echarts.init(document.getElementById('occupationChart'));
+        occupationChart.setOption({
+            tooltip: { trigger: 'axis' }, xAxis: { type: 'category', data: (populationData.occupation||[]).map(function(d){return d.name;}) },
+            yAxis: { type: 'value' }, series: [{ type: 'bar', data: (populationData.occupation||[]).map(function(d){return d.value;}) }]
+        });
+
+        var diagData = clinicalData.diagnoses || {};
+        var diagnosisChart = echarts.init(document.getElementById('diagnosisChart'));
+        diagnosisChart.setOption({
+            tooltip: { trigger: 'item' },
+            series: [{ type: 'pie', radius: ['30%','60%'],
+                data: Object.keys(diagData).map(function(k){ return {name:k, value:diagData[k]}; })
+            }]
+        });
+
+        function resizeCharts() {
+            [timeChart, districtChart, ageChart, genderChart, occupationChart, diagnosisChart].forEach(function(c){c.resize();});
+        }
+        window.addEventListener('resize', resizeCharts);
+
+        document.querySelectorAll('.run-model-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var modelId = btn.dataset.id;
+                fetch('/respiratory/warning/run?modelId=' + modelId, { method: 'POST' })
+                    .then(function(r){return r.json();})
+                    .then(function(data) {
+                        document.getElementById('warningResult').style.display = 'block';
+                        var html = '<p>检测到 <strong>' + data.count + '</strong> 条新预警信号</p>';
+                        if (data.records && data.records.length > 0) {
+                            data.records.forEach(function(r) {
+                                html += '<div style="padding:8px;margin:8px 0;background:#fef3e2;border-radius:6px;">' + r.warningContent + '</div>';
+                            });
+                        } else {
+                            html += '<p style="color:#27ae60;">当前未检测到异常波动</p>';
+                        }
+                        document.getElementById('warningResultContent').innerHTML = html;
+                    });
+            });
+        });
+
+        document.querySelectorAll('.handle-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var result = prompt('请输入处置结果：', '已核实并采取防控措施');
+                if (result) {
+                    var formData = new FormData();
+                    formData.append('id', btn.dataset.id);
+                    formData.append('result', result);
+                    fetch('/respiratory/warning/handle', { method: 'POST', body: formData })
+                        .then(function(){ location.reload(); });
+                }
+            });
+        });
+    </script>
+</div>
+</body>
+</html>

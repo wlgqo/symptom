@@ -1,0 +1,21 @@
+<nav th:fragment="pagination(pageResult, basePath)" class="pagination-bar" th:if="${pageResult != null and pageResult.total > 0}">
+    <span class="pagination-info">
+        共 <strong th:text="${pageResult.total}">0</strong> 条，
+        第 <span th:text="${pageResult.page}">1</span> / <span th:text="${pageResult.totalPages}">1</span> 页
+    </span>
+    <div class="pagination-links">
+        <a th:if="${pageResult.page > 1}"
+           th:href="@{${basePath}(page=${pageResult.page - 1}, pageSize=${pageResult.pageSize})}"
+           class="page-link">上一页</a>
+        <span th:each="p : ${#numbers.sequence(1, pageResult.totalPages)}"
+              th:if="${pageResult.totalPages <= 7 or (p >= pageResult.page - 2 and p <= pageResult.page + 2) or p == 1 or p == pageResult.totalPages}">
+            <a th:if="${p != pageResult.page}"
+               th:href="@{${basePath}(page=${p}, pageSize=${pageResult.pageSize})}"
+               class="page-link" th:text="${p}">1</a>
+            <span th:if="${p == pageResult.page}" class="page-link active" th:text="${p}">1</span>
+        </span>
+        <a th:if="${pageResult.page < pageResult.totalPages}"
+           th:href="@{${basePath}(page=${pageResult.page + 1}, pageSize=${pageResult.pageSize})}"
+           class="page-link">下一页</a>
+    </div>
+</nav>

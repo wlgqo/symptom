@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(${pageTitle}, ~{::content})}">
+<body>
+<div th:fragment="content">
+    <div class="warning-flow">
+        <span class="step">病例数据采集</span><span class="arrow">→</span>
+        <span class="step">症候群识别</span><span class="arrow">→</span>
+        <span class="step">指标计算</span><span class="arrow">→</span>
+        <span class="step">预警模型分析</span><span class="arrow">→</span>
+        <span class="step">生成预警信号</span><span class="arrow">→</span>
+        <span class="step">通知干系人</span><span class="arrow">→</span>
+        <span class="step">查看处置结果</span>
+    </div>
+
+    <div class="scope-hint" th:if="${scopeDistrict != null or scopeHospital != null}">
+        当前数据范围：
+        <strong th:if="${scopeDistrict != null}" th:text="${scopeDistrict}">辖区</strong>
+        <span th:if="${scopeDistrict != null and scopeHospital != null}"> · </span>
+        <strong th:if="${scopeHospital != null}" th:text="${scopeHospital}">机构</strong>
+    </div>
+
+    <div class="filter-bar">
+        <form method="get" th:action="@{'/' + ${syndromeCode}}" class="filter-form">
+            <input type="hidden" name="tab" th:value="${activeTab}">
+            <th:block th:replace="~{fragments/region-hospital-filter :: regionHospital(${filterDistrict}, ${filterHospital}, ${districtOptions}, ${hospitalOptions}, ${scopeDistrict}, ${scopeHospital})}"></th:block>
+            <th:block th:replace="~{fragments/date-range :: dateRange(${filterStartDate}, ${filterEndDate})}"></th:block>
+            <select name="days" class="form-select-sm" th:if="${filterStartDate == null or filterStartDate == ''}">
+                <option value="30" th:selected="${filterDays == 30}">近30天</option>
+                <option value="90" th:selected="${filterDays == 90}">近90天</option>
+                <option value="180" th:selected="${filterDays == 180}">近半年</option>
+                <option value="365" th:selected="${filterDays == 365 or filterDays == null}">近一年</option>
+            </select>
+            <button type="submit" class="btn-primary-sm">查询</button>
+            <a th:href="@{'/' + ${syndromeCode}}" class="btn-outline-sm">重置</a>
+        </form>
+    </div>
+
+    <div class="quick-links">
+        <a th:href="@{/case/list(syndromeType=${syndromeType})}" class="quick-link">查看全部病例</a>
+        <a href="/search" class="quick-link">条件树分析</a>
+        <a th:if="${syndromeConfig != null}" href="/config" class="quick-link">症候群配置</a>
+    </div>
+
+    <div class="card-panel" th:if="${syndromeConfig != null}" style="margin-bottom:16px;">
+        <h5>症候群识别规则 <span class="panel-action"><span class="badge-level badge-blue" th:text="${syndromeConfig.syndromeCode}"></span></span></h5>
+        <p class="panel-desc" th:text="${syndromeConfig.definition}"></p>
+    </div>
+
+    <div class="tab-nav" id="mainTabs">
+        <div class="tab-item" th:classappend="${activeTab == 'distribution' ? ' active' : ''}" data-tab="distribution">三间分布分析</div>
+        <div class="tab-item" th:classappend="${activeTab == 'clinical' ? ' active' : ''}" data-tab="clinical">临床特征分析</div>
+        <div class="tab-item" th:classappend="${activeTab == 'severe' ? ' active' : ''}" data-tab="severe">重症死亡统计</div>
+        <div class="tab-item" th:classappend="${activeTab == 'risk' ? ' active' : ''}" data-tab="risk">风险分布</div>
+        <div class="tab-item" th:classappend="${activeTab == 'warning' ? ' active' : ''}" data-tab="warning">预警模型管理</div>
+        <div class="tab-item" th:classappend="${activeTab == 'disposal' ? ' active' : ''}" data-tab="disposal">预警处置</div>
+    </div>
+
+    <!-- 三间分布 -->
+    <div class="tab-content" th:classappend="${activeTab == 'distribution' ? ' active' : ''}" id="tab-distribution">
+        <div class="map-breadcrumb">
+            <a th:href="@{'/' + ${syndromeCode}(startDate=${filterStartDate}, endDate=${filterEndDate}, days=${filterDays})}"
+               th:text="${mapView.breadcrumbRoot}">全省</a>
+            <span th:if="${mapView.level == 'city' and mapView.city != null}">
+                <span class="sep">/</span>
+                <a th:if="${filterDistrict != null and filterDistrict != '' and filterDistrict != mapView.city}"
+                   th:href="@{'/' + ${syndromeCode}(district=${mapView.city}, startDate=${filterStartDate}, endDate=${filterEndDate}, days=${filterDays})}"
+                   th:text="${mapView.city}">成都市</a>
+                <span th:if="${filterDistrict == null or filterDistrict == '' or filterDistrict == mapView.city}"
+                      class="current" th:text="${mapView.city}">成都市</span>
+            </span>
+            <span th:if="${filterDistrict != null and filterDistrict != '' and filterDistrict != mapView.city and mapView.level == 'city'}">
+                <span class="sep">/</span>
+                <span class="current" th:text="${filterDistrict}">区县</span>
+            </span>
+            <span th:if="${filterDistrict != null and filterDistrict != '' and mapView.level == 'province'}">
+                <span class="sep">/</span>
+                <span class="current" th:text="${filterDistrict}">地区</span>
+            </span>
+            <a th:if="${mapView.level == 'city' or (filterDistrict != null and filterDistrict != '')}"
+               th:href="@{'/' + ${syndromeCode}(startDate=${filterStartDate}, endDate=${filterEndDate}, days=${filterDays})}"
+               class="btn-outline-sm" style="margin-left:12px;font-size:12px;">返回上级</a>
+        </div>
+        <div class="distribution-layout">
+            <div class="card-panel dist-time-panel">
+                <h5>时间分布分析</h5>
+                <div class="dist-time-toolbar">
+                    <button type="button" class="btn-outline-custom time-btn active" data-group="day">按日</button>
+                    <button type="button" class="btn-outline-custom time-btn" data-group="week">按周</button>
+                    <button type="button" class="btn-outline-custom time-btn" data-group="month">按月</button>
+                </div>
+                <div id="timeChart" class="chart-container chart-compact"></div>
+            </div>
+            <div class="card-panel dist-side-panel">
+                <h5>人群分布 - 年龄</h5>
+                <div id="ageChart" class="chart-container chart-compact"></div>
+            </div>
+            <div class="card-panel dist-map-panel">
+                <h5>空间分布地图 <span class="panel-action" th:text="${mapView.title + ' · 点击下钻'}">地图</span></h5>
+                <div id="mapChart" class="chart-container chart-map"></div>
+            </div>
+            <div class="card-panel dist-side-panel">
+                <h5>人群分布 - 性别</h5>
+                <div id="genderChart" class="chart-container chart-compact"></div>
+            </div>
+            <div class="card-panel dist-side-panel">
+                <h5>地区分布分析</h5>
+                <div id="districtChart" class="chart-container chart-compact"></div>
+            </div>
+            <div class="card-panel dist-side-panel dist-occupation-panel">
+                <h5>人群分布 - 职业</h5>
+                <div id="occupationChart" class="chart-container chart-compact"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 临床特征 -->
+    <div class="tab-content" th:classappend="${activeTab == 'clinical' ? ' active' : ''}" id="tab-clinical">
+        <div class="stat-cards">
+            <div class="stat-card danger">
+                <div class="label">发热比例</div>
+                <div class="value" th:text="${clinicalData.feverRate + '%'}">0%</div>
+            </div>
+            <div class="stat-card warning">
+                <div class="label">平均体温</div>
+                <div class="value" th:text="${clinicalData.avgTemp + '℃'}">0℃</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">病例总数</div>
+                <div class="value" th:text="${clinicalData.totalCases}">0</div>
+            </div>
+        </div>
+        <div class="card-panel" th:if="${highRiskCases != null and !highRiskCases.isEmpty()}">
+            <h5>高风险病例快速筛查</h5>
+            <div class="table-scroll-panel">
+                <table class="data-table compact">
+                    <thead><tr><th>姓名</th><th>年龄</th><th>症状</th><th>诊断</th><th>风险等级</th><th>风险依据</th><th>操作</th></tr></thead>
+                    <tbody>
+                        <tr th:each="c : ${highRiskCases}">
+                            <td th:text="${c.patientName}"></td>
+                            <td th:text="${c.age}"></td>
+                            <td th:text="${c.symptoms != null ? #strings.listJoin(c.symptoms, '、') : ''}"></td>
+                            <td th:text="${c.diagnosis}"></td>
+                            <td><span class="badge-level badge-high" th:text="${c.riskLevel}"></span></td>
+                            <td th:text="${c.riskReason}"></td>
+                            <td><a th:href="@{/case/detail/{id}(id=${c.id})}" class="table-link">病例详情</a></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="grid-2 chart-row-compact">
+            <div class="card-panel">
+                <h5>诊断结果分布</h5>
+                <div id="diagnosisChart" class="chart-container chart-pie-compact"></div>
+            </div>
+            <div class="card-panel">
+                <h5>风险等级概览</h5>
+                <div id="clinicalRiskChart" class="chart-container chart-pie-compact"></div>
+            </div>
+        </div>
+        <div class="card-panel flex-grow">
+            <h5>病例临床信息列表 <span class="panel-action"><a th:href="@{/case/list(syndromeType=${syndromeType})}">全部病例 →</a></span></h5>
+            <div class="table-scroll-panel">
+                <table class="data-table">
+                    <thead><tr><th>姓名</th><th>年龄</th><th>体温</th><th>诊断</th><th>症状</th><th>转归</th><th>操作</th></tr></thead>
+                    <tbody>
+                        <tr th:each="c : ${cases}">
+                            <td th:text="${c.patientName}"></td>
+                            <td th:text="${c.age}"></td>
+                            <td th:text="${c.feverTemp != null ? c.feverTemp + '℃' : '-'}"></td>
+                            <td th:text="${c.diagnosis}"></td>
+                            <td th:text="${c.symptoms != null ? #strings.listJoin(c.symptoms, '、') : ''}"></td>
+                            <td th:text="${c.outcome}"></td>
+                            <td><a th:href="@{/case/detail/{id}(id=${c.id})}" class="table-link">原始病历</a></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="pagination-bar" th:if="${casePage.total > 0}">
+                <span>共 <strong th:text="${casePage.total}">0</strong> 条</span>
+                <div class="pagination-links">
+                    <a th:if="${casePage.page > 1}" th:href="@{'/' + ${syndromeCode}(tab='clinical', casePage=${casePage.page - 1}, district=${filterDistrict}, startDate=${filterStartDate}, endDate=${filterEndDate}, days=${filterDays})}" class="page-link">上一页</a>
+                    <span class="page-link active" th:text="${casePage.page} + '/' + ${casePage.totalPages}">1/1</span>
+                    <a th:if="${casePage.page < casePage.totalPages}" th:href="@{'/' + ${syndromeCode}(tab='clinical', casePage=${casePage.page + 1}, district=${filterDistrict}, startDate=${filterStartDate}, endDate=${filterEndDate}, days=${filterDays})}" class="page-link">下一页</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 重症死亡 -->
+    <div class="tab-content" th:classappend="${activeTab == 'severe' ? ' active' : ''}" id="tab-severe">
+        <div class="stat-cards">
+            <div class="stat-card"><div class="label">病例总数</div><div class="value" th:text="${severeDeathData.total}">0</div></div>
+            <div class="stat-card warning"><div class="label">重症病例</div><div class="value" th:text="${severeDeathData.severe}">0</div></div>
+            <div class="stat-card danger"><div class="label">死亡病例</div><div class="value" th:text="${severeDeathData.death}">0</div></div>
+            <div class="stat-card"><div class="label">重症率</div><div class="value" th:text="${severeDeathData.severeRate + '%'}">0%</div></div>
+            <div class="stat-card"><div class="label">死亡率</div><div class="value" th:text="${severeDeathData.deathRate + '%'}">0%</div></div>
+        </div>
+        <div class="grid-2">
+            <div class="card-panel"><h5>重症率趋势</h5><div id="severeTrendChart" class="chart-container"></div></div>
+            <div class="card-panel"><h5>死亡率趋势</h5><div id="deathTrendChart" class="chart-container"></div></div>
+        </div>
+        <div class="grid-2" th:if="${severeCases != null and !severeCases.isEmpty()}">
+            <div class="card-panel">
+                <h5>重症患者列表</h5>
+                <div class="table-scroll-panel">
+                    <table class="data-table compact">
+                        <thead><tr><th>姓名</th><th>性别</th><th>年龄</th><th>诊断</th><th>地区</th><th>操作</th></tr></thead>
+                        <tbody>
+                            <tr th:each="c : ${severeCases}">
+                                <td th:text="${c.patientName}"></td>
+                                <td th:text="${c.gender}"></td>
+                                <td th:text="${c.age}"></td>
+                                <td th:text="${c.diagnosis}"></td>
+                                <td th:text="${c.district}"></td>
+                                <td><a th:href="@{/case/detail/{id}(id=${c.id})}" class="table-link">病案详情</a></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card-panel">
+                <h5>死亡患者列表</h5>
+                <div class="table-scroll-panel">
+                    <table class="data-table compact">
+                        <thead><tr><th>姓名</th><th>性别</th><th>年龄</th><th>诊断</th><th>死亡日期</th><th>操作</th></tr></thead>
+                        <tbody>
+                            <tr th:each="c : ${deathCases}">
+                                <td th:text="${c.patientName}"></td>
+                                <td th:text="${c.gender}"></td>
+                                <td th:text="${c.age}"></td>
+                                <td th:text="${c.diagnosis}"></td>
+                                <td th:text="${c.deathDate != null ? #dates.format(c.deathDate, 'yyyy-MM-dd') : '-'}"></td>
+                                <td><a th:href="@{/case/detail/{id}(id=${c.id})}" class="table-link">病案详情</a></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 风险分布 -->
+    <div class="tab-content" th:classappend="${activeTab == 'risk' ? ' active' : ''}" id="tab-risk">
+        <div class="stat-cards">
+            <div class="stat-card"><div class="label">病例总数</div><div class="value" th:text="${riskData.totalCases}">0</div></div>
+        </div>
+        <div class="grid-2 chart-row-compact">
+            <div class="card-panel">
+                <h5>风险等级分布</h5>
+                <div id="riskChart" class="chart-container chart-pie-compact"></div>
+            </div>
+            <div class="card-panel">
+                <h5>风险等级明细</h5>
+                <table class="data-table compact" id="riskDetailTable">
+                    <thead><tr><th>等级</th><th>病例数</th><th>占比</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 预警模型 -->
+    <div class="tab-content" th:classappend="${activeTab == 'warning' ? ' active' : ''}" id="tab-warning">
+        <div class="card-panel">
+            <h5>历史发病趋势 <span class="panel-action">历史至今 · 预警核心指标</span></h5>
+            <div class="warning-trend-summary" th:if="${historicalTrend != null}">
+                <span>累计病例：<strong th:text="${historicalTrend.total}">0</strong></span>
+                <span>当前风险：
+                    <span class="badge-level"
+                          th:classappend="${historicalTrend.latestLevel == '高风险' ? ' badge-red' : (historicalTrend.latestLevel == '中风险' ? ' badge-orange' : (historicalTrend.latestLevel == '低风险' ? ' badge-green' : ' badge-blue'))}"
+                          th:text="${historicalTrend.latestLevel}">正常</span>
+                </span>
+                <span>环比变化：<strong th:text="${historicalTrend.latestRise + '%'}">0%</strong></span>
+            </div>
+            <div id="historicalTrendChart" class="chart-container"></div>
+        </div>
+
+        <div class="card-panel">
+            <h5>监测指标实时评估 <span class="panel-action">异常高亮</span></h5>
+            <div class="table-scroll-panel">
+                <table class="data-table compact" id="indicatorEvalTable">
+                    <thead><tr><th>指标</th><th>分类</th><th>当前值</th><th>状态</th></tr></thead>
+                    <tbody>
+                        <tr th:each="ind : ${indicatorEval}"
+                            th:style="${ind.abnormal ? 'background:' + ind.bgColor : ''}">
+                            <td th:text="${ind.name}" th:style="${ind.abnormal ? 'color:' + ind.color + ';font-weight:600' : ''}"></td>
+                            <td><span class="badge-level badge-blue" th:text="${ind.category}"></span></td>
+                            <td th:style="${ind.abnormal ? 'color:' + ind.color + ';font-weight:600' : ''}">
+                                <span th:text="${ind.value}"></span><span th:text="${ind.unit}" style="font-size:11px;color:#718096;margin-left:2px;"></span>
+                            </td>
+                            <td>
+                                <span class="badge-level"
+                                      th:classappend="${ind.status == '严重异常' ? ' badge-red' : (ind.status == '异常' ? ' badge-orange' : ' badge-green')}"
+                                      th:text="${ind.status}"></span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card-panel">
+            <h5>预置预警模型</h5>
+            <div class="table-scroll-panel">
+                <table class="data-table">
+                    <thead><tr><th>模型名称</th><th>预警地区</th><th>预警类型</th><th>等级阈值</th><th>状态</th><th>操作</th></tr></thead>
+                    <tbody>
+                        <tr th:each="m : ${models}">
+                            <td>
+                                <div th:text="${m.modelName}" style="font-weight:500;"></div>
+                                <div th:text="${m.modelType}" style="font-size:11px;color:#718096;"></div>
+                            </td>
+                            <td th:text="${m.regionScope != null ? m.regionScope : '—'}"></td>
+                            <td th:text="${m.warningType != null ? m.warningType : '—'}"></td>
+                            <td style="font-size:11px;max-width:280px;" th:text="${T(com.symptom.util.ConfigDisplayHelper).formatLevelThreshold(m.levelThresholdJson)}">—</td>
+                            <td th:text="${m.enabled == 1 ? '启用' : '禁用'}"></td>
+                            <td><button type="button" class="btn-primary-custom btn-sm run-model-btn" th:data-id="${m.id}">运行分析</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div id="warningResult" class="card-panel" style="display:none;">
+            <h5>预警分析结果</h5>
+            <div id="warningResultContent"></div>
+        </div>
+    </div>
+
+    <!-- 预警处置 -->
+    <div class="tab-content" th:classappend="${activeTab == 'disposal' ? ' active' : ''}" id="tab-disposal">
+        <div class="card-panel flex-grow">
+            <h5>预警信号列表</h5>
+            <div class="table-scroll-panel">
+                <table class="data-table">
+                    <thead><tr><th>时间</th><th>模型</th><th>级别</th><th>内容</th><th>状态</th><th>操作</th></tr></thead>
+                    <tbody>
+                        <tr th:each="w : ${warnings}">
+                            <td th:text="${#dates.format(w.warningTime, 'yyyy-MM-dd HH:mm')}"></td>
+                            <td th:text="${w.modelName}"></td>
+                            <td><span th:class="${w.warningLevel == '红色' ? 'badge-level badge-red' : 'badge-level badge-orange'}" th:text="${w.warningLevel}"></span></td>
+                            <td th:text="${w.warningContent}"></td>
+                            <td>
+                                <span th:class="${w.status == '待研判' or w.status == '已确认' or w.status == '处置中' or w.status == '待处置' ? 'badge-level badge-orange' : 'badge-level badge-low'}" th:text="${w.status}"></span>
+                            </td>
+                            <td>
+                                <button th:if="${w.status == '待研判' or w.status == '待处置'}" type="button" class="btn-primary-custom btn-sm handle-btn" th:data-id="${w.id}">处置</button>
+                                <span th:if="${w.status != '待研判' and w.status != '待处置'}" th:text="${w.handleResult}" style="font-size:12px;color:#718096;"></span>
+                                <a th:href="@{/warning/center(id=${w.id})}" class="table-link" style="margin-left:8px;">详情</a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="pagination-bar" th:if="${warningPage.total > 0}">
+                <span>共 <strong th:text="${warningPage.total}">0</strong> 条</span>
+                <div class="pagination-links">
+                    <a th:if="${warningPage.page > 1}" th:href="@{'/' + ${syndromeCode}(tab='disposal', warningPage=${warningPage.page - 1}, district=${filterDistrict}, startDate=${filterStartDate}, endDate=${filterEndDate}, days=${filterDays})}" class="page-link">上一页</a>
+                    <span class="page-link active" th:text="${warningPage.page} + '/' + ${warningPage.totalPages}">1/1</span>
+                    <a th:if="${warningPage.page < warningPage.totalPages}" th:href="@{'/' + ${syndromeCode}(tab='disposal', warningPage=${warningPage.page + 1}, district=${filterDistrict}, startDate=${filterStartDate}, endDate=${filterEndDate}, days=${filterDays})}" class="page-link">下一页</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        document.addEventListener('DOMContentLoaded', function() {
+        var syndromeCode = /*[[${syndromeCode}]]*/ 'respiratory';
+        var filterDistrict = /*[[${filterDistrict}]]*/ '';
+        var filterStartDate = /*[[${filterStartDate}]]*/ '';
+        var filterEndDate = /*[[${filterEndDate}]]*/ '';
+        var filterDays = /*[[${filterDays}]]*/ 90;
+        var timeDataDay = /*[[${timeDataDay}]]*/ {};
+        var timeDataWeek = /*[[${timeDataWeek}]]*/ {};
+        var timeDataMonth = /*[[${timeDataMonth}]]*/ {};
+        var districtData = /*[[${districtData}]]*/ [];
+        var populationData = /*[[${populationData}]]*/ {};
+        var clinicalData = /*[[${clinicalData}]]*/ {};
+        var severeDeathData = /*[[${severeDeathData}]]*/ {};
+        var riskData = /*[[${riskData}]]*/ {};
+        var historicalTrend = /*[[${historicalTrend}]]*/ {};
+        var mapLevel = /*[[${mapView.level}]]*/ 'city';
+        var mapGeoUrl = /*[[${mapView.geoUrl}]]*/ 'https://geo.datav.aliyun.com/areas_v3/bound/510100_full.json';
+        var mapRegisterKey = /*[[${mapView.mapKey}]]*/ 'chengdu';
+        var mapCity = /*[[${mapView.city}]]*/ '成都市';
+        var mapDistrictData = /*[[${mapDistrictData}]]*/ [];
+        var chengduDistricts = /*[[${chengduDistricts}]]*/ [];
+        var prefectureCities = /*[[${prefectureCities}]]*/ [];
+
+        document.querySelectorAll('#mainTabs .tab-item').forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                var params = new URLSearchParams(window.location.search);
+                params.set('tab', tab.dataset.tab);
+                window.location.search = params.toString();
+            });
+        });
+
+        var charts = [];
+        function trackChart(c) { if (c) charts.push(c); return c; }
+
+        var timeChart = trackChart(echarts.init(document.getElementById('timeChart')));
+        function renderTimeChart(data) {
+            timeChart.setOption({
+                tooltip: { trigger: 'axis' },
+                legend: { data: ['病例数', '同比', '环比'], top: 0, right: 8, textStyle: { fontSize: 11 } },
+                grid: { left: 42, right: 16, top: 32, bottom: 28 },
+                xAxis: { type: 'category', data: data.labels || [], axisLabel: { fontSize: 10, rotate: (data.labels || []).length > 20 ? 35 : 0 } },
+                yAxis: { type: 'value', name: '病例数', nameTextStyle: { fontSize: 11 } },
+                series: [
+                    { name: '病例数', type: 'bar', barMaxWidth: 18, itemStyle: { color: '#1677ff' }, data: data.values || [] },
+                    { name: '同比', type: 'line', smooth: true, symbol: 'none', lineStyle: { width: 2 }, itemStyle: { color: '#52c41a' }, data: data.yoy || [] },
+                    { name: '环比', type: 'line', smooth: true, symbol: 'none', lineStyle: { width: 2, type: 'dashed' }, itemStyle: { color: '#faad14' }, data: data.mom || [] }
+                ]
+            });
+        }
+        renderTimeChart(timeDataDay);
+
+        document.querySelectorAll('.time-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.time-btn').forEach(function(b) { b.classList.remove('active'); });
+                btn.classList.add('active');
+                var map = { day: timeDataDay, week: timeDataWeek, month: timeDataMonth };
+                renderTimeChart(map[btn.dataset.group]);
+            });
+        });
+
+        var districtChart = trackChart(echarts.init(document.getElementById('districtChart')));
+        districtChart.setOption({
+            tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+            grid: { left: 40, right: 8, top: 28, bottom: 48 },
+            xAxis: { type: 'category', data: (districtData||[]).map(function(d){return d.name;}), axisLabel: { rotate: 35, fontSize: 10 } },
+            yAxis: { type: 'value' },
+            series: [{ type: 'bar', barMaxWidth: 16, itemStyle: { color: '#52c41a' },
+                label: { show: true, position: 'top', fontSize: 10, color: '#4a5568' },
+                data: (districtData||[]).map(function(d){return d.value;})
+            }]
+        });
+        districtChart.on('click', function(p) { drillDistrict(p.name); });
+
+        function makePieChart(id, data, compact) {
+            var chart = trackChart(echarts.init(document.getElementById(id)));
+            chart.setOption(buildLabeledPieOption((data||[]).map(function(d){return {name:d.name,value:d.value};}), { compact: compact, showLegend: !compact }));
+            return chart;
+        }
+        trackChart(makePieChart('ageChart', populationData.age, true));
+        trackChart(makePieChart('genderChart', populationData.gender, true));
+        var occupationChart = trackChart(echarts.init(document.getElementById('occupationChart')));
+        occupationChart.setOption({
+            tooltip: { trigger: 'axis' },
+            grid: { left: 36, right: 8, top: 12, bottom: 48 },
+            xAxis: { type: 'category', data: (populationData.occupation||[]).map(function(d){return d.name;}), axisLabel: { rotate: 35, fontSize: 10 } },
+            yAxis: { type: 'value' },
+            series: [{ type: 'bar', barMaxWidth: 16,
+                label: { show: true, position: 'top', fontSize: 10, color: '#4a5568' },
+                data: (populationData.occupation||[]).map(function(d){return d.value;})
+            }]
+        });
+
+        var diagData = clinicalData.diagnoses || {};
+        trackChart(echarts.init(document.getElementById('diagnosisChart'))).setOption(
+            buildLabeledPieOption(mapObjectToPieData(diagData), { compact: false, showLegend: true })
+        );
+
+        var riskDistClinical = riskData.riskDistribution || {};
+        trackChart(echarts.init(document.getElementById('clinicalRiskChart'))).setOption(
+            buildLabeledPieOption(mapObjectToPieData(riskDistClinical), { compact: false, showLegend: true })
+        );
+
+        var severeTrend = severeDeathData.severeTrend || [];
+        trackChart(echarts.init(document.getElementById('severeTrendChart'))).setOption({
+            tooltip: { trigger: 'axis' },
+            xAxis: { type: 'category', data: severeTrend.map(function(d){return d.month;}) },
+            yAxis: { type: 'value', name: '重症率(%)' },
+            series: [{ type: 'line', data: severeTrend.map(function(d){return d.rate;}), itemStyle: { color: '#faad14' } }]
+        });
+        var deathTrend = severeDeathData.deathTrend || [];
+        trackChart(echarts.init(document.getElementById('deathTrendChart'))).setOption({
+            tooltip: { trigger: 'axis' },
+            xAxis: { type: 'category', data: deathTrend.map(function(d){return d.month;}) },
+            yAxis: { type: 'value', name: '死亡率(%)' },
+            series: [{ type: 'line', data: deathTrend.map(function(d){return d.rate;}), itemStyle: { color: '#ff4d4f' } }]
+        });
+
+        var riskDist = riskData.riskDistribution || {};
+        trackChart(echarts.init(document.getElementById('riskChart'))).setOption(
+            buildLabeledPieOption(mapObjectToPieData(riskDist), { compact: false, showLegend: true })
+        );
+        (function() {
+            var tbody = document.querySelector('#riskDetailTable tbody');
+            if (!tbody) return;
+            var total = riskData.totalCases || 0;
+            var rows = Object.keys(riskDist).map(function(k) {
+                var v = riskDist[k] || 0;
+                var pct = total > 0 ? (v * 100 / total).toFixed(1) : '0.0';
+                return '<tr><td>' + k + '</td><td>' + v + '</td><td>' + pct + '%</td></tr>';
+            }).join('');
+            tbody.innerHTML = rows || '<tr><td colspan="3" style="text-align:center;color:#999;">暂无数据</td></tr>';
+        })();
+
+        var districtGeoMap = /*[[${districtGeoMap}]]*/ {};
+        var cityCentralDistrict = /*[[${cityCentralDistrict}]]*/ {};
+        function mapRegionName(name) { return districtGeoMap[name] || name; }
+
+        function buildMapDataFromDistricts(source) {
+            var valueMap = {};
+            (source || []).forEach(function(d) {
+                var key = mapRegionName(d.name);
+                valueMap[key] = (valueMap[key] || 0) + (d.value || 0);
+                if (mapLevel === 'city' && mapCity && d.name === mapCity && cityCentralDistrict[mapCity]) {
+                    valueMap[cityCentralDistrict[mapCity]] = (valueMap[cityCentralDistrict[mapCity]] || 0) + (d.value || 0);
+                }
+            });
+            return valueMap;
+        }
+
+        function mergeGeoFeatures(geo, valueMap) {
+            var result = [];
+            var features = (geo && geo.features) ? geo.features : [];
+            features.forEach(function(f) {
+                var name = f.properties && f.properties.name ? f.properties.name : '';
+                if (!name) return;
+                var val = valueMap[name] != null ? valueMap[name] : 0;
+                result.push({ name: name, value: val, rawName: name });
+            });
+            Object.keys(valueMap).forEach(function(k) {
+                if (!result.some(function(r) { return r.name === k; })) {
+                    result.push({ name: k, value: valueMap[k], rawName: k });
+                }
+            });
+            return result;
+        }
+
+        function colorByValue(val, max) {
+            if (!max || max <= 0) return '#e8f4fc';
+            var colors = ['#e8f4fc', '#cfe9fc', '#a8d8f8', '#7cc4f2', '#4da8e8', '#1d8fd6'];
+            if (val <= 0) return colors[0];
+            var idx = Math.min(colors.length - 1, Math.ceil((val / max) * (colors.length - 1)));
+            return colors[idx];
+        }
+
+        function drillDistrict(name) {
+            if (!name) return;
+            var params = new URLSearchParams(window.location.search);
+            params.set('district', name);
+            params.set('tab', 'distribution');
+            window.location.search = params.toString();
+        }
+
+        var geoToDistrict = {};
+        Object.keys(districtGeoMap || {}).forEach(function(k) {
+            geoToDistrict[districtGeoMap[k]] = k;
+        });
+
+        function resolveDistrictName(name) {
+            return geoToDistrict[name] || name;
+        }
+
+        function handleMapClick(name, rawName) {
+            var drillName = resolveDistrictName(name);
+            if (mapLevel === 'province') {
+                if (prefectureCities.indexOf(drillName) >= 0 || drillName === '成都市') {
+                    drillDistrict(drillName);
+                }
+                return;
+            }
+            if (mapCity === '成都市' && chengduDistricts.indexOf(name) >= 0) {
+                drillDistrict(name);
+            }
+        }
+
+        var mapChart = trackChart(echarts.init(document.getElementById('mapChart')));
+        var valueMap = buildMapDataFromDistricts(mapDistrictData);
+        fetch(mapGeoUrl)
+            .then(function(r) { return r.json(); })
+            .then(function(geo) {
+                var mapData = mergeGeoFeatures(geo, valueMap);
+                var mapMax = Math.max.apply(null, mapData.map(function(d){return d.value;}).concat([1]));
+                echarts.registerMap(mapRegisterKey, geo);
+                mapChart.setOption({
+                    tooltip: {
+                        trigger: 'item',
+                        formatter: function(p) {
+                            var name = p.name;
+                            var val = (p.data && p.data.value != null) ? p.data.value : 0;
+                            return name + '<br/>病例数：<strong style="color:#1677ff;">' + val + '</strong> 例';
+                        }
+                    },
+                    series: [{
+                        type: 'map',
+                        map: mapRegisterKey,
+                        roam: true,
+                        data: mapData,
+                        itemStyle: {
+                            borderColor: '#fff',
+                            borderWidth: 1.2,
+                            areaColor: '#e8f4fc'
+                        },
+                        label: {
+                            show: true,
+                            fontSize: mapLevel === 'province' ? 9 : 10,
+                            color: '#334155',
+                            formatter: function(p) { return p.name; }
+                        },
+                        emphasis: {
+                            label: {
+                                show: true,
+                                fontSize: 11,
+                                fontWeight: 'bold',
+                                color: '#0c4a6e'
+                            },
+                            itemStyle: {
+                                areaColor: '#38bdf8',
+                                borderColor: '#fff',
+                                borderWidth: 2,
+                                shadowBlur: 10,
+                                shadowColor: 'rgba(2, 132, 199, 0.35)'
+                            }
+                        }
+                    }]
+                }, true);
+                mapChart.setOption({
+                    series: [{
+                        data: mapData.map(function(d) {
+                            return {
+                                name: d.name,
+                                value: d.value,
+                                rawName: d.rawName,
+                                itemStyle: { areaColor: colorByValue(d.value, mapMax) }
+                            };
+                        })
+                    }]
+                });
+                mapChart.on('click', function(p) {
+                    var name = p.name;
+                    handleMapClick(name, p.data && p.data.rawName ? p.data.rawName : name);
+                });
+            })
+            .catch(function() {
+                mapChart.setOption({
+                    title: { text: '地图加载失败，请使用柱状图下钻', left: 'center', top: 'middle', textStyle: { fontSize: 14, color: '#999' } }
+                });
+            });
+
+        if (document.getElementById('historicalTrendChart')) {
+            var histChart = trackChart(echarts.init(document.getElementById('historicalTrendChart')));
+            var histLabels = historicalTrend.labels || [];
+            var histValues = historicalTrend.values || [];
+            var histColors = historicalTrend.colors || [];
+            histChart.setOption({
+                tooltip: {
+                    trigger: 'axis',
+                    formatter: function(params) {
+                        var idx = params[0].dataIndex;
+                        var rise = (historicalTrend.risePercents || [])[idx] || 0;
+                        var level = (historicalTrend.levels || [])[idx] || '正常';
+                        return params[0].name + '<br/>病例数: ' + params[0].value
+                            + '<br/>环比: ' + rise + '%<br/>风险: ' + level;
+                    }
+                },
+                legend: { data: ['月发病数'], top: 0, right: 8, textStyle: { fontSize: 11 } },
+                grid: { left: 42, right: 16, top: 32, bottom: 48 },
+                xAxis: { type: 'category', data: histLabels, axisLabel: { fontSize: 10, rotate: histLabels.length > 12 ? 35 : 0 } },
+                yAxis: { type: 'value', name: '病例数', nameTextStyle: { fontSize: 11 } },
+                series: [{
+                    name: '月发病数', type: 'bar', barMaxWidth: 22,
+                    data: histValues.map(function(v, i) {
+                        return { value: v, itemStyle: { color: histColors[i] || '#1677ff' } };
+                    }),
+                    markLine: {
+                        silent: true,
+                        lineStyle: { type: 'dashed', color: '#faad14' },
+                        data: [{ type: 'average', name: '均值' }]
+                    }
+                }]
+            });
+        }
+
+        window.addEventListener('resize', function() { charts.forEach(function(c){ try { c.resize(); } catch(e){} }); });
+
+        document.querySelectorAll('.run-model-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                fetch('/' + syndromeCode + '/warning/run?modelId=' + btn.dataset.id, { method: 'POST' })
+                    .then(function(r){return r.json();})
+                    .then(function(data) {
+                        document.getElementById('warningResult').style.display = 'block';
+                        var html = '<p>检测到 <strong>' + data.count + '</strong> 条新预警信号</p>';
+                        if (data.records && data.records.length > 0) {
+                            data.records.forEach(function(r) {
+                                html += '<div style="padding:8px;margin:8px 0;background:#fef3e2;border-radius:6px;">' + r.warningContent + '</div>';
+                            });
+                        } else {
+                            html += '<p style="color:#27ae60;">当前未检测到异常波动</p>';
+                        }
+                        document.getElementById('warningResultContent').innerHTML = html;
+                    });
+            });
+        });
+
+        document.querySelectorAll('.handle-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var result = prompt('请输入处置结果：', '已核实并采取防控措施');
+                if (result) {
+                    var formData = new FormData();
+                    formData.append('id', btn.dataset.id);
+                    formData.append('result', result);
+                    fetch('/' + syndromeCode + '/warning/handle', { method: 'POST', body: formData })
+                        .then(function(){ location.reload(); });
+                }
+            });
+        });
+        }); // DOMContentLoaded
+    </script>
+    <script th:inline="javascript">window.__hospitalMap = /*[[${hospitalMap}]]*/ {};</script>
+</div>
+</body>
+</html>
