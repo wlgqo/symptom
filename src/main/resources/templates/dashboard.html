@@ -2,32 +2,56 @@
 <html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout('首页驾驶舱', ~{::content})}">
 <body>
 <div th:fragment="content">
+    <div class="workflow-bar">
+        <div class="workflow-step active"><span class="step-num">1</span><span class="step-label">病例采集</span></div>
+        <span class="workflow-arrow">→</span>
+        <div class="workflow-step active"><span class="step-num">2</span><span class="step-label">症候群识别</span></div>
+        <span class="workflow-arrow">→</span>
+        <div class="workflow-step active"><span class="step-num">3</span><span class="step-label">指标分析</span></div>
+        <span class="workflow-arrow">→</span>
+        <div class="workflow-step active"><span class="step-num">4</span><span class="step-label">预警模型</span></div>
+        <span class="workflow-arrow">→</span>
+        <div class="workflow-step active"><span class="step-num">5</span><span class="step-label">信号处置</span></div>
+        <span class="workflow-arrow">→</span>
+        <div class="workflow-step active"><span class="step-num">6</span><span class="step-label">病例管理</span></div>
+    </div>
+
+    <div class="quick-links">
+        <a href="/respiratory" class="quick-link">呼吸道监测 →</a>
+        <a href="/hemorrhage" class="quick-link">出血重症死亡 →</a>
+        <a href="/diarrhea" class="quick-link">腹泻风险管理 →</a>
+        <a href="/search" class="quick-link">条件树搜索 →</a>
+        <a href="/case/list" class="quick-link highlight">病例管理 →</a>
+    </div>
+
     <div class="stat-cards">
-        <div class="stat-card">
+        <div class="stat-card clickable" onclick="location.href='/case/list'">
             <div class="label">症候群病例总数</div>
             <div class="value" th:text="${stats.totalCases}">0</div>
+            <div class="sub">点击查看全部病例</div>
         </div>
-        <div class="stat-card info">
+        <div class="stat-card info clickable" onclick="location.href='/case/list'">
             <div class="label">今日新增病例</div>
             <div class="value" th:text="${stats.todayCases}">0</div>
         </div>
-        <div class="stat-card warning">
+        <div class="stat-card warning clickable" onclick="location.href='/respiratory#tab-disposal'">
             <div class="label">待处置预警</div>
             <div class="value" th:text="${stats.warningCount}">0</div>
+            <div class="sub">点击进入预警处置</div>
         </div>
-        <div class="stat-card danger">
+        <div class="stat-card danger clickable" onclick="location.href='/case/list?syndromeType='">
             <div class="label">高风险病例</div>
             <div class="value" th:text="${stats.highRiskCases}">0</div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card clickable" onclick="location.href='/respiratory'">
             <div class="label">呼吸道症候群</div>
             <div class="value" th:text="${stats.respiratoryCases}">0</div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card clickable" onclick="location.href='/hemorrhage'">
             <div class="label">出血症候群</div>
             <div class="value" th:text="${stats.hemorrhageCases}">0</div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card clickable" onclick="location.href='/diarrhea'">
             <div class="label">腹泻症候群</div>
             <div class="value" th:text="${stats.diarrheaCases}">0</div>
         </div>
@@ -44,11 +68,22 @@
         </div>
     </div>
 
+    <div class="card-panel" th:if="${syndromeConfigs != null and !syndromeConfigs.isEmpty()}">
+        <h5>症候群配置概览 <span class="panel-action"><a href="/admin">查看全部配置 →</a></span></h5>
+        <div class="syndrome-cards">
+            <div class="syndrome-card" th:each="sc : ${syndromeConfigs}">
+                <span class="code" th:text="${sc.syndromeCode}">FRI</span>
+                <h6 th:text="${sc.syndromeName}">症候群名称</h6>
+                <p th:text="${sc.definition}">定义</p>
+            </div>
+        </div>
+    </div>
+
     <div class="card-panel">
-        <h5>最新预警信号</h5>
+        <h5>最新预警信号 <span class="panel-action"><a href="/respiratory">预警处置 →</a></span></h5>
         <table class="data-table">
             <thead>
-                <tr><th>时间</th><th>症候群</th><th>级别</th><th>内容</th><th>状态</th></tr>
+                <tr><th>时间</th><th>症候群</th><th>级别</th><th>内容</th><th>状态</th><th>操作</th></tr>
             </thead>
             <tbody>
                 <tr th:each="w : ${recentWarnings}">
@@ -56,7 +91,14 @@
                     <td th:text="${w.syndromeType}"></td>
                     <td><span th:class="${w.warningLevel == '红色' ? 'badge-level badge-red' : 'badge-level badge-orange'}" th:text="${w.warningLevel}"></span></td>
                     <td th:text="${w.warningContent}"></td>
-                    <td th:text="${w.status}"></td>
+                    <td>
+                        <span th:class="${w.status == '待处置' ? 'badge-level badge-orange' : 'badge-level badge-low'}" th:text="${w.status}"></span>
+                    </td>
+                    <td>
+                        <a th:if="${w.syndromeType == '发热呼吸道症候群'}" href="/respiratory" class="table-link">处置</a>
+                        <a th:if="${w.syndromeType == '发热伴出血症候群'}" href="/hemorrhage" class="table-link">查看</a>
+                        <a th:if="${w.syndromeType == '发热伴腹泻症候群'}" href="/diarrhea" class="table-link">查看</a>
+                    </td>
                 </tr>
             </tbody>
         </table>
@@ -69,18 +111,21 @@
         var trendChart = echarts.init(document.getElementById('trendChart'));
         trendChart.setOption({
             tooltip: { trigger: 'axis' },
-            xAxis: { type: 'category', data: timeData.labels || [] },
-            yAxis: { type: 'value', name: '病例数' },
-            series: [{ name: '病例数', type: 'line', smooth: true, areaStyle: { opacity: 0.3 },
-                itemStyle: { color: '#1a6fc4' }, data: timeData.values || [] }]
+            grid: { left: 50, right: 20, top: 30, bottom: 30 },
+            xAxis: { type: 'category', data: timeData.labels || [], axisLine: { lineStyle: { color: '#e2e8f0' } } },
+            yAxis: { type: 'value', name: '病例数', splitLine: { lineStyle: { color: '#f0f4f8' } } },
+            series: [{ name: '病例数', type: 'line', smooth: true, areaStyle: { opacity: 0.15, color: '#2b6cb0' },
+                itemStyle: { color: '#2b6cb0' }, lineStyle: { width: 2 }, data: timeData.values || [] }]
         });
 
         var districtChart = echarts.init(document.getElementById('districtChart'));
         districtChart.setOption({
             tooltip: { trigger: 'item' },
-            series: [{ type: 'pie', radius: ['40%', '70%'],
+            color: ['#2b6cb0', '#38a169', '#d69e2e', '#4299e1', '#805ad5', '#e53e3e'],
+            series: [{ type: 'pie', radius: ['42%', '68%'],
                 data: (districtData || []).map(function(d) { return { name: d.name, value: d.value }; }),
-                emphasis: { itemStyle: { shadowBlur: 10 } }
+                label: { fontSize: 12 },
+                emphasis: { itemStyle: { shadowBlur: 8 } }
             }]
         });
 

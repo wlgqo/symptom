@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.symptom.mapper.SyndromeConfigMapper">
+
+    <resultMap id="BaseResultMap" type="SyndromeConfig">
+        <id column="id" property="id"/>
+        <result column="syndrome_name" property="syndromeName"/>
+        <result column="syndrome_code" property="syndromeCode"/>
+        <result column="definition" property="definition"/>
+        <result column="symptom_rules_json" property="symptomRulesJson"/>
+        <result column="risk_rules_json" property="riskRulesJson"/>
+        <result column="monitor_model_json" property="monitorModelJson"/>
+        <result column="status" property="status"/>
+        <result column="description" property="description"/>
+    </resultMap>
+
+    <select id="findAll" resultMap="BaseResultMap">
+        SELECT * FROM syndrome_config ORDER BY id
+    </select>
+
+    <select id="findByName" resultMap="BaseResultMap">
+        SELECT * FROM syndrome_config WHERE syndrome_name = #{syndromeName}
+    </select>
+</mapper>

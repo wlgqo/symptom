@@ -1,28 +1,91 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout('病例详情', ~{::content})}">
 <body>
-<div th:fragment="content">
-    <div style="margin-bottom:16px;display:flex;gap:8px;">
-        <a href="/case/list" class="btn-outline-custom" style="text-decoration:none;">← 返回列表</a>
-        <a th:if="${session.currentUser.role != '浏览人员'}" th:href="@{/case/edit/{id}(id=${caseInfo.id})}" class="btn-primary-custom" style="text-decoration:none;">修改病例</a>
+<div th:fragment="content" th:with="breadcrumb='病例详情'">
+    <div class="relation-nav">
+        <span class="label">业务关联：</span>
+        <a th:href="@{/case/list}" class="quick-link">病例列表</a>
+        <a th:if="${caseInfo != null and caseInfo.syndromeType == '发热呼吸道症候群'}" href="/respiratory" class="quick-link">呼吸道监测</a>
+        <a th:if="${caseInfo != null and caseInfo.syndromeType == '发热伴出血症候群'}" href="/hemorrhage" class="quick-link">出血症候群监测</a>
+        <a th:if="${caseInfo != null and caseInfo.syndromeType == '发热伴腹泻症候群'}" href="/diarrhea" class="quick-link">腹泻症候群风险</a>
+        <a th:href="@{/search}" class="quick-link">条件树搜索</a>
+        <a th:if="${caseInfo != null and session.currentUser.role != '浏览人员'}" th:href="@{/case/edit/{id}(id=${caseInfo.id})}" class="quick-link highlight">修改病例</a>
+    </div>
+
+    <div class="patient-header card-panel">
+        <div class="patient-avatar" th:text="${caseInfo.gender == '女' ? '♀' : '♂'}">♂</div>
+        <div class="patient-info">
+            <h3>
+                <span th:text="${caseInfo.patientName}">姓名</span>
+                <span th:if="${caseInfo.riskLevel}"
+                      th:class="${caseInfo.riskLevel == '高风险' ? 'badge-level badge-high' : (caseInfo.riskLevel == '中风险' ? 'badge-level badge-medium' : 'badge-level badge-low')}"
+                      th:text="${caseInfo.riskLevel}" style="font-size:12px;margin-left:8px;vertical-align:middle;"></span>
+                <span th:if="${caseInfo.isDeath == 1}" class="badge-level badge-red" style="margin-left:4px;">死亡</span>
+                <span th:if="${caseInfo.isSevere == 1 and caseInfo.isDeath != 1}" class="badge-level badge-orange" style="margin-left:4px;">重症</span>
+            </h3>
+            <div class="patient-meta">
+                <span><strong th:text="${caseInfo.gender}"></strong> · <strong th:text="${caseInfo.age}"></strong>岁</span>
+                <span>职业：<strong th:text="${caseInfo.occupation}"></strong></span>
+                <span>主索引：<strong th:text="${caseInfo.mainIndex}"></strong></span>
+                <span th:if="${caseInfo.idCard}">身份证：<strong th:text="${caseInfo.idCard}"></strong></span>
+                <span th:if="${caseInfo.phone}">电话：<strong th:text="${caseInfo.phone}"></strong></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid-2">
+        <div class="card-panel">
+            <h5>患者画像</h5>
+            <div id="patientProfileContent"><p class="empty-state">加载中...</p></div>
+        </div>
+        <div class="card-panel">
+            <h5>症候群识别信息</h5>
+            <div class="detail-grid">
+                <div class="detail-item"><span class="label">症候群类型</span><span class="value" th:text="${caseInfo.syndromeType}"></span></div>
+                <div class="detail-item"><span class="label">病例类型</span><span class="value" th:text="${caseInfo.caseType}"></span></div>
+                <div class="detail-item"><span class="label">发现方式</span><span class="value" th:text="${caseInfo.discoverType}"></span></div>
+                <div class="detail-item"><span class="label">诊断</span><span class="value" th:text="${caseInfo.diagnosis}"></span></div>
+                <div class="detail-item"><span class="label">体温</span><span class="value" th:text="${caseInfo.feverTemp != null ? caseInfo.feverTemp + '℃' : '-'}"></span></div>
+                <div class="detail-item"><span class="label">症状</span><span class="value" th:text="${caseInfo.symptoms != null ? #strings.listJoin(caseInfo.symptoms, '、') : '-'}"></span></div>
+            </div>
+            <div th:if="${caseInfo.riskReason}" style="margin-top:12px;padding:10px;background:#fff5f5;border-radius:6px;font-size:12px;color:#c53030;">
+                风险依据：<span th:text="${caseInfo.riskReason}"></span>
+            </div>
+        </div>
     </div>
 
     <div class="card-panel">
-        <h5>基本信息</h5>
+        <h5>入院出院与转归</h5>
         <div class="detail-grid">
-            <div class="detail-item"><span class="label">主索引号：</span><span th:text="${caseInfo.mainIndex}"></span></div>
-            <div class="detail-item"><span class="label">姓名：</span><span th:text="${caseInfo.patientName}"></span></div>
-            <div class="detail-item"><span class="label">性别：</span><span th:text="${caseInfo.gender}"></span></div>
-            <div class="detail-item"><span class="label">年龄：</span><span th:text="${caseInfo.age}"></span></div>
-            <div class="detail-item"><span class="label">职业：</span><span th:text="${caseInfo.occupation}"></span></div>
-            <div class="detail-item"><span class="label">地址：</span><span th:text="${caseInfo.address}"></span></div>
-            <div class="detail-item"><span class="label">行政区划：</span><span th:text="${caseInfo.district}"></span></div>
-            <div class="detail-item"><span class="label">发现方式：</span><span th:text="${caseInfo.discoverType}"></span></div>
-            <div class="detail-item"><span class="label">症候群类型：</span><span th:text="${caseInfo.syndromeType}"></span></div>
-            <div class="detail-item"><span class="label">病例类型：</span><span th:text="${caseInfo.caseType}"></span></div>
-            <div class="detail-item"><span class="label">诊断：</span><span th:text="${caseInfo.diagnosis}"></span></div>
-            <div class="detail-item"><span class="label">转归：</span><span th:text="${caseInfo.outcome}"></span></div>
+            <div class="detail-item"><span class="label">就诊医院</span><span class="value" th:text="${caseInfo.hospital}"></span></div>
+            <div class="detail-item"><span class="label">报告日期</span><span class="value" th:text="${caseInfo.reportDate != null ? #dates.format(caseInfo.reportDate, 'yyyy-MM-dd') : '-'}"></span></div>
+            <div class="detail-item"><span class="label">入院日期</span><span class="value" th:text="${caseInfo.admissionDate != null ? #dates.format(caseInfo.admissionDate, 'yyyy-MM-dd') : '-'}"></span></div>
+            <div class="detail-item"><span class="label">出院日期</span><span class="value" th:text="${caseInfo.dischargeDate != null ? #dates.format(caseInfo.dischargeDate, 'yyyy-MM-dd') : '-'}"></span></div>
+            <div class="detail-item" th:if="${caseInfo.deathDate != null or caseInfo.isDeath == 1}">
+                <span class="label">死亡日期</span>
+                <span class="value" style="color:#c53030;" th:text="${caseInfo.deathDate != null ? #dates.format(caseInfo.deathDate, 'yyyy-MM-dd') : '待补充'}"></span>
+            </div>
+            <div class="detail-item"><span class="label">转归</span><span class="value" th:text="${caseInfo.outcome}" th:style="${caseInfo.isDeath == 1 ? 'color:#c53030;' : ''}"></span></div>
+            <div class="detail-item"><span class="label">地址</span><span class="value" th:text="${caseInfo.address}"></span></div>
+            <div class="detail-item"><span class="label">行政区划</span><span class="value" th:text="${caseInfo.district}"></span></div>
         </div>
+    </div>
+
+    <div class="grid-2">
+        <div class="card-panel">
+            <h5>临床表现</h5>
+            <div id="clinicalDetail"></div>
+        </div>
+        <div class="card-panel">
+            <h5>检验检查</h5>
+            <div id="labDetail"></div>
+        </div>
+    </div>
+
+    <div class="card-panel">
+        <h5>原始病历 · 诊疗活动时间线</h5>
+        <p class="panel-desc">展示患者就诊、检查检验等原始病历信息，支持症候群识别溯源。</p>
+        <div id="medicalTimeline"><p class="empty-state">加载中...</p></div>
     </div>
 
     <div class="card-panel" th:if="${!cards.isEmpty()}">
@@ -35,7 +98,7 @@
                     <td th:text="${card.reportType}"></td>
                     <td th:text="${#dates.format(card.reportDate, 'yyyy-MM-dd')}"></td>
                     <td th:text="${card.reporter}"></td>
-                    <td th:text="${card.status}"></td>
+                    <td><span class="badge-level badge-blue" th:text="${card.status}"></span></td>
                 </tr>
             </tbody>
         </table>
@@ -53,8 +116,20 @@
                 </tr>
             </tbody>
         </table>
-        <p th:if="${logs.isEmpty()}" style="color:#6c757d;">暂无修改记录</p>
+        <p th:if="${logs.isEmpty()}" class="empty-state">暂无修改记录</p>
     </div>
+
+    <script th:inline="javascript">
+        document.addEventListener('DOMContentLoaded', function() {
+            var profileJson = /*[[${caseInfo.profileJson}]]*/ null;
+            var medicalJson = /*[[${caseInfo.medicalRecordJson}]]*/ null;
+            var clinicalJson = /*[[${caseInfo.clinicalJson}]]*/ null;
+            var labJson = /*[[${caseInfo.labJson}]]*/ null;
+            renderPatientProfile(profileJson, medicalJson);
+            renderClinicalJson(clinicalJson, /*[[${caseInfo.syndromeType}]]*/ '');
+            renderLabJson(labJson);
+        });
+    </script>
 </div>
 </body>
 </html>

@@ -1,0 +1,129 @@
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.tab-nav').forEach(function(nav) {
+        nav.querySelectorAll('.tab-item').forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                var tabId = tab.dataset.tab;
+                var parent = nav.parentElement;
+                nav.querySelectorAll('.tab-item').forEach(function(t) { t.classList.remove('active'); });
+                parent.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
+                tab.classList.add('active');
+                var content = parent.querySelector('#tab-' + tabId);
+                if (content) content.classList.add('active');
+                window.dispatchEvent(new Event('resize'));
+            });
+        });
+    });
+});
+
+function renderPatientProfile(profileJson, medicalJson) {
+    var profileEl = document.getElementById('patientProfileContent');
+    var timelineEl = document.getElementById('medicalTimeline');
+    if (!profileEl) return;
+
+    try {
+        var profile = profileJson ? JSON.parse(profileJson) : {};
+        var medical = medicalJson ? JSON.parse(medicalJson) : {};
+
+        var tagsHtml = (profile.tags || []).map(function(t) {
+            return '<span class="tag-item">' + t + '</span>';
+        }).join('');
+
+        var chronicHtml = (profile.chronicDiseases || []).length > 0
+            ? profile.chronicDiseases.join('、') : '无';
+        var allergyHtml = (profile.allergies || []).length > 0
+            ? profile.allergies.join('、') : '无';
+        var vaccHtml = (profile.vaccination || []).length > 0
+            ? profile.vaccination.join('、') : '无';
+
+        profileEl.innerHTML =
+            '<div class="detail-grid">' +
+            '<div class="detail-item"><span class="label">血型</span><span class="value">' + (profile.bloodType || '-') + '</span></div>' +
+            '<div class="detail-item"><span class="label">婚姻状况</span><span class="value">' + (profile.maritalStatus || '-') + '</span></div>' +
+            '<div class="detail-item"><span class="label">慢性病史</span><span class="value">' + chronicHtml + '</span></div>' +
+            '<div class="detail-item"><span class="label">过敏史</span><span class="value">' + allergyHtml + '</span></div>' +
+            '<div class="detail-item"><span class="label">疫苗接种</span><span class="value">' + vaccHtml + '</span></div>' +
+            '</div>' +
+            (profile.portrait ? '<p style="margin-top:12px;font-size:13px;color:#718096;line-height:1.7;padding:12px;background:#f7fafc;border-radius:6px;">' + profile.portrait + '</p>' : '') +
+            (tagsHtml ? '<div class="tag-list" style="margin-top:12px;">' + tagsHtml + '</div>' : '');
+
+        if (timelineEl) {
+            var items = [];
+            (medical.visits || []).forEach(function(v) {
+                items.push({date: v.date, title: v.type + ' - ' + (v.dept || ''), desc: v.doctor ? '接诊医生：' + v.doctor : ''});
+            });
+            (medical.examinations || []).forEach(function(e) {
+                items.push({date: e.date, title: '检查：' + e.item, desc: e.result});
+            });
+            (medical.labTests || []).forEach(function(l) {
+                items.push({date: l.date, title: '检验：' + l.item, desc: l.result});
+            });
+            if (medical.deathInfo) {
+                items.push({date: medical.deathInfo.deathDate, title: '死亡记录', desc: medical.deathInfo.deathCause, death: true});
+            }
+            items.sort(function(a, b) { return (a.date || '').localeCompare(b.date || ''); });
+
+            if (items.length === 0) {
+                timelineEl.innerHTML = '<p class="empty-state">暂无诊疗活动记录</p>';
+            } else {
+                timelineEl.innerHTML = '<div class="timeline">' + items.map(function(item) {
+                    return '<div class="timeline-item' + (item.death ? ' death' : '') + '">' +
+                        '<div class="timeline-date">' + item.date + '</div>' +
+                        '<div class="timeline-title">' + item.title + '</div>' +
+                        (item.desc ? '<div class="timeline-desc">' + item.desc + '</div>' : '') +
+                        '</div>';
+                }).join('') + '</div>';
+            }
+        }
+    } catch (e) {
+        profileEl.innerHTML = '<p class="empty-state">患者画像数据加载失败</p>';
+    }
+}
+
+function renderClinicalJson(clinicalJson, syndromeType) {
+    var el = document.getElementById('clinicalDetail');
+    if (!el || !clinicalJson) return;
+    try {
+        var data = JSON.parse(clinicalJson);
+        var html = '<div class="detail-grid">';
+        if (data.respiratory) {
+            html += '<div class="detail-item"><span class="label">呼吸道症状</span><span class="value">' + data.respiratory.join('、') + '</span></div>';
+        }
+        if (data.bleeding) {
+            html += '<div class="detail-item"><span class="label">出血症状</span><span class="value">' + data.bleeding.join('、') + '</span></div>';
+        }
+        if (data.diarrhea) {
+            html += '<div class="detail-item"><span class="label">腹泻症状</span><span class="value">' + data.diarrhea.join('、') + '</span></div>';
+        }
+        if (data.accompany) {
+            html += '<div class="detail-item"><span class="label">伴随症状</span><span class="value">' + data.accompany.join('、') + '</span></div>';
+        }
+        if (data.fever) {
+            html += '<div class="detail-item"><span class="label">发热描述</span><span class="value">' + data.fever + '</span></div>';
+        }
+        html += '</div>';
+        el.innerHTML = html;
+    } catch (e) {
+        el.innerHTML = '<pre class="json-display">' + clinicalJson + '</pre>';
+    }
+}
+
+function renderLabJson(labJson) {
+    var el = document.getElementById('labDetail');
+    if (!el || !labJson) return;
+    try {
+        var data = JSON.parse(labJson);
+        var html = '<div class="detail-grid">';
+        for (var key in data) {
+            if (data.hasOwnProperty(key)) {
+                var label = key;
+                var map = {wbc:'白细胞',crp:'C反应蛋白',platelet:'血小板',stool:'粪便检测'};
+                if (map[key]) label = map[key];
+                html += '<div class="detail-item"><span class="label">' + label + '</span><span class="value">' + data[key] + '</span></div>';
+            }
+        }
+        html += '</div>';
+        el.innerHTML = html;
+    } catch (e) {
+        el.innerHTML = '<pre class="json-display">' + labJson + '</pre>';
+    }
+}

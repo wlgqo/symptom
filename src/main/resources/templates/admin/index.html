@@ -4,7 +4,8 @@
 <div th:fragment="content">
     <div class="tab-nav" id="adminTabs">
         <div class="tab-item active" data-tab="users">用户管理</div>
-        <div class="tab-item" data-tab="models">模型配置</div>
+        <div class="tab-item" data-tab="syndromes">症候群配置</div>
+        <div class="tab-item" data-tab="models">预警模型</div>
         <div class="tab-item" data-tab="logs">操作日志</div>
     </div>
 
@@ -17,10 +18,10 @@
                     <tr th:each="u : ${users}">
                         <td th:text="${u.username}"></td>
                         <td th:text="${u.realName}"></td>
-                        <td th:text="${u.role}"></td>
+                        <td><span class="badge-level badge-blue" th:text="${u.role}"></span></td>
                         <td>
                             <a th:if="${u.username != 'admin'}" th:href="@{/admin/user/delete/{id}(id=${u.id})}"
-                               style="color:#c0392b;" onclick="return confirm('确认删除？')">删除</a>
+                               style="color:#c53030;font-size:12px;" onclick="return confirm('确认删除？')">删除</a>
                         </td>
                     </tr>
                 </tbody>
@@ -28,34 +29,62 @@
         </div>
         <div class="card-panel">
             <h5>添加用户</h5>
-            <form method="post" action="/admin/user/save" style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:12px;align-items:end;">
-                <div><label>用户名</label><input type="text" name="username" required style="width:100%;padding:8px;border:1px solid #dee2e6;border-radius:4px;"></div>
-                <div><label>密码</label><input type="password" name="password" required style="width:100%;padding:8px;border:1px solid #dee2e6;border-radius:4px;"></div>
-                <div><label>角色</label>
-                    <select name="role" style="width:100%;padding:8px;border:1px solid #dee2e6;border-radius:4px;">
-                        <option value="业务人员">业务人员</option>
-                        <option value="浏览人员">浏览人员</option>
-                        <option value="管理员">管理员</option>
-                    </select>
+            <form method="post" action="/admin/user/save" class="search-form" style="margin-bottom:0;">
+                <div class="form-row">
+                    <div><label>用户名</label><input type="text" name="username" required></div>
+                    <div><label>密码</label><input type="password" name="password" required></div>
+                    <div><label>角色</label>
+                        <select name="role">
+                            <option value="业务人员">业务人员</option>
+                            <option value="浏览人员">浏览人员</option>
+                            <option value="管理员">管理员</option>
+                        </select>
+                    </div>
+                    <div><label>姓名</label><input type="text" name="realName"></div>
                 </div>
-                <div><label>姓名</label><input type="text" name="realName" style="width:100%;padding:8px;border:1px solid #dee2e6;border-radius:4px;"></div>
-                <button type="submit" class="btn-primary-custom">添加</button>
+                <button type="submit" class="btn-primary-custom">添加用户</button>
             </form>
+        </div>
+    </div>
+
+    <div class="tab-content" id="tab-syndromes">
+        <div class="card-panel" th:each="sc : ${syndromeConfigs}">
+            <h5>
+                <span th:text="${sc.syndromeName}"></span>
+                <span class="panel-action"><span class="badge-level badge-blue" th:text="${sc.syndromeCode}"></span>
+                <span class="badge-level badge-low" th:text="${sc.status}" style="margin-left:4px;"></span></span>
+            </h5>
+            <p class="panel-desc" th:text="${sc.definition}"></p>
+            <div class="grid-3" style="margin-top:12px;">
+                <div>
+                    <h6 style="font-size:12px;color:#718096;margin-bottom:6px;">症状识别规则</h6>
+                    <pre class="json-display" th:text="${sc.symptomRulesJson}"></pre>
+                </div>
+                <div>
+                    <h6 style="font-size:12px;color:#718096;margin-bottom:6px;">风险评级规则</h6>
+                    <pre class="json-display" th:text="${sc.riskRulesJson}"></pre>
+                </div>
+                <div>
+                    <h6 style="font-size:12px;color:#718096;margin-bottom:6px;">监测模型配置</h6>
+                    <pre class="json-display" th:text="${sc.monitorModelJson}"></pre>
+                </div>
+            </div>
         </div>
     </div>
 
     <div class="tab-content" id="tab-models">
         <div class="card-panel">
-            <h5>预警模型配置</h5>
+            <h5>预警模型配置（共 <span th:text="${models.size()}">0</span> 个）</h5>
             <table class="data-table">
-                <thead><tr><th>模型名称</th><th>类型</th><th>症候群</th><th>参数配置</th><th>状态</th></tr></thead>
+                <thead><tr><th>模型名称</th><th>类型</th><th>症候群</th><th>参数配置</th><th>说明</th><th>状态</th></tr></thead>
                 <tbody>
                     <tr th:each="m : ${models}">
                         <td th:text="${m.modelName}"></td>
                         <td th:text="${m.modelType}"></td>
                         <td th:text="${m.syndromeType}"></td>
-                        <td><code th:text="${m.configJson}" style="font-size:12px;"></code></td>
-                        <td th:text="${m.enabled == 1 ? '启用' : '禁用'}"></td>
+                        <td><code style="font-size:11px;" th:text="${m.configJson}"></code></td>
+                        <td th:text="${m.description}"></td>
+                        <td><span th:class="${m.enabled == 1 ? 'badge-level badge-low' : 'badge-level badge-gray'}" th:text="${m.enabled == 1 ? '启用' : '禁用'}"></span></td>
                     </tr>
                 </tbody>
             </table>
@@ -78,17 +107,6 @@
             </table>
         </div>
     </div>
-
-    <script>
-        document.querySelectorAll('#adminTabs .tab-item').forEach(function(tab) {
-            tab.addEventListener('click', function() {
-                document.querySelectorAll('#adminTabs .tab-item').forEach(function(t) { t.classList.remove('active'); });
-                document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
-                tab.classList.add('active');
-                document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
-            });
-        });
-    </script>
 </div>
 </body>
 </html>

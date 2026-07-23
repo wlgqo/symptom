@@ -3,25 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>登录 - 症候群主动监测预警演示系统</title>
+    <title>登录 - 症候群主动监测预警系统</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
 <div class="login-page">
-    <div class="login-box">
-        <h2>症候群主动监测预警演示系统</h2>
-        <p class="subtitle">传染病症候群主动监测业务平台</p>
-        <div th:if="${error}" class="alert-error" th:text="${error}"></div>
-        <form method="post" action="/login">
-            <input type="text" name="username" class="form-control" placeholder="用户名" required autofocus>
-            <input type="password" name="password" class="form-control" placeholder="密码" required>
-            <button type="submit" class="btn-login">登 录</button>
-        </form>
-        <div class="login-hint">
-            <strong>演示账号：</strong><br>
-            管理员：admin / admin123<br>
-            业务人员：business / business123<br>
-            浏览人员：viewer / viewer123
+    <div class="login-wrapper">
+        <div class="login-brand">
+            <h1>症候群主动监测<br>预警演示系统</h1>
+            <p>面向传染病监测预警业务场景，支持病例采集、症候群识别、风险分析、预警模型与病例全流程管理。</p>
+            <ul class="login-features">
+                <li>三类症候群监测预警（呼吸道 / 出血 / 腹泻）</li>
+                <li>7种预警模型与信号处置闭环</li>
+                <li>患者画像与原始病历关联查询</li>
+                <li>条件树组合搜索与病例管理</li>
+            </ul>
+        </div>
+        <div class="login-box">
+            <h2>系统登录</h2>
+            <p class="subtitle">传染病症候群主动监测业务平台</p>
+            <div th:if="${error}" class="alert-error" th:text="${error}"></div>
+            <form method="post" action="/login">
+                <input type="text" name="username" class="form-control" placeholder="用户名" required autofocus>
+                <input type="password" name="password" class="form-control" placeholder="密码" required>
+                <button type="submit" class="btn-login">登 录</button>
+            </form>
+            <div class="login-hint">
+                <strong>演示账号</strong><br>
+                管理员：admin / admin123<br>
+                业务人员：business / business123<br>
+                浏览人员：viewer / viewer123
+            </div>
         </div>
     </div>
 </div>

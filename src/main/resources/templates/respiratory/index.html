@@ -12,6 +12,17 @@
         <span class="step">查看处置结果</span>
     </div>
 
+    <div class="quick-links">
+        <a href="/case/list?syndromeType=发热呼吸道症候群" class="quick-link">查看全部病例</a>
+        <a href="/search" class="quick-link">条件树搜索</a>
+        <a th:if="${syndromeConfig != null}" href="/admin" class="quick-link">症候群配置</a>
+    </div>
+
+    <div class="card-panel" th:if="${syndromeConfig != null}" style="margin-bottom:16px;">
+        <h5>症候群识别规则 <span class="panel-action"><span class="badge-level badge-blue" th:text="${syndromeConfig.syndromeCode}"></span></span></h5>
+        <p class="panel-desc" th:text="${syndromeConfig.definition}"></p>
+    </div>
+
     <div class="tab-nav" id="mainTabs">
         <div class="tab-item active" data-tab="distribution">三间分布分析</div>
         <div class="tab-item" data-tab="clinical">临床特征分析</div>
@@ -73,9 +84,9 @@
             <div id="diagnosisChart" class="chart-container"></div>
         </div>
         <div class="card-panel">
-            <h5>病例临床信息列表</h5>
+            <h5>病例临床信息列表 <span class="panel-action"><a href="/case/list?syndromeType=发热呼吸道症候群">全部病例 →</a></span></h5>
             <table class="data-table">
-                <thead><tr><th>姓名</th><th>年龄</th><th>体温</th><th>诊断</th><th>症状</th><th>转归</th></tr></thead>
+                <thead><tr><th>姓名</th><th>年龄</th><th>体温</th><th>诊断</th><th>症状</th><th>转归</th><th>操作</th></tr></thead>
                 <tbody>
                     <tr th:each="c : ${cases}">
                         <td th:text="${c.patientName}"></td>
@@ -84,6 +95,7 @@
                         <td th:text="${c.diagnosis}"></td>
                         <td th:text="${c.symptoms != null ? #strings.listJoin(c.symptoms, '、') : ''}"></td>
                         <td th:text="${c.outcome}"></td>
+                        <td><a th:href="@{/case/detail/{id}(id=${c.id})}" class="table-link">原始病历</a></td>
                     </tr>
                 </tbody>
             </table>
@@ -102,7 +114,7 @@
                         <td th:text="${m.modelType}"></td>
                         <td th:text="${m.description}"></td>
                         <td th:text="${m.enabled == 1 ? '启用' : '禁用'}"></td>
-                        <td><button class="btn-primary-custom run-model-btn" th:data-id="${m.id}" th:text="'运行分析'"></button></td>
+                        <td><button class="btn-primary-custom btn-sm run-model-btn" th:data-id="${m.id}">运行分析</button></td>
                     </tr>
                 </tbody>
             </table>
@@ -125,11 +137,14 @@
                         <td th:text="${w.modelName}"></td>
                         <td><span th:class="${w.warningLevel == '红色' ? 'badge-level badge-red' : 'badge-level badge-orange'}" th:text="${w.warningLevel}"></span></td>
                         <td th:text="${w.warningContent}"></td>
-                        <td th:text="${w.status}"></td>
                         <td>
-                            <button th:if="${w.status == '待处置'}" class="btn-primary-custom handle-btn"
+                            <span th:class="${w.status == '待处置' ? 'badge-level badge-orange' : 'badge-level badge-low'}" th:text="${w.status}"></span>
+                        </td>
+                        <td>
+                            <button th:if="${w.status == '待处置'}" class="btn-primary-custom btn-sm handle-btn"
                                     th:data-id="${w.id}">处置</button>
-                            <span th:if="${w.status != '待处置'}" th:text="${w.handleResult}"></span>
+                            <span th:if="${w.status != '待处置'}" th:text="${w.handleResult}" style="font-size:12px;color:#718096;"></span>
+                            <a href="/case/list?syndromeType=发热呼吸道症候群" class="table-link" style="margin-left:8px;">关联病例</a>
                         </td>
                     </tr>
                 </tbody>
@@ -161,7 +176,7 @@
                 tooltip: { trigger: 'axis' },
                 xAxis: { type: 'category', data: data.labels || [] },
                 yAxis: { type: 'value', name: '病例数' },
-                series: [{ type: 'bar', itemStyle: { color: '#1a6fc4' }, data: data.values || [] }]
+                series: [{ type: 'bar', itemStyle: { color: '#2b6cb0' }, data: data.values || [] }]
             });
         }
         renderTimeChart(timeDataDay);
@@ -180,7 +195,7 @@
             tooltip: { trigger: 'axis' },
             xAxis: { type: 'category', data: (districtData||[]).map(function(d){return d.name;}) },
             yAxis: { type: 'value' },
-            series: [{ type: 'bar', itemStyle: { color: '#00b4d8' }, data: (districtData||[]).map(function(d){return d.value;}) }]
+            series: [{ type: 'bar', itemStyle: { color: '#38a169' }, data: (districtData||[]).map(function(d){return d.value;}) }]
         });
 
         function makePieChart(id, data) {
