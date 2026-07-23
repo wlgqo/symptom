@@ -21,4 +21,18 @@
     <select id="findByName" resultMap="BaseResultMap">
         SELECT * FROM syndrome_config WHERE syndrome_name = #{syndromeName}
     </select>
+
+    <select id="findById" resultMap="BaseResultMap">
+        SELECT * FROM syndrome_config WHERE id = #{id}
+    </select>
+
+    <update id="update">
+        UPDATE syndrome_config SET definition = #{definition},
+            symptom_rules_json = #{symptomRulesJson},
+            risk_rules_json = #{riskRulesJson},
+            monitor_model_json = #{monitorModelJson},
+            status = #{status},
+            description = #{description}
+        WHERE id = #{id}
+    </update>
 </mapper>

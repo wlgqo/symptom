@@ -1,11 +1,9 @@
 package com.symptom.service;
 
-import com.symptom.entity.WarningModel;
-import com.symptom.entity.WarningRecord;
-import com.symptom.mapper.CaseInfoMapper;
-import com.symptom.mapper.WarningModelMapper;
-import com.symptom.mapper.WarningRecordMapper;
+import com.symptom.entity.*;
+import com.symptom.mapper.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
@@ -14,12 +12,18 @@ public class WarningService {
 
     private final WarningModelMapper modelMapper;
     private final WarningRecordMapper recordMapper;
+    private final WarningNotificationMapper notificationMapper;
+    private final WarningDisposalMapper disposalMapper;
     private final CaseInfoMapper caseInfoMapper;
 
     public WarningService(WarningModelMapper modelMapper, WarningRecordMapper recordMapper,
+                          WarningNotificationMapper notificationMapper,
+                          WarningDisposalMapper disposalMapper,
                           CaseInfoMapper caseInfoMapper) {
         this.modelMapper = modelMapper;
         this.recordMapper = recordMapper;
+        this.notificationMapper = notificationMapper;
+        this.disposalMapper = disposalMapper;
         this.caseInfoMapper = caseInfoMapper;
     }
 
@@ -47,22 +51,82 @@ public class WarningService {
         return recordMapper.findBySyndromeType(syndromeType);
     }
 
+    public List<WarningRecord> getRecordsByModelId(Integer modelId) {
+        return recordMapper.findByModelId(modelId);
+    }
+
     public WarningRecord getRecordById(Integer id) {
         return recordMapper.findById(id);
     }
 
-    public void handleWarning(Integer id, String handler, String result) {
-        WarningRecord record = recordMapper.findById(id);
-        if (record != null) {
-            record.setStatus("已处置");
-            record.setHandler(handler);
-            record.setHandleResult(result);
-            recordMapper.update(record);
-        }
+    public List<WarningNotification> getNotifications(Integer warningId) {
+        return notificationMapper.findByWarningId(warningId);
+    }
+
+    public List<WarningDisposal> getDisposals(Integer warningId) {
+        return disposalMapper.findByWarningId(warningId);
     }
 
     public int countPending() {
         return recordMapper.countPending();
+    }
+
+    public Map<String, Object> getModelStats() {
+        Map<String, Object> stats = new HashMap<>();
+        List<WarningModel> models = modelMapper.findAll();
+        stats.put("total", models.size());
+        stats.put("enabled", models.stream().filter(m -> m.getEnabled() != null && m.getEnabled() == 1).count());
+        stats.put("triggered", recordMapper.findAll().size());
+        return stats;
+    }
+
+    @Transactional
+    public void processAction(Integer warningId, String action, String operator, String comment) {
+        WarningRecord record = recordMapper.findById(warningId);
+        if (record == null) return;
+
+        String newStatus;
+        switch (action) {
+            case "confirm":
+                newStatus = "已确认";
+                break;
+            case "dispose":
+                newStatus = "处置中";
+                break;
+            case "complete":
+                newStatus = "已完成";
+                break;
+            case "close":
+                newStatus = "已关闭";
+                break;
+            default:
+                newStatus = record.getStatus();
+        }
+
+        record.setStatus(newStatus);
+        record.setHandler(operator);
+        record.setHandleResult(comment);
+        recordMapper.update(record);
+
+        WarningDisposal disposal = new WarningDisposal();
+        disposal.setWarningId(warningId);
+        disposal.setOperator(operator);
+        disposal.setActionType(actionLabel(action));
+        disposal.setActionComment(comment);
+        disposalMapper.insert(disposal);
+    }
+
+    public void sendNotification(Integer warningId, String target, String method) {
+        WarningNotification notification = new WarningNotification();
+        notification.setWarningId(warningId);
+        notification.setNotifyTarget(target);
+        notification.setNotifyMethod(method);
+        notification.setNotifyStatus("已发送");
+        notificationMapper.insert(notification);
+    }
+
+    public void handleWarning(Integer id, String handler, String result) {
+        processAction(id, "complete", handler, result);
     }
 
     /**
@@ -82,6 +146,7 @@ public class WarningService {
         }
 
         double threshold = 3.0;
+        double baseline = calculateMean(dailyData);
         String modelType = model.getModelType();
 
         switch (modelType) {
@@ -92,16 +157,16 @@ public class WarningService {
                 threshold = calculatePercentile(dailyData, 0.9);
                 break;
             case "CUSUM累计和控制图模型":
-                threshold = calculateMean(dailyData) * 1.5;
+                threshold = baseline * 1.5;
                 break;
             case "移动流行区间模型":
-                threshold = calculateMean(dailyData) * 1.3;
+                threshold = baseline * 1.3;
                 break;
             case "EWMA指数加权移动平均模型":
                 threshold = calculateEwma(dailyData) * 1.2;
                 break;
             case "ARIMA模型":
-                threshold = calculateMean(dailyData) * 1.4;
+                threshold = baseline * 1.4;
                 break;
             case "场所聚集性模型":
                 threshold = 3.0;
@@ -121,12 +186,32 @@ public class WarningService {
             record.setWarningContent(String.format(
                 "【%s】检测到异常：%s病例数%.0f例，超过阈值%.1f例",
                 model.getModelName(), syndromeType, latestCount, threshold));
-            record.setStatus("待处置");
+            record.setStatus("待研判");
+            record.setObservedValue(latestCount);
+            record.setBaselineValue(baseline);
+            record.setThresholdValue(threshold);
+            record.setAnomalyDegree(latestCount > threshold * 1.5 ? "严重" : "中等");
+            record.setAnomalyType("异常增长");
+            record.setDistrict("朝阳区");
+            record.setHospital("市第三人民医院");
             recordMapper.insert(record);
             newWarnings.add(record);
+
+            sendNotification(record.getId(), "疾控业务人员", "站内消息");
+            sendNotification(record.getId(), "监测分析人员", "短信");
         }
 
         return newWarnings;
+    }
+
+    private String actionLabel(String action) {
+        switch (action) {
+            case "confirm": return "确认异常";
+            case "dispose": return "启动处置";
+            case "complete": return "完成处置";
+            case "close": return "关闭预警";
+            default: return action;
+        }
     }
 
     private double calculateMean(List<Map<String, Object>> data) {

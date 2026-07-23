@@ -94,7 +94,13 @@ public class CaseService {
         stats.put("hemorrhageCases", caseInfoMapper.countBySyndromeType("发热伴出血症候群"));
         stats.put("diarrheaCases", caseInfoMapper.countBySyndromeType("发热伴腹泻症候群"));
         stats.put("highRiskCases", caseInfoMapper.countHighRisk());
+        stats.put("severeCases", caseInfoMapper.countSevere());
+        stats.put("deathCases", caseInfoMapper.countDeath());
         return stats;
+    }
+
+    public int countBySyndromeType(String syndromeType) {
+        return caseInfoMapper.countBySyndromeType(syndromeType);
     }
 
     public List<CaseInfo> searchByConditionTree(String conditionSql) {

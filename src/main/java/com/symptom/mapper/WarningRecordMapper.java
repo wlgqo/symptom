@@ -11,5 +11,7 @@ public interface WarningRecordMapper {
     WarningRecord findById(@Param("id") Integer id);
     int insert(WarningRecord record);
     int update(WarningRecord record);
+    List<WarningRecord> findByStatus(@Param("status") String status);
+    List<WarningRecord> findByModelId(@Param("modelId") Integer modelId);
     int countPending();
 }

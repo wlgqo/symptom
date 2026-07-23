@@ -21,7 +21,9 @@ public class SearchController {
     }
 
     @GetMapping
-    public String index() {
+    public String index(Model model) {
+        model.addAttribute("pageTitle", "条件树组合分析");
+        model.addAttribute("breadcrumb", "智能分析");
         return "search/index";
     }
 

@@ -9,4 +9,6 @@ import java.util.List;
 public interface SyndromeConfigMapper {
     List<SyndromeConfig> findAll();
     SyndromeConfig findByName(String syndromeName);
+    SyndromeConfig findById(Integer id);
+    int update(SyndromeConfig config);
 }

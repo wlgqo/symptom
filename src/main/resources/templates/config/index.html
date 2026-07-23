@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout('监测配置', ~{::content})}">
+<body>
+<div th:fragment="content">
+    <div class="tab-nav" id="configTabs">
+        <div class="tab-item active" data-tab="syndrome">症候群主题定义</div>
+        <div class="tab-item" data-tab="model">预警模型配置</div>
+        <div class="tab-item" data-tab="indicator">监测指标</div>
+    </div>
+
+    <div class="tab-content active" id="tab-syndrome">
+        <div class="grid-2">
+            <div class="card-panel">
+                <h5>症候群列表</h5>
+                <table class="data-table">
+                    <thead><tr><th>编码</th><th>名称</th><th>状态</th><th>操作</th></tr></thead>
+                    <tbody>
+                        <tr th:each="s : ${syndromeConfigs}">
+                            <td th:text="${s.syndromeCode}"></td>
+                            <td th:text="${s.syndromeName}"></td>
+                            <td th:text="${s.status}"></td>
+                            <td><a th:href="@{/config(syndromeId=${s.id})}" class="table-link">编辑</a></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-panel" th:if="${selectedSyndrome != null}">
+                <h5>编辑症候群定义</h5>
+                <form id="syndromeForm">
+                    <input type="hidden" id="syndromeId" th:value="${selectedSyndrome.id}">
+                    <div class="form-group"><label>定义</label><textarea id="definition" class="form-textarea" th:text="${selectedSyndrome.definition}"></textarea></div>
+                    <div class="form-group"><label>症状规则 JSON</label><textarea id="symptomRules" class="form-textarea code" th:text="${selectedSyndrome.symptomRulesJson}"></textarea></div>
+                    <div class="form-group"><label>风险规则 JSON</label><textarea id="riskRules" class="form-textarea code" th:text="${selectedSyndrome.riskRulesJson}"></textarea></div>
+                    <div class="form-group"><label>状态</label>
+                        <select id="syndromeStatus" class="form-select-sm">
+                            <option value="启用" th:selected="${selectedSyndrome.status == '启用'}">启用</option>
+                            <option value="停用" th:selected="${selectedSyndrome.status == '停用'}">停用</option>
+                        </select>
+                    </div>
+                    <button type="button" class="btn-primary-sm" onclick="saveSyndrome()">保存</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-content" id="tab-model">
+        <div class="card-panel">
+            <h5>预警模型配置</h5>
+            <table class="data-table">
+                <thead><tr><th>模型名称</th><th>类型</th><th>症候群</th><th>状态</th><th>参数</th></tr></thead>
+                <tbody>
+                    <tr th:each="m : ${models}">
+                        <td th:text="${m.modelName}"></td>
+                        <td th:text="${m.modelType}"></td>
+                        <td th:text="${m.syndromeType}"></td>
+                        <td th:text="${m.enabled == 1 ? '启用' : '停用'}"></td>
+                        <td><code th:text="${m.configJson}"></code></td>
+                    </tr>
+                </tbody>
+            </table>
+            <a href="/warning/model" class="btn-outline-sm" style="margin-top:12px;">进入预警模型中心 →</a>
+        </div>
+    </div>
+
+    <div class="tab-content" id="tab-indicator">
+        <div class="card-panel">
+            <h5>监测指标体系</h5>
+            <div class="indicator-grid">
+                <div class="indicator-card"><h6>规模指标</h6><p>病例数、新增病例、累计病例</p></div>
+                <div class="indicator-card"><h6>趋势指标</h6><p>同比、环比、增长率、移动平均</p></div>
+                <div class="indicator-card"><h6>风险指标</h6><p>风险评分、异常指数、预警数量</p></div>
+                <div class="indicator-card"><h6>重症指标</h6><p>重症病例数、重症率、重症率变化</p></div>
+                <div class="indicator-card"><h6>死亡指标</h6><p>死亡病例数、死亡率、病死率</p></div>
+                <div class="indicator-card"><h6>空间指标</h6><p>区域病例数、区域发病率、区域异常指数</p></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.querySelectorAll('#configTabs .tab-item').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('#configTabs .tab-item').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+            });
+        });
+        function saveSyndrome() {
+            const data = {
+                id: parseInt(document.getElementById('syndromeId').value),
+                definition: document.getElementById('definition').value,
+                symptomRulesJson: document.getElementById('symptomRules').value,
+                riskRulesJson: document.getElementById('riskRules').value,
+                status: document.getElementById('syndromeStatus').value
+            };
+            fetch('/config/syndrome/update', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            }).then(r => r.json()).then(d => { alert(d.success ? '保存成功' : '保存失败'); });
+        }
+    </script>
+</div>
+</body>
+</html>

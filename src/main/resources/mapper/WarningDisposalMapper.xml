@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.symptom.mapper.WarningDisposalMapper">
+    <select id="findByWarningId" resultType="WarningDisposal">
+        SELECT * FROM warning_disposal WHERE warning_id = #{warningId} ORDER BY action_time DESC
+    </select>
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO warning_disposal (warning_id, operator, action_type, action_comment, attachment, remark)
+        VALUES (#{warningId}, #{operator}, #{actionType}, #{actionComment}, #{attachment}, #{remark})
+    </insert>
+</mapper>

@@ -5,6 +5,7 @@ import com.symptom.mapper.CaseInfoMapper;
 import com.symptom.mapper.WarningRecordMapper;
 import com.symptom.service.AnalysisService;
 import com.symptom.service.CaseService;
+import com.symptom.service.EventService;
 import com.symptom.service.SyndromeConfigService;
 import com.symptom.service.WarningService;
 import org.springframework.stereotype.Controller;
@@ -22,22 +23,26 @@ public class DashboardController {
     private final CaseInfoMapper caseInfoMapper;
     private final WarningRecordMapper warningRecordMapper;
     private final SyndromeConfigService syndromeConfigService;
+    private final EventService eventService;
 
     public DashboardController(CaseService caseService, WarningService warningService,
                                AnalysisService analysisService, CaseInfoMapper caseInfoMapper,
                                WarningRecordMapper warningRecordMapper,
-                               SyndromeConfigService syndromeConfigService) {
+                               SyndromeConfigService syndromeConfigService,
+                               EventService eventService) {
         this.caseService = caseService;
         this.warningService = warningService;
         this.analysisService = analysisService;
         this.caseInfoMapper = caseInfoMapper;
         this.warningRecordMapper = warningRecordMapper;
         this.syndromeConfigService = syndromeConfigService;
+        this.eventService = eventService;
     }
 
     @GetMapping("/")
     public String dashboard(Model model) {
-        model.addAttribute("pageTitle", "监测工作台");
+        model.addAttribute("pageTitle", "监测驾驶舱");
+        model.addAttribute("breadcrumb", "监测驾驶舱");
         Map<String, Object> stats = caseService.getDashboardStats();
         stats.put("warningCount", warningRecordMapper.countPending());
         model.addAttribute("stats", stats);
@@ -47,6 +52,10 @@ public class DashboardController {
                 java.util.Collections.emptyList() :
                 warningService.getAllRecords().subList(0, Math.min(5, warningService.getAllRecords().size())));
         model.addAttribute("syndromeConfigs", syndromeConfigService.findAll());
+        model.addAttribute("severeCases", caseService.findSevereCases(null));
+        model.addAttribute("deathCases", caseService.findDeathCases(null));
+        model.addAttribute("highRiskCases", caseService.findByRiskLevel("高风险"));
+        model.addAttribute("pendingEvents", eventService.countPending());
         return "dashboard";
     }
 }

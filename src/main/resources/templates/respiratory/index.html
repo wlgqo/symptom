@@ -138,12 +138,12 @@
                         <td><span th:class="${w.warningLevel == '红色' ? 'badge-level badge-red' : 'badge-level badge-orange'}" th:text="${w.warningLevel}"></span></td>
                         <td th:text="${w.warningContent}"></td>
                         <td>
-                            <span th:class="${w.status == '待处置' ? 'badge-level badge-orange' : 'badge-level badge-low'}" th:text="${w.status}"></span>
+                            <span th:class="${w.status == '待研判' or w.status == '已确认' or w.status == '处置中' or w.status == '待处置' ? 'badge-level badge-orange' : 'badge-level badge-low'}" th:text="${w.status}"></span>
                         </td>
                         <td>
-                            <button th:if="${w.status == '待处置'}" class="btn-primary-custom btn-sm handle-btn"
+                            <button th:if="${w.status == '待研判' or w.status == '待处置'}" class="btn-primary-custom btn-sm handle-btn"
                                     th:data-id="${w.id}">处置</button>
-                            <span th:if="${w.status != '待处置'}" th:text="${w.handleResult}" style="font-size:12px;color:#718096;"></span>
+                            <span th:if="${w.status != '待研判' and w.status != '待处置'}" th:text="${w.handleResult}" style="font-size:12px;color:#718096;"></span>
                             <a href="/case/list?syndromeType=发热呼吸道症候群" class="table-link" style="margin-left:8px;">关联病例</a>
                         </td>
                     </tr>

@@ -25,5 +25,7 @@ public interface CaseInfoMapper {
     int countToday();
     int countHighRisk();
     int countBySyndromeType(@Param("syndromeType") String syndromeType);
+    int countSevere();
+    int countDeath();
     List<CaseInfo> searchByConditionTree(@Param("sql") String sql);
 }

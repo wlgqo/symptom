@@ -17,12 +17,26 @@
         LEFT JOIN warning_model m ON r.model_id = m.id
         WHERE r.id = #{id}
     </select>
+    <select id="findByStatus" resultType="WarningRecord">
+        SELECT r.*, m.model_name as modelName FROM warning_record r
+        LEFT JOIN warning_model m ON r.model_id = m.id
+        WHERE r.status = #{status}
+        ORDER BY r.warning_time DESC
+    </select>
+    <select id="findByModelId" resultType="WarningRecord">
+        SELECT r.*, m.model_name as modelName FROM warning_record r
+        LEFT JOIN warning_model m ON r.model_id = m.id
+        WHERE r.model_id = #{modelId}
+        ORDER BY r.warning_time DESC
+    </select>
     <select id="countPending" resultType="int">
-        SELECT COUNT(*) FROM warning_record WHERE status = '待处置'
+        SELECT COUNT(*) FROM warning_record WHERE status IN ('待研判', '已确认', '处置中', '待处置')
     </select>
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO warning_record (model_id, syndrome_type, warning_level, warning_content, status)
-        VALUES (#{modelId}, #{syndromeType}, #{warningLevel}, #{warningContent}, #{status})
+        INSERT INTO warning_record (model_id, syndrome_type, warning_level, warning_content, status,
+            district, hospital, venue, observed_value, baseline_value, threshold_value, anomaly_degree, anomaly_type)
+        VALUES (#{modelId}, #{syndromeType}, #{warningLevel}, #{warningContent}, #{status},
+            #{district}, #{hospital}, #{venue}, #{observedValue}, #{baselineValue}, #{thresholdValue}, #{anomalyDegree}, #{anomalyType})
     </insert>
     <update id="update">
         UPDATE warning_record SET status = #{status}, handler = #{handler},

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.symptom.mapper.WarningNotificationMapper">
+    <select id="findByWarningId" resultType="WarningNotification">
+        SELECT * FROM warning_notification WHERE warning_id = #{warningId} ORDER BY notify_time DESC
+    </select>
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO warning_notification (warning_id, notify_target, notify_method, notify_status)
+        VALUES (#{warningId}, #{notifyTarget}, #{notifyMethod}, #{notifyStatus})
+    </insert>
+</mapper>

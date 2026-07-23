@@ -22,4 +22,12 @@ public class SyndromeConfigService {
     public SyndromeConfig findByName(String syndromeName) {
         return syndromeConfigMapper.findByName(syndromeName);
     }
+
+    public SyndromeConfig findById(Integer id) {
+        return syndromeConfigMapper.findById(id);
+    }
+
+    public void update(SyndromeConfig config) {
+        syndromeConfigMapper.update(config);
+    }
 }

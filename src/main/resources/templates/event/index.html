@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout('事件中心', ~{::content})}">
+<body>
+<div th:fragment="content">
+    <div class="workbench-2col">
+        <div class="workbench-col workbench-list">
+            <div class="col-header">异常事件列表</div>
+            <a th:each="e : ${events}" th:href="@{/event(id=${e.id})}"
+               th:class="${selected != null and selected.id == e.id ? 'event-item active' : 'event-item'}">
+                <div class="event-item-title" th:text="${e.eventName}">事件名</div>
+                <div class="event-item-meta">
+                    <span th:text="${e.eventType}">类型</span>
+                    <span th:text="${e.district}">区域</span>
+                    <span th:class="${e.status == '待核查' ? 'badge-level badge-orange' : 'badge-level badge-low'}" th:text="${e.status}"></span>
+                </div>
+                <div class="event-item-time" th:text="${#dates.format(e.discoveryTime, 'yyyy-MM-dd HH:mm')}"></div>
+            </a>
+            <div th:if="${events == null or events.isEmpty()}" class="empty-state">暂无异常事件</div>
+        </div>
+
+        <div class="workbench-col workbench-detail" th:if="${selected != null}">
+            <div class="col-header">事件详情</div>
+            <div class="detail-grid">
+                <div class="detail-item"><label>事件名称</label><span th:text="${selected.eventName}"></span></div>
+                <div class="detail-item"><label>事件类型</label><span th:text="${selected.eventType}"></span></div>
+                <div class="detail-item"><label>症候群</label><span th:text="${selected.syndromeType}"></span></div>
+                <div class="detail-item"><label>区域</label><span th:text="${selected.district}"></span></div>
+                <div class="detail-item"><label>场所</label><span th:text="${selected.venue}"></span></div>
+                <div class="detail-item"><label>责任人</label><span th:text="${selected.responsiblePerson}"></span></div>
+                <div class="detail-item"><label>状态</label><span th:text="${selected.status}"></span></div>
+            </div>
+            <div class="detail-section">
+                <h6>事件描述</h6>
+                <p th:text="${selected.description}"></p>
+            </div>
+            <div class="detail-section">
+                <h6>关联预警</h6>
+                <p th:text="${selected.relatedWarnings}">-</p>
+            </div>
+            <div class="detail-section">
+                <h6>关联病例</h6>
+                <p th:text="${selected.relatedCases}">-</p>
+            </div>
+            <div class="action-panel">
+                <select id="eventStatus" class="form-select-sm">
+                    <option value="待核查">待核查</option>
+                    <option value="调查中">调查中</option>
+                    <option value="处置中">处置中</option>
+                    <option value="已完成">已完成</option>
+                    <option value="已关闭">已关闭</option>
+                </select>
+                <textarea id="eventDesc" class="form-textarea" placeholder="处置备注..."></textarea>
+                <button class="btn-primary-sm" th:onclick="'updateEvent(' + ${selected.id} + ')'">更新状态</button>
+            </div>
+        </div>
+    </div>
+    <script th:inline="javascript">
+        function updateEvent(id) {
+            const status = document.getElementById('eventStatus').value;
+            const description = document.getElementById('eventDesc').value;
+            fetch('/event/update', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({id, status, description})
+            }).then(r => r.json()).then(d => { if (d.success) location.reload(); });
+        }
+    </script>
+</div>
+</body>
+</html>

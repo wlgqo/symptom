@@ -200,6 +200,14 @@
         SELECT COUNT(*) FROM case_info WHERE syndrome_type = #{syndromeType}
     </select>
 
+    <select id="countSevere" resultType="int">
+        SELECT COUNT(*) FROM case_info WHERE is_severe = 1
+    </select>
+
+    <select id="countDeath" resultType="int">
+        SELECT COUNT(*) FROM case_info WHERE is_death = 1
+    </select>
+
     <select id="searchByConditionTree" resultMap="BaseResultMap">
         SELECT DISTINCT c.* FROM case_info c
         WHERE c.id IN (${sql})

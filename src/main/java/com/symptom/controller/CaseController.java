@@ -53,6 +53,8 @@ public class CaseController {
         List<CaseInfo> cases = caseService.search(params);
         model.addAttribute("cases", cases);
         model.addAttribute("params", params);
+        model.addAttribute("pageTitle", "病例中心");
+        model.addAttribute("breadcrumb", "主动监测病例");
         return "case/list";
     }
 
@@ -64,6 +66,8 @@ public class CaseController {
         model.addAttribute("caseInfo", caseInfo);
         model.addAttribute("logs", logs);
         model.addAttribute("cards", cards);
+        model.addAttribute("pageTitle", "病例360°画像");
+        model.addAttribute("breadcrumb", "病例详情");
         return "case/detail";
     }
 

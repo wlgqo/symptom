@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout('预警中心', ~{::content})}">
+<body>
+<div th:fragment="content">
+    <div class="filter-bar">
+        <form method="get" action="/warning/center" class="filter-form">
+            <select name="syndromeType" class="form-select-sm">
+                <option value="">全部症候群</option>
+                <option value="发热呼吸道症候群" th:selected="${filterSyndrome == '发热呼吸道症候群'}">发热呼吸道症候群</option>
+                <option value="发热伴出血症候群" th:selected="${filterSyndrome == '发热伴出血症候群'}">发热伴出血症候群</option>
+                <option value="发热伴腹泻症候群" th:selected="${filterSyndrome == '发热伴腹泻症候群'}">发热伴腹泻症候群</option>
+            </select>
+            <select name="status" class="form-select-sm">
+                <option value="">全部状态</option>
+                <option value="待研判" th:selected="${filterStatus == '待研判'}">待研判</option>
+                <option value="已确认" th:selected="${filterStatus == '已确认'}">已确认</option>
+                <option value="处置中" th:selected="${filterStatus == '处置中'}">处置中</option>
+                <option value="已完成" th:selected="${filterStatus == '已完成'}">已完成</option>
+                <option value="已关闭" th:selected="${filterStatus == '已关闭'}">已关闭</option>
+            </select>
+            <button type="submit" class="btn-primary-sm">筛选</button>
+            <a href="/warning/center" class="btn-outline-sm">重置</a>
+        </form>
+        <div class="filter-meta">待处置预警 <strong th:text="${pendingCount}">0</strong> 条</div>
+    </div>
+
+    <div class="workbench-3col">
+        <!-- 左：预警列表 -->
+        <div class="workbench-col workbench-list">
+            <div class="col-header">预警列表</div>
+            <div class="warning-list">
+                <a th:each="r : ${records}"
+                   th:href="@{/warning/center(id=${r.id})}"
+                   th:class="${selected != null and selected.id == r.id ? 'warning-item active' : 'warning-item'}">
+                    <div class="warning-item-top">
+                        <span class="badge-level" th:classappend="${r.warningLevel == '红色' ? ' badge-red' : ' badge-orange'}" th:text="${r.warningLevel}"></span>
+                        <span class="warning-time" th:text="${#dates.format(r.warningTime, 'MM-dd HH:mm')}"></span>
+                    </div>
+                    <div class="warning-item-title" th:text="${r.syndromeType}">症候群</div>
+                    <div class="warning-item-desc" th:text="${r.warningContent}">内容</div>
+                    <div class="warning-item-meta">
+                        <span th:text="${r.modelName}">模型</span>
+                        <span th:class="${r.status == '待研判' or r.status == '待处置' ? 'badge-level badge-orange' : 'badge-level badge-low'}" th:text="${r.status}"></span>
+                    </div>
+                </a>
+                <div th:if="${records == null or records.isEmpty()}" class="empty-state">暂无预警记录</div>
+            </div>
+        </div>
+
+        <!-- 中：预警详情 -->
+        <div class="workbench-col workbench-detail" th:if="${selected != null}">
+            <div class="col-header">预警详情</div>
+            <div class="detail-section">
+                <h6>异常信息</h6>
+                <p th:text="${selected.warningContent}"></p>
+                <div class="detail-grid">
+                    <div class="detail-item"><label>触发模型</label><span th:text="${selected.modelName}">-</span></div>
+                    <div class="detail-item"><label>异常类型</label><span th:text="${selected.anomalyType != null ? selected.anomalyType : '异常增长'}">-</span></div>
+                    <div class="detail-item"><label>观测值</label><span th:text="${selected.observedValue != null ? selected.observedValue : '-'}">-</span></div>
+                    <div class="detail-item"><label>基线值</label><span th:text="${selected.baselineValue != null ? selected.baselineValue : '-'}">-</span></div>
+                    <div class="detail-item"><label>阈值</label><span th:text="${selected.thresholdValue != null ? selected.thresholdValue : '-'}">-</span></div>
+                    <div class="detail-item"><label>异常程度</label><span th:text="${selected.anomalyDegree != null ? selected.anomalyDegree : '-'}">-</span></div>
+                    <div class="detail-item"><label>涉及区域</label><span th:text="${selected.district != null ? selected.district : '-'}">-</span></div>
+                    <div class="detail-item"><label>涉及机构</label><span th:text="${selected.hospital != null ? selected.hospital : '-'}">-</span></div>
+                </div>
+            </div>
+            <div class="detail-section" th:if="${model != null}">
+                <h6>模型参数</h6>
+                <pre class="json-preview" th:text="${model.configJson}"></pre>
+            </div>
+            <div class="detail-section">
+                <h6>关联病例 <a href="/case/list" class="panel-action">查看全部 →</a></h6>
+                <table class="data-table compact">
+                    <thead><tr><th>姓名</th><th>地区</th><th>风险</th><th>操作</th></tr></thead>
+                    <tbody>
+                        <tr th:each="c, stat : ${relatedCases}" th:if="${stat.index < 5}">
+                            <td th:text="${c.patientName}"></td>
+                            <td th:text="${c.district}"></td>
+                            <td><span class="badge-level" th:classappend="${c.riskLevel == '高风险' ? ' badge-red' : ' badge-low'}" th:text="${c.riskLevel}"></span></td>
+                            <td><a th:href="@{/case/detail/{id}(id=${c.id})}" class="table-link">360°画像</a></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="detail-section">
+                <h6>干系人通知</h6>
+                <table class="data-table compact" th:if="${notifications != null and !notifications.isEmpty()}">
+                    <thead><tr><th>对象</th><th>方式</th><th>时间</th><th>状态</th></tr></thead>
+                    <tbody>
+                        <tr th:each="n : ${notifications}">
+                            <td th:text="${n.notifyTarget}"></td>
+                            <td th:text="${n.notifyMethod}"></td>
+                            <td th:text="${#dates.format(n.notifyTime, 'MM-dd HH:mm')}"></td>
+                            <td th:text="${n.notifyStatus}"></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div th:if="${notifications == null or notifications.isEmpty()}" class="empty-hint">尚未发送通知</div>
+            </div>
+        </div>
+        <div class="workbench-col workbench-detail" th:if="${selected == null}">
+            <div class="empty-state">请选择左侧预警记录查看详情</div>
+        </div>
+
+        <!-- 右：处置面板 -->
+        <div class="workbench-col workbench-action" th:if="${selected != null}">
+            <div class="col-header">处置面板</div>
+            <div class="status-flow">
+                <span th:class="${selected.status == '待研判' or selected.status == '待处置' ? 'flow-step active' : 'flow-step'}">待研判</span>
+                <span class="flow-arrow">→</span>
+                <span th:class="${selected.status == '已确认' ? 'flow-step active' : 'flow-step'}">已确认</span>
+                <span class="flow-arrow">→</span>
+                <span th:class="${selected.status == '处置中' ? 'flow-step active' : 'flow-step'}">处置中</span>
+                <span class="flow-arrow">→</span>
+                <span th:class="${selected.status == '已完成' ? 'flow-step active' : 'flow-step'}">已完成</span>
+                <span class="flow-arrow">→</span>
+                <span th:class="${selected.status == '已关闭' ? 'flow-step active' : 'flow-step'}">已关闭</span>
+            </div>
+            <div class="action-panel">
+                <textarea id="actionComment" class="form-textarea" placeholder="填写处置意见..."></textarea>
+                <div class="action-btns">
+                    <button class="btn-primary-sm" onclick="doAction('confirm')">确认异常</button>
+                    <button class="btn-warning-sm" onclick="doAction('dispose')">启动处置</button>
+                    <button class="btn-success-sm" onclick="doAction('complete')">完成处置</button>
+                    <button class="btn-outline-sm" onclick="doAction('close')">关闭预警</button>
+                </div>
+                <button class="btn-outline-sm btn-block" onclick="sendNotify()">发送干系人通知</button>
+            </div>
+            <div class="detail-section">
+                <h6>处置记录</h6>
+                <div class="timeline" th:if="${disposals != null and !disposals.isEmpty()}">
+                    <div class="timeline-item" th:each="d : ${disposals}">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-title" th:text="${d.actionType} + ' · ' + ${d.operator}"></div>
+                            <div class="timeline-time" th:text="${#dates.format(d.actionTime, 'yyyy-MM-dd HH:mm')}"></div>
+                            <div class="timeline-desc" th:text="${d.actionComment}"></div>
+                        </div>
+                    </div>
+                </div>
+                <div th:if="${disposals == null or disposals.isEmpty()}" class="empty-hint">暂无处置记录</div>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        const warningId = /*[[${selected != null ? selected.id : null}]]*/ null;
+        function doAction(action) {
+            if (!warningId) return;
+            const comment = document.getElementById('actionComment').value;
+            fetch('/warning/action', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({warningId, action, comment})
+            }).then(r => r.json()).then(d => {
+                if (d.success) location.reload();
+                else alert('操作失败');
+            });
+        }
+        function sendNotify() {
+            if (!warningId) return;
+            fetch('/warning/notify', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({warningId, target: '疾控业务人员', method: '站内消息'})
+            }).then(r => r.json()).then(d => {
+                if (d.success) { alert('通知已发送'); location.reload(); }
+            });
+        }
+    </script>
+</div>
+</body>
+</html>

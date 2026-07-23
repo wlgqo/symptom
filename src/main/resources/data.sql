@@ -1,4 +1,8 @@
 -- 初始化业务数据
+DELETE FROM warning_disposal;
+DELETE FROM warning_notification;
+DELETE FROM surveillance_event;
+DELETE FROM saved_query;
 DELETE FROM report_card;
 DELETE FROM case_modify_log;
 DELETE FROM case_symptom;
@@ -10,7 +14,7 @@ DELETE FROM operation_log;
 DELETE FROM sys_user;
 
 -- 重置自增ID
-DELETE FROM sqlite_sequence WHERE name IN ('case_info', 'case_symptom', 'warning_record', 'case_modify_log', 'report_card', 'warning_model', 'syndrome_config', 'operation_log', 'sys_user');
+DELETE FROM sqlite_sequence WHERE name IN ('case_info', 'case_symptom', 'warning_record', 'case_modify_log', 'report_card', 'warning_model', 'syndrome_config', 'operation_log', 'sys_user', 'warning_notification', 'warning_disposal', 'surveillance_event', 'saved_query');
 
 -- 用户数据
 INSERT INTO sys_user (username, password, role, real_name) VALUES
@@ -140,12 +144,38 @@ INSERT INTO case_symptom (case_id, symptom_name) VALUES
 (43, '发热'), (43, '腹泻');
 
 -- 预警记录
-INSERT INTO warning_record (model_id, syndrome_type, warning_level, warning_content, warning_time, status) VALUES
-(1, '发热呼吸道症候群', '橙色', '【固定阈值模型】检测到异常：发热呼吸道症候群病例数8例，超过阈值5.0例', '2026-03-15 09:30:00', '已处置'),
-(3, '发热呼吸道症候群', '红色', '【CUSUM累计和控制图模型】检测到持续性异常上升趋势', '2026-03-18 14:20:00', '待处置'),
-(7, '发热呼吸道症候群', '橙色', '【场所聚集性模型】朝阳区望京街道发现3例聚集病例', '2026-03-20 10:15:00', '待处置'),
-(1, '发热伴出血症候群', '红色', '【固定阈值模型】大兴安岭地区出血热病例异常增加', '2026-03-16 16:00:00', '已处置'),
-(5, '发热伴腹泻症候群', '橙色', '【EWMA模型】腹泻症候群病例近期呈上升趋势', '2026-03-19 11:45:00', '待处置');
+INSERT INTO warning_record (model_id, syndrome_type, warning_level, warning_content, warning_time, status, district, hospital, observed_value, baseline_value, threshold_value, anomaly_degree, anomaly_type) VALUES
+(1, '发热呼吸道症候群', '橙色', '【固定阈值模型】检测到异常：发热呼吸道症候群病例数8例，超过阈值5.0例', '2026-03-15 09:30:00', '已完成', '东城区', '市第一人民医院', 8, 4.2, 5.0, '中等', '异常增长'),
+(3, '发热呼吸道症候群', '红色', '【CUSUM累计和控制图模型】检测到持续性异常上升趋势', '2026-03-18 14:20:00', '待研判', '朝阳区', '市第三人民医院', 12, 5.5, 8.3, '严重', '持续上升'),
+(7, '发热呼吸道症候群', '橙色', '【场所聚集性模型】朝阳区望京街道发现3例聚集病例', '2026-03-20 10:15:00', '已确认', '朝阳区', '望京社区卫生服务中心', 3, 1.0, 3.0, '中等', '场所聚集'),
+(1, '发热伴出血症候群', '红色', '【固定阈值模型】大兴安岭地区出血热病例异常增加', '2026-03-16 16:00:00', '处置中', '大兴安岭', '盟人民医院', 6, 2.0, 4.0, '严重', '区域异常'),
+(5, '发热伴腹泻症候群', '橙色', '【EWMA模型】腹泻症候群病例近期呈上升趋势', '2026-03-19 11:45:00', '待研判', '丰台区', '市第二人民医院', 7, 3.5, 5.0, '中等', '趋势异常');
+
+-- 预警通知
+INSERT INTO warning_notification (warning_id, notify_target, notify_method, notify_time, notify_status) VALUES
+(1, '疾控业务人员', '站内消息', '2026-03-15 09:35:00', '已发送'),
+(1, '监测分析人员', '短信', '2026-03-15 09:36:00', '已发送'),
+(2, '疾控业务人员', '站内消息', '2026-03-18 14:25:00', '已发送'),
+(3, '处置人员', '邮件', '2026-03-20 10:20:00', '已发送'),
+(4, '疾控业务人员', '短信', '2026-03-16 16:05:00', '已发送');
+
+-- 预警处置记录
+INSERT INTO warning_disposal (warning_id, operator, action_time, action_type, action_comment) VALUES
+(1, '张业务', '2026-03-15 10:00:00', '确认异常', '经核实为季节性流感波动，已启动监测'),
+(1, '张业务', '2026-03-15 14:30:00', '完成处置', '已完成流行病学调查，无聚集性疫情'),
+(3, '系统管理员', '2026-03-20 11:00:00', '确认异常', '望京街道3例病例存在时空聚集，需进一步调查'),
+(4, '张业务', '2026-03-16 17:00:00', '启动处置', '已派调查组赴大兴安岭');
+
+-- 监测事件
+INSERT INTO surveillance_event (event_name, event_type, syndrome_type, district, venue, related_cases, related_warnings, status, responsible_person, discovery_time, description) VALUES
+('朝阳区望京街道呼吸道病例聚集', '场所聚集', '发热呼吸道症候群', '朝阳区', '望京街道', '3,7,26', '3', '调查中', '张业务', '2026-03-20 10:15:00', '望京街道3日内报告3例发热呼吸道症候群病例，存在同一场所暴露可能'),
+('大兴安岭出血热病例异常', '区域异常', '发热伴出血症候群', '大兴安岭', '牧区', '29,31', '4', '处置中', '系统管理员', '2026-03-16 16:00:00', '出血热病例数超过历史同期水平，已启动专项监测'),
+('丰台区腹泻高风险聚集', '食源性风险', '发热伴腹泻症候群', '丰台区', '某餐饮单位', '36,37,38', '5', '待核查', '李浏览', '2026-03-19 11:45:00', '同一餐饮单位多名员工出现发热腹泻症状');
+
+-- 保存的查询
+INSERT INTO saved_query (query_name, syndrome_type, condition_json, created_by) VALUES
+('高风险呼吸道病例', '发热呼吸道症候群', '{"logic":"AND","conditions":[{"type":"syndrome","value":"发热呼吸道症候群"},{"type":"risk","value":"高风险"}]}', '张业务'),
+('60岁以上重症病例', NULL, '{"logic":"AND","conditions":[{"type":"age","operator":">=","value":"60"}]}', '系统管理员');
 
 -- 报卡数据
 INSERT INTO report_card (case_id, card_no, report_type, report_date, reporter, status) VALUES

@@ -85,11 +85,71 @@ CREATE TABLE IF NOT EXISTS warning_record (
     warning_level VARCHAR(20),
     warning_content TEXT,
     warning_time DATETIME DEFAULT CURRENT_TIMESTAMP,
-    status VARCHAR(20) DEFAULT '待处置',
+    status VARCHAR(20) DEFAULT '待研判',
     handler VARCHAR(50),
     handle_result TEXT,
     handle_time DATETIME,
+    district VARCHAR(100),
+    hospital VARCHAR(100),
+    venue VARCHAR(200),
+    observed_value REAL,
+    baseline_value REAL,
+    threshold_value REAL,
+    anomaly_degree VARCHAR(20),
+    anomaly_type VARCHAR(50),
     FOREIGN KEY (model_id) REFERENCES warning_model(id)
+);
+
+-- 预警通知表
+CREATE TABLE IF NOT EXISTS warning_notification (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    warning_id INTEGER NOT NULL,
+    notify_target VARCHAR(100),
+    notify_method VARCHAR(50),
+    notify_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    notify_status VARCHAR(20) DEFAULT '已发送',
+    FOREIGN KEY (warning_id) REFERENCES warning_record(id)
+);
+
+-- 预警处置记录表
+CREATE TABLE IF NOT EXISTS warning_disposal (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    warning_id INTEGER NOT NULL,
+    operator VARCHAR(50),
+    action_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    action_type VARCHAR(50),
+    action_comment TEXT,
+    attachment TEXT,
+    remark TEXT,
+    FOREIGN KEY (warning_id) REFERENCES warning_record(id)
+);
+
+-- 监测事件表
+CREATE TABLE IF NOT EXISTS surveillance_event (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    event_name VARCHAR(200) NOT NULL,
+    event_type VARCHAR(50),
+    syndrome_type VARCHAR(50),
+    district VARCHAR(100),
+    venue VARCHAR(200),
+    related_cases TEXT,
+    related_warnings TEXT,
+    status VARCHAR(20) DEFAULT '待核查',
+    responsible_person VARCHAR(50),
+    discovery_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    description TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 保存的查询条件
+CREATE TABLE IF NOT EXISTS saved_query (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    query_name VARCHAR(100) NOT NULL,
+    syndrome_type VARCHAR(50),
+    condition_json TEXT,
+    created_by VARCHAR(50),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 修改日志表
