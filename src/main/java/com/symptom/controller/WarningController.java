@@ -31,7 +31,7 @@ public class WarningController {
                          Model model) {
         model.addAttribute("pageTitle", "预警中心");
         model.addAttribute("breadcrumb", "预警中心");
-        List<WarningRecord> records = warningService.getAllRecords();
+        List<WarningRecord> records = warningService.searchRecords(syndromeType, status);
         model.addAttribute("records", records);
         model.addAttribute("filterSyndrome", syndromeType);
         model.addAttribute("filterStatus", status);
@@ -61,7 +61,7 @@ public class WarningController {
     public Map<String, Object> action(@RequestBody Map<String, Object> body, HttpSession session) {
         SysUser user = (SysUser) session.getAttribute("currentUser");
         Map<String, Object> result = new HashMap<>();
-        Integer warningId = (Integer) body.get("warningId");
+        Integer warningId = toInteger(body.get("warningId"));
         String action = (String) body.get("action");
         String comment = (String) body.getOrDefault("comment", "");
 
@@ -80,11 +80,25 @@ public class WarningController {
     @ResponseBody
     public Map<String, Object> notify(@RequestBody Map<String, Object> body) {
         Map<String, Object> result = new HashMap<>();
-        Integer warningId = (Integer) body.get("warningId");
+        Integer warningId = toInteger(body.get("warningId"));
+        if (warningId == null) {
+            result.put("success", false);
+            result.put("message", "预警ID无效");
+            return result;
+        }
         String target = (String) body.getOrDefault("target", "疾控业务人员");
         String method = (String) body.getOrDefault("method", "站内消息");
         warningService.sendNotification(warningId, target, method);
         result.put("success", true);
         return result;
+    }
+
+    private Integer toInteger(Object value) {
+        if (value == null) return null;
+        if (value instanceof Number) return ((Number) value).intValue();
+        if (value instanceof String && !((String) value).isEmpty()) {
+            return Integer.parseInt((String) value);
+        }
+        return null;
     }
 }

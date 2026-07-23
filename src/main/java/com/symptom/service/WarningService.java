@@ -47,6 +47,13 @@ public class WarningService {
         return recordMapper.findAll();
     }
 
+    public List<WarningRecord> searchRecords(String syndromeType, String status) {
+        if ((syndromeType == null || syndromeType.isEmpty()) && (status == null || status.isEmpty())) {
+            return recordMapper.findAll();
+        }
+        return recordMapper.search(syndromeType, status);
+    }
+
     public List<WarningRecord> getRecordsBySyndrome(String syndromeType) {
         return recordMapper.findBySyndromeType(syndromeType);
     }
@@ -138,7 +145,7 @@ public class WarningService {
             return Collections.emptyList();
         }
 
-        List<Map<String, Object>> dailyData = caseInfoMapper.countByDate(syndromeType, "day");
+        List<Map<String, Object>> dailyData = caseInfoMapper.countByDate(syndromeType, "day", null, null);
         List<WarningRecord> newWarnings = new ArrayList<>();
 
         if (dailyData.isEmpty()) {

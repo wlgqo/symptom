@@ -9,6 +9,8 @@
                 <option value="发热呼吸道症候群" th:selected="${filterSyndrome == '发热呼吸道症候群'}">发热呼吸道症候群</option>
                 <option value="发热伴出血症候群" th:selected="${filterSyndrome == '发热伴出血症候群'}">发热伴出血症候群</option>
                 <option value="发热伴腹泻症候群" th:selected="${filterSyndrome == '发热伴腹泻症候群'}">发热伴腹泻症候群</option>
+                <option value="发热出疹症候群" th:selected="${filterSyndrome == '发热出疹症候群'}">发热出疹症候群</option>
+                <option value="脑炎脑膜炎症候群" th:selected="${filterSyndrome == '脑炎脑膜炎症候群'}">脑炎脑膜炎症候群</option>
             </select>
             <select name="status" class="form-select-sm">
                 <option value="">全部状态</option>
@@ -30,7 +32,7 @@
             <div class="col-header">预警列表</div>
             <div class="warning-list">
                 <a th:each="r : ${records}"
-                   th:href="@{/warning/center(id=${r.id})}"
+                   th:href="@{/warning/center(id=${r.id}, syndromeType=${filterSyndrome}, status=${filterStatus})}"
                    th:class="${selected != null and selected.id == r.id ? 'warning-item active' : 'warning-item'}">
                     <div class="warning-item-top">
                         <span class="badge-level" th:classappend="${r.warningLevel == '红色' ? ' badge-red' : ' badge-orange'}" th:text="${r.warningLevel}"></span>
@@ -145,27 +147,36 @@
 
     <script th:inline="javascript">
         const warningId = /*[[${selected != null ? selected.id : null}]]*/ null;
+        const filterSyndrome = /*[[${filterSyndrome}]]*/ '';
+        const filterStatus = /*[[${filterStatus}]]*/ '';
+        function warningUrl() {
+            var q = '/warning/center?id=' + warningId;
+            if (filterSyndrome) q += '&syndromeType=' + encodeURIComponent(filterSyndrome);
+            if (filterStatus) q += '&status=' + encodeURIComponent(filterStatus);
+            return q;
+        }
         function doAction(action) {
             if (!warningId) return;
             const comment = document.getElementById('actionComment').value;
             fetch('/warning/action', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({warningId, action, comment})
-            }).then(r => r.json()).then(d => {
-                if (d.success) location.reload();
-                else alert('操作失败');
-            });
+                body: JSON.stringify({warningId: warningId, action: action, comment: comment})
+            }).then(function(r) { return r.json(); }).then(function(d) {
+                if (d.success) location.href = warningUrl();
+                else alert(d.message || '操作失败');
+            }).catch(function() { alert('网络异常，请重试'); });
         }
         function sendNotify() {
             if (!warningId) return;
             fetch('/warning/notify', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({warningId, target: '疾控业务人员', method: '站内消息'})
-            }).then(r => r.json()).then(d => {
-                if (d.success) { alert('通知已发送'); location.reload(); }
-            });
+                body: JSON.stringify({warningId: warningId, target: '疾控业务人员', method: '站内消息'})
+            }).then(function(r) { return r.json(); }).then(function(d) {
+                if (d.success) { alert('通知已发送'); location.href = warningUrl(); }
+                else alert(d.message || '发送失败');
+            }).catch(function() { alert('网络异常，请重试'); });
         }
     </script>
 </div>

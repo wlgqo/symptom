@@ -17,8 +17,13 @@ public interface CaseInfoMapper {
     List<CaseInfo> findSevereCases(@Param("syndromeType") String syndromeType);
     List<CaseInfo> findDeathCases(@Param("syndromeType") String syndromeType);
     List<CaseInfo> findByRiskLevel(@Param("riskLevel") String riskLevel);
-    List<Map<String, Object>> countByDate(@Param("syndromeType") String syndromeType, @Param("groupBy") String groupBy);
-    List<Map<String, Object>> countByDistrict(@Param("syndromeType") String syndromeType);
+    List<Map<String, Object>> countByDate(@Param("syndromeType") String syndromeType,
+                                          @Param("groupBy") String groupBy,
+                                          @Param("district") String district,
+                                          @Param("days") Integer days);
+    List<Map<String, Object>> countByDistrict(@Param("syndromeType") String syndromeType,
+                                              @Param("district") String district,
+                                              @Param("days") Integer days);
     List<Map<String, Object>> countByAgeGroup(@Param("syndromeType") String syndromeType);
     List<Map<String, Object>> countByGender(@Param("syndromeType") String syndromeType);
     List<Map<String, Object>> countByOccupation(@Param("syndromeType") String syndromeType);

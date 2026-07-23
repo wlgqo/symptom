@@ -15,6 +15,46 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+function renderMedicalRecordSummary(medicalJson) {
+    var el = document.getElementById('medicalRecordSummary');
+    if (!el) return;
+    try {
+        var medical = medicalJson ? JSON.parse(medicalJson) : {};
+        var html = '<div class="detail-grid">';
+        html += '<div class="detail-item full-width"><span class="label">主诉</span><span class="value">' + (medical.chiefComplaint || '-') + '</span></div>';
+        html += '<div class="detail-item full-width"><span class="label">现病史</span><span class="value">' + (medical.presentIllness || '-') + '</span></div>';
+        html += '<div class="detail-item full-width"><span class="label">体格检查</span><span class="value">' + (medical.physicalExam || '-') + '</span></div>';
+        if (medical.department) {
+            html += '<div class="detail-item"><span class="label">科室</span><span class="value">' + medical.department + '</span></div>';
+        }
+        if (medical.bedNo) {
+            html += '<div class="detail-item"><span class="label">床号</span><span class="value">' + medical.bedNo + '</span></div>';
+        }
+        html += '</div>';
+
+        var auxItems = [];
+        (medical.examinations || []).forEach(function(e) {
+            auxItems.push({date: e.date, type: '辅助检查', name: e.item, result: e.result});
+        });
+        (medical.labTests || []).forEach(function(l) {
+            auxItems.push({date: l.date, type: '实验室检查', name: l.item, result: l.result});
+        });
+        if (auxItems.length > 0) {
+            html += '<h6 style="margin:16px 0 8px;font-size:13px;color:#4a5568;">辅助检查</h6>';
+            html += '<table class="data-table compact"><thead><tr><th>日期</th><th>类型</th><th>项目</th><th>结果</th></tr></thead><tbody>';
+            auxItems.forEach(function(item) {
+                html += '<tr><td>' + (item.date || '-') + '</td><td>' + item.type + '</td><td>' + item.name + '</td><td>' + (item.result || '-') + '</td></tr>';
+            });
+            html += '</tbody></table>';
+        } else {
+            html += '<p class="empty-hint" style="margin-top:12px;">暂无辅助检查记录</p>';
+        }
+        el.innerHTML = html;
+    } catch (e) {
+        el.innerHTML = '<p class="empty-state">病历信息加载失败</p>';
+    }
+}
+
 function renderPatientProfile(profileJson, medicalJson) {
     var profileEl = document.getElementById('patientProfileContent');
     var timelineEl = document.getElementById('medicalTimeline');

@@ -15,8 +15,13 @@ public class AnalysisService {
     }
 
     public Map<String, Object> getTimeDistribution(String syndromeType, String groupBy) {
+        return getTimeDistribution(syndromeType, groupBy, null, null);
+    }
+
+    public Map<String, Object> getTimeDistribution(String syndromeType, String groupBy,
+                                                   String district, Integer days) {
         Map<String, Object> result = new HashMap<>();
-        List<Map<String, Object>> data = caseInfoMapper.countByDate(syndromeType, groupBy);
+        List<Map<String, Object>> data = caseInfoMapper.countByDate(syndromeType, groupBy, district, days);
         List<String> labels = new ArrayList<>();
         List<Integer> values = new ArrayList<>();
         for (Map<String, Object> item : data) {
@@ -29,7 +34,11 @@ public class AnalysisService {
     }
 
     public List<Map<String, Object>> getDistrictDistribution(String syndromeType) {
-        return caseInfoMapper.countByDistrict(syndromeType);
+        return getDistrictDistribution(syndromeType, null, null);
+    }
+
+    public List<Map<String, Object>> getDistrictDistribution(String syndromeType, String district, Integer days) {
+        return caseInfoMapper.countByDistrict(syndromeType, district, days);
     }
 
     public Map<String, Object> getPopulationDistribution(String syndromeType) {
@@ -94,8 +103,6 @@ public class AnalysisService {
 
         int feverCount = 0;
         double totalTemp = 0;
-        Map<String, Integer> respiratorySymptoms = new HashMap<>();
-        Map<String, Integer> accompanySymptoms = new HashMap<>();
         Map<String, Integer> diagnoses = new HashMap<>();
 
         for (com.symptom.entity.CaseInfo c : cases) {

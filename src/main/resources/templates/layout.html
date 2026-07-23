@@ -64,12 +64,6 @@
                         <span>发热伴腹泻症候群</span>
                     </a>
                 </div>
-                <div class="nav-item">
-                    <a href="/theme" th:classappend="${activeMenu == 'theme' ? 'active' : ''}">
-                        <svg class="nav-svg" viewBox="0 0 16 16"><path fill="currentColor" d="M2 3h12v1H2V3zm0 3h8v1H2V6zm0 3h10v1H2V9zm0 3h6v1H2v-1z"/></svg>
-                        <span>症候群主题库</span>
-                    </a>
-                </div>
 
                 <div class="nav-section">预警中心</div>
                 <div class="nav-item">
@@ -106,18 +100,54 @@
                         <span>条件树组合分析</span>
                     </a>
                 </div>
+                <div class="nav-item">
+                    <a href="/theme" th:classappend="${activeMenu == 'theme' ? 'active' : ''}">
+                        <svg class="nav-svg" viewBox="0 0 16 16"><path fill="currentColor" d="M2 3h12v1H2V3zm0 3h8v1H2V6zm0 3h10v1H2V9zm0 3h6v1H2v-1z"/></svg>
+                        <span>症候群主题库</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/config" th:classappend="${activeMenu == 'syndrome-config' ? 'active' : ''}">
+                        <svg class="nav-svg" viewBox="0 0 16 16"><path fill="currentColor" d="M8 1.5l1.5 3 3.3.5-2.4 2.3.6 3.3L8 9.2 4 10.6l.6-3.3L2.2 4.5l3.3-.5L8 1.5z"/></svg>
+                        <span>症候群配置</span>
+                    </a>
+                </div>
 
                 <div class="nav-section" th:if="${session.currentUser != null and session.currentUser.role == '管理员'}">系统管理</div>
                 <div class="nav-item" th:if="${session.currentUser != null and session.currentUser.role == '管理员'}">
-                    <a href="/config" th:classappend="${activeMenu == 'config' ? 'active' : ''}">
-                        <svg class="nav-svg" viewBox="0 0 16 16"><path fill="currentColor" d="M8 1.5l1.5 3 3.3.5-2.4 2.3.6 3.3L8 9.2 4 10.6l.6-3.3L2.2 4.5l3.3-.5L8 1.5z"/></svg>
-                        <span>监测配置</span>
+                    <a href="/admin?tab=menu" th:classappend="${activeMenu == 'admin' ? 'active' : ''}">
+                        <svg class="nav-svg" viewBox="0 0 16 16"><path fill="currentColor" d="M2 2h5v5H2V2zm9 0h5v5h-5V2zM2 9h5v5H2V9zm9 0h5v5h-5V9z"/></svg>
+                        <span>菜单配置</span>
                     </a>
                 </div>
                 <div class="nav-item" th:if="${session.currentUser != null and session.currentUser.role == '管理员'}">
-                    <a href="/admin" th:classappend="${activeMenu == 'admin' ? 'active' : ''}">
+                    <a href="/admin?tab=users" th:classappend="${activeMenu == 'admin' ? 'active' : ''}">
+                        <svg class="nav-svg" viewBox="0 0 16 16"><path fill="currentColor" d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm-5 6s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3z"/></svg>
+                        <span>用户配置</span>
+                    </a>
+                </div>
+                <div class="nav-item" th:if="${session.currentUser != null and session.currentUser.role == '管理员'}">
+                    <a href="/admin?tab=roles" th:classappend="${activeMenu == 'admin' ? 'active' : ''}">
                         <svg class="nav-svg" viewBox="0 0 16 16"><path fill="currentColor" d="M8 1.5l6.5 2.5v4c0 3.5-2.5 5.5-6.5 6.5C4 13.5 1.5 11.5 1.5 8V4L8 1.5z"/></svg>
-                        <span>系统管理</span>
+                        <span>角色配置</span>
+                    </a>
+                </div>
+                <div class="nav-item" th:if="${session.currentUser != null and session.currentUser.role == '管理员'}">
+                    <a href="/admin?tab=dict" th:classappend="${activeMenu == 'admin' ? 'active' : ''}">
+                        <svg class="nav-svg" viewBox="0 0 16 16"><path fill="currentColor" d="M3 2h10a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z"/></svg>
+                        <span>字典项配置</span>
+                    </a>
+                </div>
+                <div class="nav-item" th:if="${session.currentUser != null and session.currentUser.role == '管理员'}">
+                    <a href="/admin?tab=monitor" th:classappend="${activeMenu == 'admin' ? 'active' : ''}">
+                        <svg class="nav-svg" viewBox="0 0 16 16"><path fill="currentColor" d="M2 12h12v2H2v-2zm2-3h2V4H4v5zm4 0h2V2H8v7zm4 0h2V6h-2v3z"/></svg>
+                        <span>系统监控</span>
+                    </a>
+                </div>
+                <div class="nav-item" th:if="${session.currentUser != null and session.currentUser.role == '管理员'}">
+                    <a href="/admin?tab=notice" th:classappend="${activeMenu == 'admin' ? 'active' : ''}">
+                        <svg class="nav-svg" viewBox="0 0 16 16"><path fill="currentColor" d="M2 3h12v2H2V3zm0 4h8v2H2V7zm0 4h10v2H2v-2z"/></svg>
+                        <span>通知公告</span>
                     </a>
                 </div>
             </nav>

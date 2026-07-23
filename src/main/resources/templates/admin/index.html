@@ -3,13 +3,31 @@
 <body>
 <div th:fragment="content">
     <div class="tab-nav" id="adminTabs">
-        <div class="tab-item active" data-tab="users">用户管理</div>
-        <div class="tab-item" data-tab="syndromes">症候群配置</div>
-        <div class="tab-item" data-tab="models">预警模型</div>
-        <div class="tab-item" data-tab="logs">操作日志</div>
+        <div class="tab-item" data-tab="menu" th:classappend="${activeTab == 'menu' ? ' active' : ''}">菜单配置</div>
+        <div class="tab-item" data-tab="users" th:classappend="${activeTab == 'users' ? ' active' : ''}">用户配置</div>
+        <div class="tab-item" data-tab="roles" th:classappend="${activeTab == 'roles' ? ' active' : ''}">角色配置</div>
+        <div class="tab-item" data-tab="dict" th:classappend="${activeTab == 'dict' ? ' active' : ''}">字典项配置</div>
+        <div class="tab-item" data-tab="monitor" th:classappend="${activeTab == 'monitor' ? ' active' : ''}">系统监控</div>
+        <div class="tab-item" data-tab="notice" th:classappend="${activeTab == 'notice' ? ' active' : ''}">通知公告</div>
     </div>
 
-    <div class="tab-content active" id="tab-users">
+    <div class="tab-content" id="tab-menu" th:classappend="${activeTab == 'menu' ? ' active' : ''}">
+        <div class="card-panel">
+            <h5>系统菜单配置</h5>
+            <table class="data-table">
+                <thead><tr><th>菜单名称</th><th>访问路径</th><th>状态</th></tr></thead>
+                <tbody>
+                    <tr th:each="m : ${menuItems}">
+                        <td th:text="${m.name}"></td>
+                        <td><code th:text="${m.path}"></code></td>
+                        <td><span class="badge-level badge-green" th:text="${m.status}"></span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="tab-content" id="tab-users" th:classappend="${activeTab == 'users' ? ' active' : ''}">
         <div class="card-panel">
             <h5>用户列表</h5>
             <table class="data-table">
@@ -47,58 +65,60 @@
         </div>
     </div>
 
-    <div class="tab-content" id="tab-syndromes">
-        <div class="card-panel" th:each="sc : ${syndromeConfigs}">
-            <h5>
-                <span th:text="${sc.syndromeName}"></span>
-                <span class="panel-action"><span class="badge-level badge-blue" th:text="${sc.syndromeCode}"></span>
-                <span class="badge-level badge-low" th:text="${sc.status}" style="margin-left:4px;"></span></span>
-            </h5>
-            <p class="panel-desc" th:text="${sc.definition}"></p>
-            <div class="grid-3" style="margin-top:12px;">
-                <div>
-                    <h6 style="font-size:12px;color:#718096;margin-bottom:6px;">症状识别规则</h6>
-                    <pre class="json-display" th:text="${sc.symptomRulesJson}"></pre>
-                </div>
-                <div>
-                    <h6 style="font-size:12px;color:#718096;margin-bottom:6px;">风险评级规则</h6>
-                    <pre class="json-display" th:text="${sc.riskRulesJson}"></pre>
-                </div>
-                <div>
-                    <h6 style="font-size:12px;color:#718096;margin-bottom:6px;">监测模型配置</h6>
-                    <pre class="json-display" th:text="${sc.monitorModelJson}"></pre>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="tab-content" id="tab-models">
+    <div class="tab-content" id="tab-roles" th:classappend="${activeTab == 'roles' ? ' active' : ''}">
         <div class="card-panel">
-            <h5>预警模型配置（共 <span th:text="${models.size()}">0</span> 个）</h5>
+            <h5>角色权限配置</h5>
             <table class="data-table">
-                <thead><tr><th>模型名称</th><th>类型</th><th>症候群</th><th>参数配置</th><th>说明</th><th>状态</th></tr></thead>
+                <thead><tr><th>角色名称</th><th>权限说明</th><th>用户数</th></tr></thead>
                 <tbody>
-                    <tr th:each="m : ${models}">
-                        <td th:text="${m.modelName}"></td>
-                        <td th:text="${m.modelType}"></td>
-                        <td th:text="${m.syndromeType}"></td>
-                        <td><code style="font-size:11px;" th:text="${m.configJson}"></code></td>
-                        <td th:text="${m.description}"></td>
-                        <td><span th:class="${m.enabled == 1 ? 'badge-level badge-low' : 'badge-level badge-gray'}" th:text="${m.enabled == 1 ? '启用' : '禁用'}"></span></td>
+                    <tr th:each="r : ${roles}">
+                        <td th:text="${r.name}"></td>
+                        <td th:text="${r.desc}"></td>
+                        <td th:text="${r.count}"></td>
                     </tr>
                 </tbody>
             </table>
         </div>
     </div>
 
-    <div class="tab-content" id="tab-logs">
+    <div class="tab-content" id="tab-dict" th:classappend="${activeTab == 'dict' ? ' active' : ''}">
         <div class="card-panel">
-            <h5>操作日志</h5>
+            <h5>数据字典配置</h5>
             <table class="data-table">
+                <thead><tr><th>字典编码</th><th>字典名称</th><th>字典值</th></tr></thead>
+                <tbody>
+                    <tr th:each="d : ${dictItems}">
+                        <td><code th:text="${d.code}"></code></td>
+                        <td th:text="${d.name}"></td>
+                        <td th:text="${d.values}"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="tab-content" id="tab-monitor" th:classappend="${activeTab == 'monitor' ? ' active' : ''}">
+        <div class="stat-cards">
+            <div class="stat-card"><div class="label">在线用户</div><div class="value" th:text="${monitorStats.onlineUsers}">0</div></div>
+            <div class="stat-card info"><div class="label">今日登录</div><div class="value" th:text="${monitorStats.todayLogins}">0</div></div>
+            <div class="stat-card"><div class="label">数据库</div><div class="value" style="font-size:16px;" th:text="${monitorStats.dbStatus}">正常</div></div>
+            <div class="stat-card"><div class="label">接口服务</div><div class="value" style="font-size:16px;" th:text="${monitorStats.apiStatus}">正常</div></div>
+        </div>
+        <div class="card-panel">
+            <h5>系统运行状态</h5>
+            <div class="detail-grid">
+                <div class="detail-item"><label>数据同步</label><span class="badge-level badge-green" th:text="${monitorStats.dataSync}"></span></div>
+                <div class="detail-item"><label>内存使用</label><span th:text="${monitorStats.memoryUsage}"></span></div>
+                <div class="detail-item"><label>最近操作</label><span th:text="${#lists.size(logs)} + ' 条日志'"></span></div>
+            </div>
+        </div>
+        <div class="card-panel">
+            <h5>最近操作日志</h5>
+            <table class="data-table compact">
                 <thead><tr><th>时间</th><th>用户</th><th>操作</th><th>IP</th></tr></thead>
                 <tbody>
-                    <tr th:each="log : ${logs}">
-                        <td th:text="${#dates.format(log.createdAt, 'yyyy-MM-dd HH:mm:ss')}"></td>
+                    <tr th:each="log, stat : ${logs}" th:if="${stat.index < 10}">
+                        <td th:text="${#dates.format(log.createdAt, 'yyyy-MM-dd HH:mm')}"></td>
                         <td th:text="${log.username}"></td>
                         <td th:text="${log.operation}"></td>
                         <td th:text="${log.ip}"></td>
@@ -107,6 +127,27 @@
             </table>
         </div>
     </div>
+
+    <div class="tab-content" id="tab-notice" th:classappend="${activeTab == 'notice' ? ' active' : ''}">
+        <div class="card-panel" th:each="n : ${notices}">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                <h5 style="margin:0;" th:text="${n.title}"></h5>
+                <span class="badge-level badge-green" th:text="${n.status}"></span>
+            </div>
+            <p class="panel-desc" th:text="${n.content}"></p>
+            <div style="font-size:12px;color:#718096;" th:text="${n.date}"></div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        var activeTab = /*[[${activeTab}]]*/ 'users';
+        document.querySelectorAll('#adminTabs .tab-item').forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                var tabId = tab.dataset.tab;
+                location.href = '/admin?tab=' + tabId;
+            });
+        });
+    </script>
 </div>
 </body>
 </html>

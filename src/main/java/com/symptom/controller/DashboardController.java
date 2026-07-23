@@ -2,6 +2,7 @@ package com.symptom.controller;
 
 import com.symptom.entity.SurveillanceEvent;
 import com.symptom.entity.SysUser;
+import com.symptom.entity.WarningRecord;
 import com.symptom.mapper.CaseInfoMapper;
 import com.symptom.mapper.WarningRecordMapper;
 import com.symptom.service.AnalysisService;
@@ -12,8 +13,12 @@ import com.symptom.service.WarningService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Controller
 public class DashboardController {
@@ -41,26 +46,44 @@ public class DashboardController {
     }
 
     @GetMapping("/")
-    public String dashboard(Model model) {
+    public String dashboard(@RequestParam(required = false) String syndromeType,
+                            @RequestParam(required = false) String district,
+                            @RequestParam(required = false, defaultValue = "30") Integer days,
+                            Model model) {
         model.addAttribute("pageTitle", "监测驾驶舱");
         model.addAttribute("breadcrumb", "监测驾驶舱");
-        Map<String, Object> stats = caseService.getDashboardStats();
+        model.addAttribute("filterSyndrome", syndromeType);
+        model.addAttribute("filterDistrict", district);
+        model.addAttribute("filterDays", days);
+
+        Map<String, Object> stats = caseService.getDashboardStats(syndromeType, district, days);
         stats.put("warningCount", warningRecordMapper.countPending());
         model.addAttribute("stats", stats);
-        model.addAttribute("timeData", analysisService.getTimeDistribution(null, "month"));
-        model.addAttribute("districtData", analysisService.getDistrictDistribution(null));
-        model.addAttribute("recentWarnings", warningService.getAllRecords().isEmpty() ?
+        model.addAttribute("timeData", analysisService.getTimeDistribution(syndromeType, "month", district, days));
+        model.addAttribute("districtData", analysisService.getDistrictDistribution(syndromeType, district, days));
+
+        List<WarningRecord> allWarnings = warningService.searchRecords(syndromeType, null);
+        model.addAttribute("recentWarnings", allWarnings.isEmpty() ?
                 java.util.Collections.emptyList() :
-                warningService.getAllRecords().subList(0, Math.min(5, warningService.getAllRecords().size())));
+                allWarnings.subList(0, Math.min(5, allWarnings.size())));
+
+        Map<String, Object> filter = caseService.buildFilterParamsPublic(syndromeType, district, days);
+        Map<String, Object> highRiskFilter = new HashMap<>(filter);
+        highRiskFilter.put("riskLevel", "高风险");
+        model.addAttribute("highRiskCases", caseService.searchLimited(highRiskFilter, 5));
+
         model.addAttribute("syndromeConfigs", syndromeConfigService.findAll());
-        model.addAttribute("severeCases", caseService.findSevereCases(null));
-        model.addAttribute("deathCases", caseService.findDeathCases(null));
-        model.addAttribute("highRiskCases", caseService.findByRiskLevel("高风险"));
-        model.addAttribute("pendingEvents", eventService.countPending());
-        java.util.List<SurveillanceEvent> allEvents = eventService.findAll();
+
+        List<SurveillanceEvent> allEvents = eventService.findAll();
+        if (district != null && !district.isEmpty()) {
+            allEvents = allEvents.stream()
+                    .filter(e -> district.equals(e.getDistrict()))
+                    .collect(Collectors.toList());
+        }
         model.addAttribute("recentEvents", allEvents.isEmpty() ?
                 java.util.Collections.emptyList() :
                 allEvents.subList(0, Math.min(5, allEvents.size())));
+        model.addAttribute("pendingEvents", eventService.countPending());
         return "dashboard";
     }
 }

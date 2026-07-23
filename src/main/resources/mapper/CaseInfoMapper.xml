@@ -79,6 +79,15 @@
             <if test="riskLevel != null and riskLevel != ''">
                 AND risk_level = #{riskLevel}
             </if>
+            <if test="days != null">
+                AND report_date &gt;= date('now', '-' || #{days} || ' days')
+            </if>
+            <if test="isSevere != null">
+                AND is_severe = #{isSevere}
+            </if>
+            <if test="isDeath != null">
+                AND is_death = #{isDeath}
+            </if>
         </where>
         ORDER BY report_date DESC
     </select>
@@ -91,6 +100,21 @@
             </if>
             <if test="syndromeType != null and syndromeType != ''">
                 AND syndrome_type = #{syndromeType}
+            </if>
+            <if test="district != null and district != ''">
+                AND district = #{district}
+            </if>
+            <if test="days != null">
+                AND report_date &gt;= date('now', '-' || #{days} || ' days')
+            </if>
+            <if test="riskLevel != null and riskLevel != ''">
+                AND risk_level = #{riskLevel}
+            </if>
+            <if test="isSevere != null">
+                AND is_severe = #{isSevere}
+            </if>
+            <if test="isDeath != null">
+                AND is_death = #{isDeath}
             </if>
         </where>
     </select>
@@ -124,25 +148,49 @@
             <when test="groupBy == 'week'">
                 SELECT strftime('%Y-W%W', report_date) as period, COUNT(*) as cnt
                 FROM case_info
-                <if test="syndromeType != null and syndromeType != ''">
-                    WHERE syndrome_type = #{syndromeType}
-                </if>
+                <where>
+                    <if test="syndromeType != null and syndromeType != ''">
+                        AND syndrome_type = #{syndromeType}
+                    </if>
+                    <if test="district != null and district != ''">
+                        AND district = #{district}
+                    </if>
+                    <if test="days != null">
+                        AND report_date &gt;= date('now', '-' || #{days} || ' days')
+                    </if>
+                </where>
                 GROUP BY period ORDER BY period
             </when>
             <when test="groupBy == 'month'">
                 SELECT strftime('%Y-%m', report_date) as period, COUNT(*) as cnt
                 FROM case_info
-                <if test="syndromeType != null and syndromeType != ''">
-                    WHERE syndrome_type = #{syndromeType}
-                </if>
+                <where>
+                    <if test="syndromeType != null and syndromeType != ''">
+                        AND syndrome_type = #{syndromeType}
+                    </if>
+                    <if test="district != null and district != ''">
+                        AND district = #{district}
+                    </if>
+                    <if test="days != null">
+                        AND report_date &gt;= date('now', '-' || #{days} || ' days')
+                    </if>
+                </where>
                 GROUP BY period ORDER BY period
             </when>
             <otherwise>
                 SELECT report_date as period, COUNT(*) as cnt
                 FROM case_info
-                <if test="syndromeType != null and syndromeType != ''">
-                    WHERE syndrome_type = #{syndromeType}
-                </if>
+                <where>
+                    <if test="syndromeType != null and syndromeType != ''">
+                        AND syndrome_type = #{syndromeType}
+                    </if>
+                    <if test="district != null and district != ''">
+                        AND district = #{district}
+                    </if>
+                    <if test="days != null">
+                        AND report_date &gt;= date('now', '-' || #{days} || ' days')
+                    </if>
+                </where>
                 GROUP BY report_date ORDER BY report_date
             </otherwise>
         </choose>
@@ -150,9 +198,17 @@
 
     <select id="countByDistrict" resultType="map">
         SELECT district as name, COUNT(*) as value FROM case_info
-        <if test="syndromeType != null and syndromeType != ''">
-            WHERE syndrome_type = #{syndromeType}
-        </if>
+        <where>
+            <if test="syndromeType != null and syndromeType != ''">
+                AND syndrome_type = #{syndromeType}
+            </if>
+            <if test="district != null and district != ''">
+                AND district = #{district}
+            </if>
+            <if test="days != null">
+                AND report_date &gt;= date('now', '-' || #{days} || ' days')
+            </if>
+        </where>
         GROUP BY district ORDER BY value DESC
     </select>
 

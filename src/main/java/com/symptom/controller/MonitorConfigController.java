@@ -31,12 +31,8 @@ public class MonitorConfigController {
     public String index(@RequestParam(required = false) Integer syndromeId,
                         @RequestParam(required = false) Integer modelId,
                         Model model, HttpSession session) {
-        SysUser user = (SysUser) session.getAttribute("currentUser");
-        if (!"管理员".equals(user.getRole())) {
-            return "redirect:/";
-        }
-        model.addAttribute("pageTitle", "监测配置");
-        model.addAttribute("breadcrumb", "监测配置");
+        model.addAttribute("pageTitle", "症候群配置");
+        model.addAttribute("breadcrumb", "症候群配置");
         model.addAttribute("syndromeConfigs", syndromeConfigService.findAll());
         model.addAttribute("models", warningService.getAllModels());
 

@@ -23,6 +23,19 @@
         WHERE r.status = #{status}
         ORDER BY r.warning_time DESC
     </select>
+    <select id="search" resultType="WarningRecord">
+        SELECT r.*, m.model_name as modelName FROM warning_record r
+        LEFT JOIN warning_model m ON r.model_id = m.id
+        <where>
+            <if test="syndromeType != null and syndromeType != ''">
+                AND r.syndrome_type = #{syndromeType}
+            </if>
+            <if test="status != null and status != ''">
+                AND r.status = #{status}
+            </if>
+        </where>
+        ORDER BY r.warning_time DESC
+    </select>
     <select id="findByModelId" resultType="WarningRecord">
         SELECT r.*, m.model_name as modelName FROM warning_record r
         LEFT JOIN warning_model m ON r.model_id = m.id

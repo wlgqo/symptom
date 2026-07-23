@@ -9,6 +9,37 @@
 <body class="login-body">
 <div class="login-page">
     <aside class="login-brand-panel">
+        <svg class="login-bg-svg" viewBox="0 0 800 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+            <defs>
+                <linearGradient id="lg1" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#1677ff" stop-opacity="0.18"/>
+                    <stop offset="100%" stop-color="#1677ff" stop-opacity="0"/>
+                </linearGradient>
+            </defs>
+            <circle cx="120" cy="140" r="90" fill="url(#lg1)"/>
+            <circle cx="680" cy="200" r="120" fill="rgba(22,119,255,0.08)"/>
+            <circle cx="640" cy="720" r="160" fill="rgba(22,119,255,0.06)"/>
+            <path d="M0 520 Q200 460 400 520 T800 500" stroke="rgba(255,255,255,0.08)" stroke-width="2" fill="none"/>
+            <path d="M0 600 Q250 540 500 600 T800 580" stroke="rgba(255,255,255,0.05)" stroke-width="1.5" fill="none"/>
+            <g opacity="0.12" stroke="#fff" stroke-width="1.5" fill="none">
+                <rect x="80" y="320" width="48" height="48" rx="6"/>
+                <path d="M104 332v24M92 344h24"/>
+                <rect x="200" y="400" width="40" height="40" rx="4"/>
+                <path d="M220 412v16M212 420h16"/>
+            </g>
+            <g opacity="0.1" fill="none" stroke="#fff" stroke-width="1.2">
+                <path d="M560 380c0-22 18-40 40-40s40 18 40 40-18 40-40 40"/>
+                <path d="M600 360v-20M600 420v20M580 400h-20M620 400h20"/>
+            </g>
+            <g opacity="0.08">
+                <polyline points="100,680 160,620 220,650 300,560 380,600 460,520 540,580 620,500 700,540" fill="none" stroke="#69b1ff" stroke-width="2"/>
+                <circle cx="160" cy="620" r="4" fill="#69b1ff"/>
+                <circle cx="300" cy="560" r="4" fill="#69b1ff"/>
+                <circle cx="460" cy="520" r="4" fill="#69b1ff"/>
+                <circle cx="620" cy="500" r="4" fill="#69b1ff"/>
+            </g>
+        </svg>
+
         <div class="login-brand-inner">
             <div class="login-org-badge">
                 <svg class="login-org-icon" viewBox="0 0 40 40" fill="none" aria-hidden="true">
@@ -17,6 +48,7 @@
                 </svg>
                 <span>四川省疾病预防控制中心</span>
             </div>
+            <p class="login-system-tag">SSEW · 症候群监测预警平台</p>
             <h1 class="login-system-name">症候群主动监测<br>预警系统</h1>
             <p class="login-system-en">Syndrome Surveillance &amp; Early Warning System</p>
             <div class="login-divider"></div>
@@ -35,8 +67,14 @@
     <main class="login-form-panel">
         <div class="login-form-box">
             <div class="login-form-header">
+                <div class="login-form-logo">
+                    <svg viewBox="0 0 48 48" width="48" height="48" aria-hidden="true">
+                        <rect width="48" height="48" rx="10" fill="#e6f4ff"/>
+                        <path d="M24 10v28M10 24h28" stroke="#1677ff" stroke-width="2.5" stroke-linecap="round"/>
+                    </svg>
+                </div>
                 <h2>用户登录</h2>
-                <p>请输入您的系统账号和密码</p>
+                <p>症候群主动监测预警系统</p>
             </div>
 
             <div th:if="${error}" class="login-alert" th:text="${error}"></div>

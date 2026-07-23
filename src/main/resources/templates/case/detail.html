@@ -83,6 +83,11 @@
     </div>
 
     <div class="card-panel">
+        <h5>病历信息</h5>
+        <div id="medicalRecordSummary"><p class="empty-state">加载中...</p></div>
+    </div>
+
+    <div class="card-panel">
         <h5>原始病历 · 诊疗活动时间线</h5>
         <p class="panel-desc">展示患者就诊、检查检验等原始病历信息，支持症候群识别溯源。</p>
         <div id="medicalTimeline"><p class="empty-state">加载中...</p></div>
@@ -126,6 +131,7 @@
             var clinicalJson = /*[[${caseInfo.clinicalJson}]]*/ null;
             var labJson = /*[[${caseInfo.labJson}]]*/ null;
             renderPatientProfile(profileJson, medicalJson);
+            renderMedicalRecordSummary(medicalJson);
             renderClinicalJson(clinicalJson, /*[[${caseInfo.syndromeType}]]*/ '');
             renderLabJson(labJson);
         });

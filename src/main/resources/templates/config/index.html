@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout('监测配置', ~{::content})}">
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout('症候群配置', ~{::content})}">
 <body>
 <div th:fragment="content">
     <div class="tab-nav" id="configTabs">
@@ -37,7 +37,8 @@
                             <option value="停用" th:selected="${selectedSyndrome.status == '停用'}">停用</option>
                         </select>
                     </div>
-                    <button type="button" class="btn-primary-sm" onclick="saveSyndrome()">保存</button>
+                    <button type="button" class="btn-primary-sm" th:if="${session.currentUser.role == '管理员'}" onclick="saveSyndrome()">保存</button>
+                    <p th:if="${session.currentUser.role != '管理员'}" class="empty-hint">仅管理员可修改症候群配置</p>
                 </form>
             </div>
         </div>

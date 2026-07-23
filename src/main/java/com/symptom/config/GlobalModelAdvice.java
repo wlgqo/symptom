@@ -30,7 +30,7 @@ public class GlobalModelAdvice {
         if (uri.startsWith("/search")) return "analysis";
         if (uri.startsWith("/case")) return "case";
         if (uri.startsWith("/event")) return "event";
-        if (uri.startsWith("/config")) return "config";
+        if (uri.startsWith("/config")) return "syndrome-config";
         if (uri.startsWith("/admin")) return "admin";
         return "";
     }
