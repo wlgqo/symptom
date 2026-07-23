@@ -3,46 +3,105 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${pageTitle}">症候群主动监测预警演示系统</title>
+    <title th:text="${pageTitle} + ' - 症候群主动监测预警系统'">症候群主动监测预警系统</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <script th:src="@{/js/common.js}" defer></script>
 </head>
 <body>
 <div class="app-layout">
-    <aside class="sidebar">
-        <div class="sidebar-logo">
-            <h3>症候群主动监测<br>预警演示系统</h3>
-            <small>传染病监测平台</small>
-        </div>
-        <nav class="sidebar-nav">
-            <div class="nav-section">总览</div>
-            <div class="nav-item"><a href="/" th:classappend="${activeMenu == 'dashboard' ? 'active' : ''}"><span>📊</span><span>首页驾驶舱</span></a></div>
-
-            <div class="nav-section">监测预警</div>
-            <div class="nav-item"><a href="/respiratory" th:classappend="${activeMenu == 'respiratory' ? 'active' : ''}"><span>🫁</span><span>发热呼吸道症候群</span></a></div>
-            <div class="nav-item"><a href="/hemorrhage" th:classappend="${activeMenu == 'hemorrhage' ? 'active' : ''}"><span>🩸</span><span>发热伴出血症候群</span></a></div>
-            <div class="nav-item"><a href="/diarrhea" th:classappend="${activeMenu == 'diarrhea' ? 'active' : ''}"><span>💧</span><span>发热伴腹泻症候群</span></a></div>
-
-            <div class="nav-section">数据管理</div>
-            <div class="nav-item"><a href="/search" th:classappend="${activeMenu == 'search' ? 'active' : ''}"><span>🔍</span><span>条件树搜索</span></a></div>
-            <div class="nav-item"><a href="/case/list" th:classappend="${activeMenu == 'case' ? 'active' : ''}"><span>📋</span><span>病例管理</span></a></div>
-
-            <div class="nav-section" th:if="${session.currentUser != null and session.currentUser.role == '管理员'}">系统</div>
-            <div class="nav-item" th:if="${session.currentUser != null and session.currentUser.role == '管理员'}">
-                <a href="/admin" th:classappend="${activeMenu == 'admin' ? 'active' : ''}"><span>⚙️</span><span>系统管理</span></a>
+    <header class="app-header">
+        <div class="header-left">
+            <div class="header-logo">
+                <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
+                    <rect width="32" height="32" rx="4" fill="#1677ff"/>
+                    <path d="M16 7v18M7 16h18" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+                </svg>
             </div>
-        </nav>
-    </aside>
-    <div class="main-content">
-        <div class="top-bar">
-            <h4 th:text="${pageTitle != null ? pageTitle : '首页驾驶舱'}">页面标题</h4>
-            <div class="user-info">
-                <span th:text="${session.currentUser.realName}">用户</span>
-                <span class="role-badge" th:text="${session.currentUser.role}">角色</span>
-                <a href="/logout" style="color:#dc3545;text-decoration:none;font-size:13px;">退出</a>
+            <div class="header-titles">
+                <span class="header-org">疾病预防控制中心</span>
+                <h1 class="header-system">症候群主动监测预警系统</h1>
             </div>
         </div>
-        <div class="page-content" th:replace="${content}">内容区域</div>
+        <div class="header-right">
+            <span class="header-user" th:text="${session.currentUser.realName}">用户</span>
+            <span class="header-role" th:text="${session.currentUser.role}">角色</span>
+            <a href="/logout" class="header-logout">退出</a>
+        </div>
+    </header>
+
+    <div class="app-body">
+        <aside class="sidebar">
+            <nav class="sidebar-nav">
+                <div class="nav-section">监测总览</div>
+                <div class="nav-item">
+                    <a href="/" th:classappend="${activeMenu == 'dashboard' ? 'active' : ''}">
+                        <svg class="nav-svg" viewBox="0 0 16 16"><path fill="currentColor" d="M2 2h5v5H2V2zm7 0h5v5H9V2zM2 9h5v5H2V9zm7 0h5v5H9V9z"/></svg>
+                        <span>监测工作台</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">症候群监测</div>
+                <div class="nav-item">
+                    <a href="/respiratory" th:classappend="${activeMenu == 'respiratory' ? 'active' : ''}">
+                        <svg class="nav-svg" viewBox="0 0 16 16"><path fill="currentColor" d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm0 1.5a5.5 5.5 0 1 1 0 11 5.5 5.5 0 0 1 0-11z"/></svg>
+                        <span>发热呼吸道症候群</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/hemorrhage" th:classappend="${activeMenu == 'hemorrhage' ? 'active' : ''}">
+                        <svg class="nav-svg" viewBox="0 0 16 16"><path fill="currentColor" d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm0 1.5a5.5 5.5 0 1 1 0 11 5.5 5.5 0 0 1 0-11z"/></svg>
+                        <span>发热伴出血症候群</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/diarrhea" th:classappend="${activeMenu == 'diarrhea' ? 'active' : ''}">
+                        <svg class="nav-svg" viewBox="0 0 16 16"><path fill="currentColor" d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm0 1.5a5.5 5.5 0 1 1 0 11 5.5 5.5 0 0 1 0-11z"/></svg>
+                        <span>发热伴腹泻症候群</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">数据管理</div>
+                <div class="nav-item">
+                    <a href="/search" th:classappend="${activeMenu == 'search' ? 'active' : ''}">
+                        <svg class="nav-svg" viewBox="0 0 16 16"><path fill="currentColor" d="M11.5 10.5l3 3-.7.7-3-3a5 5 0 1 0-.7-.7l3-3 .7.7zM6 10a4 4 0 1 1 0-8 4 4 0 0 1 0 8z"/></svg>
+                        <span>主题库条件检索</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/case/list" th:classappend="${activeMenu == 'case' ? 'active' : ''}">
+                        <svg class="nav-svg" viewBox="0 0 16 16"><path fill="currentColor" d="M3 2h10a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1zm1 2v8h8V4H4z"/></svg>
+                        <span>病例信息管理</span>
+                    </a>
+                </div>
+
+                <div class="nav-section" th:if="${session.currentUser != null and session.currentUser.role == '管理员'}">系统运维</div>
+                <div class="nav-item" th:if="${session.currentUser != null and session.currentUser.role == '管理员'}">
+                    <a href="/admin" th:classappend="${activeMenu == 'admin' ? 'active' : ''}">
+                        <svg class="nav-svg" viewBox="0 0 16 16"><path fill="currentColor" d="M8 1.5l6.5 2.5v4c0 3.5-2.5 5.5-6.5 6.5C4 13.5 1.5 11.5 1.5 8V4L8 1.5z"/></svg>
+                        <span>系统管理</span>
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <div class="main-wrapper">
+            <div class="page-header-bar">
+                <div class="page-header-left">
+                    <h2 class="page-title" th:text="${pageTitle != null ? pageTitle : '监测工作台'}">页面标题</h2>
+                    <div class="breadcrumb" th:if="${breadcrumb != null}">
+                        <a href="/">监测工作台</a>
+                        <span class="sep">/</span>
+                        <span class="current" th:text="${breadcrumb}">当前页</span>
+                    </div>
+                </div>
+            </div>
+            <div class="page-content" th:replace="${content}">内容区域</div>
+            <footer class="app-footer">
+                <span>症候群主动监测预警系统</span>
+                <span>© 疾病预防控制中心 版权所有</span>
+            </footer>
+        </div>
     </div>
 </div>
 </body>

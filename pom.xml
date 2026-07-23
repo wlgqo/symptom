@@ -14,8 +14,8 @@
     <groupId>com.symptom</groupId>
     <artifactId>symptom-monitor</artifactId>
     <version>1.0.0</version>
-    <name>症候群主动监测预警演示系统</name>
-    <description>传染病症候群主动监测预警演示系统</description>
+    <name>症候群主动监测预警系统</name>
+    <description>传染病症候群主动监测预警系统</description>
 
     <properties>
         <java.version>1.8</java.version>

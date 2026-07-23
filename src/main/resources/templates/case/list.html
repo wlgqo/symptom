@@ -2,6 +2,12 @@
 <html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout('主动监测病例管理', ~{::content})}">
 <body>
 <div th:fragment="content">
+    <div class="quick-links">
+        <a href="/" class="quick-link">监测工作台</a>
+        <a href="/respiratory" class="quick-link">呼吸道监测</a>
+        <a href="/search" class="quick-link">主题库检索</a>
+    </div>
+
     <form class="search-form" method="get" action="/case/list">
         <div class="form-row">
             <div><label>患者姓名</label><input type="text" name="patientName" th:value="${params.patientName}"></div>
@@ -78,8 +84,8 @@
                     </td>
                     <td th:text="${#dates.format(c.reportDate, 'yyyy-MM-dd')}"></td>
                     <td>
-                        <a th:href="@{/case/detail/{id}(id=${c.id})}" style="color:#1a6fc4;margin-right:8px;">查看</a>
-                        <a th:if="${session.currentUser.role != '浏览人员'}" th:href="@{/case/edit/{id}(id=${c.id})}" style="color:#e67e22;">修改</a>
+                        <a th:href="@{/case/detail/{id}(id=${c.id})}" class="table-link">原始病历</a>
+                        <a th:if="${session.currentUser.role != '浏览人员'}" th:href="@{/case/edit/{id}(id=${c.id})}" class="table-link" style="margin-left:8px;color:#d69e2e;">修改</a>
                     </td>
                 </tr>
             </tbody>

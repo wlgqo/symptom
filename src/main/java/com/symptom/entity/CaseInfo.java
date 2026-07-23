@@ -10,6 +10,9 @@ public class CaseInfo {
     private String gender;
     private Integer age;
     private String occupation;
+    private String idCard;
+    private String phone;
+    private String ethnicity;
     private String caseType;
     private String syndromeType;
     private String address;
@@ -23,10 +26,15 @@ public class CaseInfo {
     private String riskReason;
     private Date reportDate;
     private String hospital;
+    private Date admissionDate;
+    private Date dischargeDate;
+    private Date deathDate;
     private Double feverTemp;
     private String clinicalJson;
     private String labJson;
     private String treatmentJson;
+    private String profileJson;
+    private String medicalRecordJson;
     private Date createdAt;
     private Date updatedAt;
     private List<String> symptoms;
@@ -43,6 +51,12 @@ public class CaseInfo {
     public void setAge(Integer age) { this.age = age; }
     public String getOccupation() { return occupation; }
     public void setOccupation(String occupation) { this.occupation = occupation; }
+    public String getIdCard() { return idCard; }
+    public void setIdCard(String idCard) { this.idCard = idCard; }
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
+    public String getEthnicity() { return ethnicity; }
+    public void setEthnicity(String ethnicity) { this.ethnicity = ethnicity; }
     public String getCaseType() { return caseType; }
     public void setCaseType(String caseType) { this.caseType = caseType; }
     public String getSyndromeType() { return syndromeType; }
@@ -69,6 +83,12 @@ public class CaseInfo {
     public void setReportDate(Date reportDate) { this.reportDate = reportDate; }
     public String getHospital() { return hospital; }
     public void setHospital(String hospital) { this.hospital = hospital; }
+    public Date getAdmissionDate() { return admissionDate; }
+    public void setAdmissionDate(Date admissionDate) { this.admissionDate = admissionDate; }
+    public Date getDischargeDate() { return dischargeDate; }
+    public void setDischargeDate(Date dischargeDate) { this.dischargeDate = dischargeDate; }
+    public Date getDeathDate() { return deathDate; }
+    public void setDeathDate(Date deathDate) { this.deathDate = deathDate; }
     public Double getFeverTemp() { return feverTemp; }
     public void setFeverTemp(Double feverTemp) { this.feverTemp = feverTemp; }
     public String getClinicalJson() { return clinicalJson; }
@@ -77,6 +97,10 @@ public class CaseInfo {
     public void setLabJson(String labJson) { this.labJson = labJson; }
     public String getTreatmentJson() { return treatmentJson; }
     public void setTreatmentJson(String treatmentJson) { this.treatmentJson = treatmentJson; }
+    public String getProfileJson() { return profileJson; }
+    public void setProfileJson(String profileJson) { this.profileJson = profileJson; }
+    public String getMedicalRecordJson() { return medicalRecordJson; }
+    public void setMedicalRecordJson(String medicalRecordJson) { this.medicalRecordJson = medicalRecordJson; }
     public Date getCreatedAt() { return createdAt; }
     public void setCreatedAt(Date createdAt) { this.createdAt = createdAt; }
     public Date getUpdatedAt() { return updatedAt; }

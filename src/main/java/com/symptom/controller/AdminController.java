@@ -4,6 +4,7 @@ import com.symptom.entity.SysUser;
 import com.symptom.entity.WarningModel;
 import com.symptom.service.UserService;
 import com.symptom.service.WarningService;
+import com.symptom.service.SyndromeConfigService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -18,10 +19,13 @@ public class AdminController {
 
     private final UserService userService;
     private final WarningService warningService;
+    private final SyndromeConfigService syndromeConfigService;
 
-    public AdminController(UserService userService, WarningService warningService) {
+    public AdminController(UserService userService, WarningService warningService,
+                           SyndromeConfigService syndromeConfigService) {
         this.userService = userService;
         this.warningService = warningService;
+        this.syndromeConfigService = syndromeConfigService;
     }
 
     @GetMapping
@@ -33,6 +37,7 @@ public class AdminController {
         model.addAttribute("users", userService.findAll());
         model.addAttribute("models", warningService.getAllModels());
         model.addAttribute("logs", userService.getOperationLogs());
+        model.addAttribute("syndromeConfigs", syndromeConfigService.findAll());
         return "admin/index";
     }
 

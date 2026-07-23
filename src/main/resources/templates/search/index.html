@@ -1,9 +1,16 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout('症候群主题库条件树搜索', ~{::content})}">
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout('主题库条件检索', ~{::content})}">
 <body>
 <div th:fragment="content">
+    <div class="quick-links">
+        <a href="/case/list" class="quick-link">病例管理</a>
+        <a href="/respiratory" class="quick-link">呼吸道监测</a>
+        <a href="/hemorrhage" class="quick-link">出血症候群</a>
+        <a href="/diarrhea" class="quick-link">腹泻症候群</a>
+    </div>
+
     <div class="card-panel">
-        <h5>条件树搜索</h5>
+        <h5>主题库条件检索</h5>
         <p style="color:#6c757d;font-size:13px;margin-bottom:16px;">
             通过可视化方式组合症状、人群、时间、地域、临床指标等条件，生成符合条件的数据集。
             示例：(发热 AND 咳嗽) OR (发热 AND 腹泻) AND 年龄 &gt; 60
@@ -53,7 +60,7 @@
         <div id="generatedSql" style="font-size:12px;color:#6c757d;margin-bottom:12px;padding:8px;background:#f8f9fa;border-radius:4px;"></div>
         <table class="data-table" id="resultTable">
             <thead>
-                <tr><th>主索引号</th><th>姓名</th><th>性别</th><th>年龄</th><th>症候群</th><th>症状</th><th>诊断</th><th>风险等级</th></tr>
+                <tr><th>主索引号</th><th>姓名</th><th>性别</th><th>年龄</th><th>症候群</th><th>症状</th><th>诊断</th><th>风险等级</th><th>操作</th></tr>
             </thead>
             <tbody id="resultBody"></tbody>
         </table>
@@ -160,7 +167,8 @@
                     tr.innerHTML = '<td>' + (c.mainIndex||'') + '</td><td>' + (c.patientName||'') + '</td>' +
                         '<td>' + (c.gender||'') + '</td><td>' + (c.age||'') + '</td>' +
                         '<td>' + (c.syndromeType||'') + '</td><td>' + ((c.symptoms||[]).join('、')) + '</td>' +
-                        '<td>' + (c.diagnosis||'') + '</td><td>' + (c.riskLevel||'') + '</td>';
+                        '<td>' + (c.diagnosis||'') + '</td><td>' + (c.riskLevel||'') + '</td>' +
+                        '<td><a href="/case/detail/' + c.id + '" class="table-link">原始病历</a></td>';
                     tbody.appendChild(tr);
                 });
             });

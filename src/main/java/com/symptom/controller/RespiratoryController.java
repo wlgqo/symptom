@@ -5,6 +5,7 @@ import com.symptom.entity.SysUser;
 import com.symptom.entity.WarningRecord;
 import com.symptom.service.AnalysisService;
 import com.symptom.service.CaseService;
+import com.symptom.service.SyndromeConfigService;
 import com.symptom.service.WarningService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -24,12 +25,15 @@ public class RespiratoryController {
     private final CaseService caseService;
     private final AnalysisService analysisService;
     private final WarningService warningService;
+    private final SyndromeConfigService syndromeConfigService;
 
     public RespiratoryController(CaseService caseService, AnalysisService analysisService,
-                                 WarningService warningService) {
+                                 WarningService warningService,
+                                 SyndromeConfigService syndromeConfigService) {
         this.caseService = caseService;
         this.analysisService = analysisService;
         this.warningService = warningService;
+        this.syndromeConfigService = syndromeConfigService;
     }
 
     @GetMapping
@@ -44,6 +48,7 @@ public class RespiratoryController {
         model.addAttribute("models", warningService.getModelsBySyndrome(SYNDROME));
         model.addAttribute("warnings", warningService.getRecordsBySyndrome(SYNDROME));
         model.addAttribute("cases", caseService.findBySyndromeType(SYNDROME));
+        model.addAttribute("syndromeConfig", syndromeConfigService.findByName(SYNDROME));
         return "respiratory/index";
     }
 

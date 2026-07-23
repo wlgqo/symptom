@@ -9,6 +9,9 @@
         <result column="gender" property="gender"/>
         <result column="age" property="age"/>
         <result column="occupation" property="occupation"/>
+        <result column="id_card" property="idCard"/>
+        <result column="phone" property="phone"/>
+        <result column="ethnicity" property="ethnicity"/>
         <result column="case_type" property="caseType"/>
         <result column="syndrome_type" property="syndromeType"/>
         <result column="address" property="address"/>
@@ -20,14 +23,19 @@
         <result column="is_death" property="isDeath"/>
         <result column="risk_level" property="riskLevel"/>
         <result column="risk_reason" property="riskReason"/>
-        <result column="report_date" property="reportDate"/>
+        <result column="report_date" property="reportDate" typeHandler="com.symptom.config.SqliteDateTypeHandler"/>
         <result column="hospital" property="hospital"/>
+        <result column="admission_date" property="admissionDate" typeHandler="com.symptom.config.SqliteDateTypeHandler"/>
+        <result column="discharge_date" property="dischargeDate" typeHandler="com.symptom.config.SqliteDateTypeHandler"/>
+        <result column="death_date" property="deathDate" typeHandler="com.symptom.config.SqliteDateTypeHandler"/>
         <result column="fever_temp" property="feverTemp"/>
         <result column="clinical_json" property="clinicalJson"/>
         <result column="lab_json" property="labJson"/>
         <result column="treatment_json" property="treatmentJson"/>
-        <result column="created_at" property="createdAt"/>
-        <result column="updated_at" property="updatedAt"/>
+        <result column="profile_json" property="profileJson"/>
+        <result column="medical_record_json" property="medicalRecordJson"/>
+        <result column="created_at" property="createdAt" typeHandler="com.symptom.config.SqliteDateTypeHandler"/>
+        <result column="updated_at" property="updatedAt" typeHandler="com.symptom.config.SqliteDateTypeHandler"/>
     </resultMap>
 
     <select id="findAll" resultMap="BaseResultMap">

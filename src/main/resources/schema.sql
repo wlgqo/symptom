@@ -8,6 +8,19 @@ CREATE TABLE IF NOT EXISTS sys_user (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 症候群配置表
+CREATE TABLE IF NOT EXISTS syndrome_config (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    syndrome_name VARCHAR(50) NOT NULL,
+    syndrome_code VARCHAR(20) NOT NULL,
+    definition TEXT,
+    symptom_rules_json TEXT,
+    risk_rules_json TEXT,
+    monitor_model_json TEXT,
+    status VARCHAR(20) DEFAULT '启用',
+    description TEXT
+);
+
 -- 病例信息表
 CREATE TABLE IF NOT EXISTS case_info (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -16,6 +29,9 @@ CREATE TABLE IF NOT EXISTS case_info (
     gender VARCHAR(10),
     age INTEGER,
     occupation VARCHAR(50),
+    id_card VARCHAR(20),
+    phone VARCHAR(20),
+    ethnicity VARCHAR(20),
     case_type VARCHAR(50),
     syndrome_type VARCHAR(50),
     address VARCHAR(200),
@@ -29,10 +45,15 @@ CREATE TABLE IF NOT EXISTS case_info (
     risk_reason TEXT,
     report_date DATE,
     hospital VARCHAR(100),
+    admission_date DATE,
+    discharge_date DATE,
+    death_date DATE,
     fever_temp REAL,
     clinical_json TEXT,
     lab_json TEXT,
     treatment_json TEXT,
+    profile_json TEXT,
+    medical_record_json TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
