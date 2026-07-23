@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.symptom.mapper.CaseInfoMapper">
+
+    <resultMap id="BaseResultMap" type="CaseInfo">
+        <id column="id" property="id"/>
+        <result column="main_index" property="mainIndex"/>
+        <result column="patient_name" property="patientName"/>
+        <result column="gender" property="gender"/>
+        <result column="age" property="age"/>
+        <result column="occupation" property="occupation"/>
+        <result column="id_card" property="idCard"/>
+        <result column="phone" property="phone"/>
+        <result column="ethnicity" property="ethnicity"/>
+        <result column="case_type" property="caseType"/>
+        <result column="syndrome_type" property="syndromeType"/>
+        <result column="address" property="address"/>
+        <result column="district" property="district"/>
+        <result column="discover_type" property="discoverType"/>
+        <result column="diagnosis" property="diagnosis"/>
+        <result column="outcome" property="outcome"/>
+        <result column="is_severe" property="isSevere"/>
+        <result column="is_death" property="isDeath"/>
+        <result column="risk_level" property="riskLevel"/>
+        <result column="risk_reason" property="riskReason"/>
+        <result column="report_date" property="reportDate" typeHandler="com.symptom.config.SqliteDateTypeHandler"/>
+        <result column="hospital" property="hospital"/>
+        <result column="admission_date" property="admissionDate" typeHandler="com.symptom.config.SqliteDateTypeHandler"/>
+        <result column="discharge_date" property="dischargeDate" typeHandler="com.symptom.config.SqliteDateTypeHandler"/>
+        <result column="death_date" property="deathDate" typeHandler="com.symptom.config.SqliteDateTypeHandler"/>
+        <result column="fever_temp" property="feverTemp"/>
+        <result column="clinical_json" property="clinicalJson"/>
+        <result column="lab_json" property="labJson"/>
+        <result column="treatment_json" property="treatmentJson"/>
+        <result column="profile_json" property="profileJson"/>
+        <result column="medical_record_json" property="medicalRecordJson"/>
+        <result column="created_at" property="createdAt" typeHandler="com.symptom.config.SqliteDateTypeHandler"/>
+        <result column="updated_at" property="updatedAt" typeHandler="com.symptom.config.SqliteDateTypeHandler"/>
+    </resultMap>
+
+    <select id="findAll" resultMap="BaseResultMap">
+        SELECT * FROM case_info ORDER BY report_date DESC
+    </select>
+
+    <select id="findById" resultMap="BaseResultMap">
+        SELECT * FROM case_info WHERE id = #{id}
+    </select>
+
+    <select id="search" resultMap="BaseResultMap" parameterType="map">
+        SELECT * FROM case_info
+        <where>
+            <if test="patientName != null and patientName != ''">
+                AND patient_name LIKE '%' || #{patientName} || '%'
+            </if>
+            <if test="mainIndex != null and mainIndex != ''">
+                AND main_index LIKE '%' || #{mainIndex} || '%'
+            </if>
+            <if test="gender != null and gender != ''">
+                AND gender = #{gender}
+            </if>
+            <if test="district != null and district != ''">
+                AND district LIKE '%' || #{district} || '%'
+            </if>
+            <if test="caseType != null and caseType != ''">
+                AND case_type = #{caseType}
+            </if>
+            <if test="syndromeType != null and syndromeType != ''">
+                AND syndrome_type = #{syndromeType}
+            </if>
+            <if test="ageMin != null">
+                AND age &gt;= #{ageMin}
+            </if>
+            <if test="ageMax != null">
+                AND age &lt;= #{ageMax}
+            </if>
+            <if test="discoverType != null and discoverType != ''">
+                AND discover_type = #{discoverType}
+            </if>
+            <if test="riskLevel != null and riskLevel != ''">
+                AND risk_level = #{riskLevel}
+            </if>
+        </where>
+        ORDER BY report_date DESC
+    </select>
+
+    <select id="count" resultType="int" parameterType="map">
+        SELECT COUNT(*) FROM case_info
+        <where>
+            <if test="patientName != null and patientName != ''">
+                AND patient_name LIKE '%' || #{patientName} || '%'
+            </if>
+            <if test="syndromeType != null and syndromeType != ''">
+                AND syndrome_type = #{syndromeType}
+            </if>
+        </where>
+    </select>
+
+    <select id="findBySyndromeType" resultMap="BaseResultMap">
+        SELECT * FROM case_info WHERE syndrome_type = #{syndromeType} ORDER BY report_date DESC
+    </select>
+
+    <select id="findSevereCases" resultMap="BaseResultMap">
+        SELECT * FROM case_info WHERE is_severe = 1
+        <if test="syndromeType != null and syndromeType != ''">
+            AND syndrome_type = #{syndromeType}
+        </if>
+        ORDER BY report_date DESC
+    </select>
+
+    <select id="findDeathCases" resultMap="BaseResultMap">
+        SELECT * FROM case_info WHERE is_death = 1
+        <if test="syndromeType != null and syndromeType != ''">
+            AND syndrome_type = #{syndromeType}
+        </if>
+        ORDER BY report_date DESC
+    </select>
+
+    <select id="findByRiskLevel" resultMap="BaseResultMap">
+        SELECT * FROM case_info WHERE risk_level = #{riskLevel} ORDER BY report_date DESC
+    </select>
+
+    <select id="countByDate" resultType="map">
+        <choose>
+            <when test="groupBy == 'week'">
+                SELECT strftime('%Y-W%W', report_date) as period, COUNT(*) as cnt
+                FROM case_info
+                <if test="syndromeType != null and syndromeType != ''">
+                    WHERE syndrome_type = #{syndromeType}
+                </if>
+                GROUP BY period ORDER BY period
+            </when>
+            <when test="groupBy == 'month'">
+                SELECT strftime('%Y-%m', report_date) as period, COUNT(*) as cnt
+                FROM case_info
+                <if test="syndromeType != null and syndromeType != ''">
+                    WHERE syndrome_type = #{syndromeType}
+                </if>
+                GROUP BY period ORDER BY period
+            </when>
+            <otherwise>
+                SELECT report_date as period, COUNT(*) as cnt
+                FROM case_info
+                <if test="syndromeType != null and syndromeType != ''">
+                    WHERE syndrome_type = #{syndromeType}
+                </if>
+                GROUP BY report_date ORDER BY report_date
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="countByDistrict" resultType="map">
+        SELECT district as name, COUNT(*) as value FROM case_info
+        <if test="syndromeType != null and syndromeType != ''">
+            WHERE syndrome_type = #{syndromeType}
+        </if>
+        GROUP BY district ORDER BY value DESC
+    </select>
+
+    <select id="countByAgeGroup" resultType="map">
+        SELECT
+            CASE
+                WHEN age &lt; 18 THEN '0-17岁'
+                WHEN age &lt; 45 THEN '18-44岁'
+                WHEN age &lt; 60 THEN '45-59岁'
+                ELSE '60岁以上'
+            END as name,
+            COUNT(*) as value
+        FROM case_info
+        <if test="syndromeType != null and syndromeType != ''">
+            WHERE syndrome_type = #{syndromeType}
+        </if>
+        GROUP BY name
+    </select>
+
+    <select id="countByGender" resultType="map">
+        SELECT gender as name, COUNT(*) as value FROM case_info
+        <if test="syndromeType != null and syndromeType != ''">
+            WHERE syndrome_type = #{syndromeType}
+        </if>
+        GROUP BY gender
+    </select>
+
+    <select id="countByOccupation" resultType="map">
+        SELECT occupation as name, COUNT(*) as value FROM case_info
+        <if test="syndromeType != null and syndromeType != ''">
+            WHERE syndrome_type = #{syndromeType}
+        </if>
+        GROUP BY occupation ORDER BY value DESC
+    </select>
+
+    <select id="countToday" resultType="int">
+        SELECT COUNT(*) FROM case_info WHERE report_date = date('now')
+    </select>
+
+    <select id="countHighRisk" resultType="int">
+        SELECT COUNT(*) FROM case_info WHERE risk_level = '高风险'
+    </select>
+
+    <select id="countBySyndromeType" resultType="int">
+        SELECT COUNT(*) FROM case_info WHERE syndrome_type = #{syndromeType}
+    </select>
+
+    <select id="countSevere" resultType="int">
+        SELECT COUNT(*) FROM case_info WHERE is_severe = 1
+    </select>
+
+    <select id="countDeath" resultType="int">
+        SELECT COUNT(*) FROM case_info WHERE is_death = 1
+    </select>
+
+    <select id="searchByConditionTree" resultMap="BaseResultMap">
+        SELECT DISTINCT c.* FROM case_info c
+        WHERE c.id IN (${sql})
+        ORDER BY c.report_date DESC
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO case_info (main_index, patient_name, gender, age, occupation, case_type, syndrome_type,
+            address, district, discover_type, diagnosis, outcome, is_severe, is_death, risk_level, risk_reason,
+            report_date, hospital, fever_temp, clinical_json, lab_json, treatment_json)
+        VALUES (#{mainIndex}, #{patientName}, #{gender}, #{age}, #{occupation}, #{caseType}, #{syndromeType},
+            #{address}, #{district}, #{discoverType}, #{diagnosis}, #{outcome}, #{isSevere}, #{isDeath},
+            #{riskLevel}, #{riskReason}, #{reportDate}, #{hospital}, #{feverTemp}, #{clinicalJson}, #{labJson}, #{treatmentJson})
+    </insert>
+
+    <update id="update">
+        UPDATE case_info SET
+            patient_name = #{patientName}, gender = #{gender}, age = #{age}, occupation = #{occupation},
+            case_type = #{caseType}, address = #{address}, district = #{district}, discover_type = #{discoverType},
+            diagnosis = #{diagnosis}, outcome = #{outcome}, is_severe = #{isSevere}, is_death = #{isDeath},
+            risk_level = #{riskLevel}, risk_reason = #{riskReason}, hospital = #{hospital},
+            fever_temp = #{feverTemp}, clinical_json = #{clinicalJson}, lab_json = #{labJson},
+            treatment_json = #{treatmentJson}, updated_at = datetime('now')
+        WHERE id = #{id}
+    </update>
+</mapper>

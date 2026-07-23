@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 - 症候群主动监测预警系统</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="login-body">
+<div class="login-page">
+    <aside class="login-brand-panel">
+        <div class="login-brand-inner">
+            <div class="login-org-badge">
+                <svg class="login-org-icon" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+                    <rect width="40" height="40" rx="4" fill="rgba(255,255,255,0.12)"/>
+                    <path d="M20 8v24M8 20h24" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+                <span>四川省疾病预防控制中心</span>
+            </div>
+            <h1 class="login-system-name">症候群主动监测<br>预警系统</h1>
+            <p class="login-system-en">Syndrome Surveillance &amp; Early Warning System</p>
+            <div class="login-divider"></div>
+            <ul class="login-capabilities">
+                <li>传染病症候群实时监测与识别</li>
+                <li>三间分布分析与预警模型计算</li>
+                <li>病例全流程管理与主题库检索</li>
+                <li>预警信号生成与联动处置</li>
+            </ul>
+        </div>
+        <div class="login-brand-footer">
+            <span>遵循国家传染病监测技术规范</span>
+        </div>
+    </aside>
+
+    <main class="login-form-panel">
+        <div class="login-form-box">
+            <div class="login-form-header">
+                <h2>用户登录</h2>
+                <p>请输入您的系统账号和密码</p>
+            </div>
+
+            <div th:if="${error}" class="login-alert" th:text="${error}"></div>
+
+            <form method="post" action="/login" class="login-form">
+                <div class="login-field">
+                    <label for="username">用户名</label>
+                    <input type="text" id="username" name="username" class="form-control" placeholder="请输入用户名" required autofocus autocomplete="username">
+                </div>
+                <div class="login-field">
+                    <label for="password">密码</label>
+                    <input type="password" id="password" name="password" class="form-control" placeholder="请输入密码" required autocomplete="current-password">
+                </div>
+                <button type="submit" class="btn-login">登 录</button>
+            </form>
+
+            <div class="login-form-footer">
+                <span>症候群主动监测预警系统 V1.0</span>
+                <span>技术支持：传染病监测信息科</span>
+            </div>
+        </div>
+    </main>
+</div>
+</body>
+</html>

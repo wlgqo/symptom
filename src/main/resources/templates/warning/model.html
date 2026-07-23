@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout('预警模型中心', ~{::content})}">
+<body>
+<div th:fragment="content">
+    <div class="stat-cards inline-stats">
+        <div class="stat-card"><div class="label">模型总数</div><div class="value" th:text="${modelStats.total}">0</div></div>
+        <div class="stat-card success"><div class="label">已启用</div><div class="value" th:text="${modelStats.enabled}">0</div></div>
+        <div class="stat-card warning"><div class="label">历史触发</div><div class="value" th:text="${modelStats.triggered}">0</div></div>
+    </div>
+
+    <div class="grid-2">
+        <div class="card-panel">
+            <h5>预警模型列表</h5>
+            <div class="model-cards">
+                <a th:each="m : ${models}" th:href="@{/warning/model(id=${m.id})}"
+                   th:class="${selected != null and selected.id == m.id ? 'model-card active' : 'model-card'}">
+                    <div class="model-card-header">
+                        <span th:text="${m.modelName}">模型名</span>
+                        <span th:class="${m.enabled == 1 ? 'badge-level badge-green' : 'badge-level badge-low'}"
+                              th:text="${m.enabled == 1 ? '启用' : '停用'}"></span>
+                    </div>
+                    <div class="model-card-type" th:text="${m.modelType}">类型</div>
+                    <div class="model-card-meta">
+                        <span th:text="${m.syndromeType}">症候群</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <div class="card-panel" th:if="${selected != null}">
+            <h5 th:text="${selected.modelName}">模型详情</h5>
+            <div class="detail-grid">
+                <div class="detail-item"><label>模型类型</label><span th:text="${selected.modelType}"></span></div>
+                <div class="detail-item"><label>监测主题</label><span th:text="${selected.syndromeType}"></span></div>
+                <div class="detail-item"><label>运行状态</label>
+                    <span th:class="${selected.enabled == 1 ? 'badge-level badge-green' : 'badge-level badge-low'}"
+                          th:text="${selected.enabled == 1 ? '运行中' : '已停用'}"></span>
+                </div>
+            </div>
+            <div class="detail-section">
+                <h6>模型说明</h6>
+                <p th:text="${selected.description}">说明</p>
+            </div>
+            <div class="detail-section">
+                <h6>参数配置</h6>
+                <pre class="json-preview" th:text="${selected.configJson}"></pre>
+            </div>
+            <div class="action-btns">
+                <button class="btn-primary-sm" th:onclick="'runModel(' + ${selected.id} + ',\'' + ${selected.syndromeType} + '\')'">运行分析</button>
+                <button class="btn-outline-sm" th:onclick="'toggleModel(' + ${selected.id} + ',' + (${selected.enabled == 1} ? 0 : 1) + ')'"
+                        th:text="${selected.enabled == 1 ? '停用模型' : '启用模型'}">切换</button>
+            </div>
+            <div class="detail-section" th:if="${modelWarnings != null and !modelWarnings.isEmpty()}">
+                <h6>历史预警记录</h6>
+                <table class="data-table compact">
+                    <thead><tr><th>时间</th><th>级别</th><th>状态</th></tr></thead>
+                    <tbody>
+                        <tr th:each="w : ${modelWarnings}">
+                            <td th:text="${#dates.format(w.warningTime, 'yyyy-MM-dd HH:mm')}"></td>
+                            <td th:text="${w.warningLevel}"></td>
+                            <td th:text="${w.status}"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function runModel(modelId, syndromeType) {
+            fetch('/warning/model/run', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({modelId, syndromeType})
+            }).then(r => r.json()).then(d => {
+                alert(d.count > 0 ? '生成 ' + d.count + ' 条新预警信号' : '未检测到异常');
+                if (d.count > 0) location.href = '/warning/center';
+            });
+        }
+        function toggleModel(id, enabled) {
+            fetch('/warning/model/toggle', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({id, enabled})
+            }).then(r => r.json()).then(d => { if (d.success) location.reload(); });
+        }
+    </script>
+</div>
+</body>
+</html>

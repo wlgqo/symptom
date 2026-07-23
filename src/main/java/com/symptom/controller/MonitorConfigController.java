@@ -1,0 +1,89 @@
+package com.symptom.controller;
+
+import com.symptom.entity.SyndromeConfig;
+import com.symptom.entity.SysUser;
+import com.symptom.entity.WarningModel;
+import com.symptom.service.SyndromeConfigService;
+import com.symptom.service.WarningService;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+
+import javax.servlet.http.HttpSession;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@Controller
+@RequestMapping("/config")
+public class MonitorConfigController {
+
+    private final SyndromeConfigService syndromeConfigService;
+    private final WarningService warningService;
+
+    public MonitorConfigController(SyndromeConfigService syndromeConfigService,
+                                   WarningService warningService) {
+        this.syndromeConfigService = syndromeConfigService;
+        this.warningService = warningService;
+    }
+
+    @GetMapping
+    public String index(@RequestParam(required = false) Integer syndromeId,
+                        @RequestParam(required = false) Integer modelId,
+                        Model model, HttpSession session) {
+        SysUser user = (SysUser) session.getAttribute("currentUser");
+        if (!"管理员".equals(user.getRole())) {
+            return "redirect:/";
+        }
+        model.addAttribute("pageTitle", "监测配置");
+        model.addAttribute("breadcrumb", "监测配置");
+        model.addAttribute("syndromeConfigs", syndromeConfigService.findAll());
+        model.addAttribute("models", warningService.getAllModels());
+
+        SyndromeConfig selectedSyndrome = null;
+        if (syndromeId != null) {
+            selectedSyndrome = syndromeConfigService.findById(syndromeId);
+        } else {
+            List<SyndromeConfig> configs = syndromeConfigService.findAll();
+            if (!configs.isEmpty()) {
+                selectedSyndrome = configs.get(0);
+            }
+        }
+        model.addAttribute("selectedSyndrome", selectedSyndrome);
+
+        WarningModel selectedModel = null;
+        if (modelId != null) {
+            selectedModel = warningService.getModelById(modelId);
+        }
+        model.addAttribute("selectedModel", selectedModel);
+        return "config/index";
+    }
+
+    @PostMapping("/syndrome/update")
+    @ResponseBody
+    public Map<String, Object> updateSyndrome(@RequestBody SyndromeConfig config, HttpSession session) {
+        SysUser user = (SysUser) session.getAttribute("currentUser");
+        Map<String, Object> result = new HashMap<>();
+        if (!"管理员".equals(user.getRole())) {
+            result.put("success", false);
+            return result;
+        }
+        syndromeConfigService.update(config);
+        result.put("success", true);
+        return result;
+    }
+
+    @PostMapping("/model/update")
+    @ResponseBody
+    public Map<String, Object> updateModel(@RequestBody WarningModel model, HttpSession session) {
+        SysUser user = (SysUser) session.getAttribute("currentUser");
+        Map<String, Object> result = new HashMap<>();
+        if (!"管理员".equals(user.getRole())) {
+            result.put("success", false);
+            return result;
+        }
+        warningService.updateModel(model);
+        result.put("success", true);
+        return result;
+    }
+}

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout('腹泻症候群病例详情', ~{::content})}">
+<body>
+<div th:fragment="content">
+    <div style="margin-bottom:16px;">
+        <a href="/diarrhea" class="btn-outline-custom" style="text-decoration:none;">← 返回列表</a>
+    </div>
+
+    <div class="card-panel">
+        <h5>患者基本信息</h5>
+        <div class="detail-grid">
+            <div class="detail-item"><span class="label">姓名：</span><span th:text="${caseInfo.patientName}"></span></div>
+            <div class="detail-item"><span class="label">性别：</span><span th:text="${caseInfo.gender}"></span></div>
+            <div class="detail-item"><span class="label">年龄：</span><span th:text="${caseInfo.age}"></span></div>
+            <div class="detail-item"><span class="label">职业：</span><span th:text="${caseInfo.occupation}"></span></div>
+            <div class="detail-item"><span class="label">主索引号：</span><span th:text="${caseInfo.mainIndex}"></span></div>
+            <div class="detail-item"><span class="label">地址：</span><span th:text="${caseInfo.address}"></span></div>
+        </div>
+    </div>
+
+    <div class="card-panel">
+        <h5>症状信息</h5>
+        <div class="detail-grid">
+            <div class="detail-item"><span class="label">体温：</span><span th:text="${caseInfo.feverTemp != null ? caseInfo.feverTemp + '℃' : '-'}"></span></div>
+            <div class="detail-item"><span class="label">症状列表：</span><span th:text="${caseInfo.symptoms != null ? #strings.listJoin(caseInfo.symptoms, '、') : ''}"></span></div>
+        </div>
+        <pre th:if="${caseInfo.clinicalJson}" style="background:#f8f9fa;padding:12px;border-radius:6px;font-size:13px;margin-top:12px;" th:text="${caseInfo.clinicalJson}"></pre>
+    </div>
+
+    <div class="grid-2">
+        <div class="card-panel">
+            <h5>诊断信息</h5>
+            <div class="detail-item"><span class="label">诊断：</span><span th:text="${caseInfo.diagnosis}"></span></div>
+            <div class="detail-item" style="margin-top:8px;"><span class="label">病例类型：</span><span th:text="${caseInfo.caseType}"></span></div>
+        </div>
+        <div class="card-panel">
+            <h5>检验信息</h5>
+            <pre style="background:#f8f9fa;padding:12px;border-radius:6px;font-size:13px;" th:text="${caseInfo.labJson}"></pre>
+        </div>
+    </div>
+
+    <div class="card-panel">
+        <h5>用药信息</h5>
+        <pre style="background:#f8f9fa;padding:12px;border-radius:6px;font-size:13px;" th:text="${caseInfo.treatmentJson}"></pre>
+    </div>
+
+    <div class="card-panel">
+        <h5>风险评级</h5>
+        <div class="detail-grid">
+            <div class="detail-item"><span class="label">风险等级：</span>
+                <span th:class="${caseInfo.riskLevel == '高风险' ? 'badge-level badge-high' : (caseInfo.riskLevel == '中风险' ? 'badge-level badge-medium' : 'badge-level badge-low')}"
+                      th:text="${caseInfo.riskLevel}"></span>
+            </div>
+            <div class="detail-item"><span class="label">转归：</span><span th:text="${caseInfo.outcome}"></span></div>
+        </div>
+        <div style="margin-top:12px;padding:12px;background:#fef3e2;border-radius:6px;" th:if="${caseInfo.riskReason}">
+            <strong>风险分析依据：</strong><span th:text="${caseInfo.riskReason}"></span>
+        </div>
+    </div>
+</div>
+</body>
+</html>
