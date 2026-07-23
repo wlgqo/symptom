@@ -28,7 +28,7 @@
                 <option value="30" th:selected="${filterDays == 30}">近30天</option>
                 <option value="90" th:selected="${filterDays == 90}">近90天</option>
                 <option value="180" th:selected="${filterDays == 180}">近半年</option>
-                <option value="365" th:selected="${filterDays == 365}">近一年</option>
+                <option value="365" th:selected="${filterDays == 365 or filterDays == null}">近一年</option>
             </select>
             <button type="submit" class="btn-primary-sm">查询</button>
             <a th:href="@{'/' + ${syndromeCode}}" class="btn-outline-sm">重置</a>
@@ -58,7 +58,7 @@
     <!-- 三间分布 -->
     <div class="tab-content" th:classappend="${activeTab == 'distribution' ? ' active' : ''}" id="tab-distribution">
         <div class="map-breadcrumb">
-            <a th:href="@{'/' + ${syndromeCode}(startDate=${filterStartDate}, endDate=${filterEndDate}, days=${filterDays})}">全省</a>
+            <a th:href="@{'/' + ${syndromeCode}(startDate=${filterStartDate}, endDate=${filterEndDate}, days=${filterDays})}">全市</a>
             <span th:if="${filterDistrict != null and filterDistrict != ''}">
                 <span class="sep">/</span>
                 <span class="current" th:text="${filterDistrict}">区县</span>
@@ -67,37 +67,35 @@
                th:href="@{'/' + ${syndromeCode}(startDate=${filterStartDate}, endDate=${filterEndDate}, days=${filterDays})}"
                class="btn-outline-sm" style="margin-left:12px;font-size:12px;">返回上级</a>
         </div>
-        <div class="card-panel">
-            <h5>空间分布地图 <span class="panel-action">点击区域下钻</span></h5>
-            <div id="mapChart" class="chart-container" style="height:400px;"></div>
-        </div>
-        <div class="card-panel">
-            <h5>时间分布分析</h5>
-            <div style="margin-bottom:12px;">
-                <button type="button" class="btn-outline-custom time-btn active" data-group="day">按日</button>
-                <button type="button" class="btn-outline-custom time-btn" data-group="week">按周</button>
-                <button type="button" class="btn-outline-custom time-btn" data-group="month">按月</button>
+        <div class="distribution-layout">
+            <div class="card-panel dist-time-panel">
+                <h5>时间分布分析</h5>
+                <div class="dist-time-toolbar">
+                    <button type="button" class="btn-outline-custom time-btn active" data-group="day">按日</button>
+                    <button type="button" class="btn-outline-custom time-btn" data-group="week">按周</button>
+                    <button type="button" class="btn-outline-custom time-btn" data-group="month">按月</button>
+                </div>
+                <div id="timeChart" class="chart-container chart-compact"></div>
             </div>
-            <div id="timeChart" class="chart-container"></div>
-        </div>
-        <div class="grid-2">
-            <div class="card-panel">
-                <h5>地区分布分析</h5>
-                <div id="districtChart" class="chart-container"></div>
-            </div>
-            <div class="card-panel">
+            <div class="card-panel dist-side-panel">
                 <h5>人群分布 - 年龄</h5>
-                <div id="ageChart" class="chart-container"></div>
+                <div id="ageChart" class="chart-container chart-compact"></div>
             </div>
-        </div>
-        <div class="grid-2">
-            <div class="card-panel">
+            <div class="card-panel dist-map-panel">
+                <h5>空间分布地图 <span class="panel-action">成都市 · 点击下钻</span></h5>
+                <div id="mapChart" class="chart-container chart-map"></div>
+            </div>
+            <div class="card-panel dist-side-panel">
                 <h5>人群分布 - 性别</h5>
-                <div id="genderChart" class="chart-container"></div>
+                <div id="genderChart" class="chart-container chart-compact"></div>
             </div>
-            <div class="card-panel">
+            <div class="card-panel dist-side-panel">
+                <h5>地区分布分析</h5>
+                <div id="districtChart" class="chart-container chart-compact"></div>
+            </div>
+            <div class="card-panel dist-side-panel dist-occupation-panel">
                 <h5>人群分布 - 职业</h5>
-                <div id="occupationChart" class="chart-container"></div>
+                <div id="occupationChart" class="chart-container chart-compact"></div>
             </div>
         </div>
     </div>
@@ -265,9 +263,15 @@
         function renderTimeChart(data) {
             timeChart.setOption({
                 tooltip: { trigger: 'axis' },
-                xAxis: { type: 'category', data: data.labels || [] },
-                yAxis: { type: 'value', name: '病例数' },
-                series: [{ type: 'bar', itemStyle: { color: '#1677ff' }, data: data.values || [] }]
+                legend: { data: ['病例数', '同比', '环比'], top: 0, right: 8, textStyle: { fontSize: 11 } },
+                grid: { left: 42, right: 16, top: 32, bottom: 28 },
+                xAxis: { type: 'category', data: data.labels || [], axisLabel: { fontSize: 10, rotate: (data.labels || []).length > 20 ? 35 : 0 } },
+                yAxis: { type: 'value', name: '病例数', nameTextStyle: { fontSize: 11 } },
+                series: [
+                    { name: '病例数', type: 'bar', barMaxWidth: 18, itemStyle: { color: '#1677ff' }, data: data.values || [] },
+                    { name: '同比', type: 'line', smooth: true, symbol: 'none', lineStyle: { width: 2 }, itemStyle: { color: '#52c41a' }, data: data.yoy || [] },
+                    { name: '环比', type: 'line', smooth: true, symbol: 'none', lineStyle: { width: 2, type: 'dashed' }, itemStyle: { color: '#faad14' }, data: data.mom || [] }
+                ]
             });
         }
         renderTimeChart(timeDataDay);
@@ -284,9 +288,10 @@
         var districtChart = trackChart(echarts.init(document.getElementById('districtChart')));
         districtChart.setOption({
             tooltip: { trigger: 'axis' },
-            xAxis: { type: 'category', data: (districtData||[]).map(function(d){return d.name;}), axisLabel: { rotate: 30 } },
+            grid: { left: 40, right: 8, top: 12, bottom: 48 },
+            xAxis: { type: 'category', data: (districtData||[]).map(function(d){return d.name;}), axisLabel: { rotate: 35, fontSize: 10 } },
             yAxis: { type: 'value' },
-            series: [{ type: 'bar', itemStyle: { color: '#52c41a' }, data: (districtData||[]).map(function(d){return d.value;}) }]
+            series: [{ type: 'bar', barMaxWidth: 16, itemStyle: { color: '#52c41a' }, data: (districtData||[]).map(function(d){return d.value;}) }]
         });
         districtChart.on('click', function(p) { drillDistrict(p.name); });
 
@@ -303,9 +308,10 @@
         var occupationChart = trackChart(echarts.init(document.getElementById('occupationChart')));
         occupationChart.setOption({
             tooltip: { trigger: 'axis' },
-            xAxis: { type: 'category', data: (populationData.occupation||[]).map(function(d){return d.name;}), axisLabel: { rotate: 30 } },
+            grid: { left: 36, right: 8, top: 12, bottom: 48 },
+            xAxis: { type: 'category', data: (populationData.occupation||[]).map(function(d){return d.name;}), axisLabel: { rotate: 35, fontSize: 10 } },
             yAxis: { type: 'value' },
-            series: [{ type: 'bar', data: (populationData.occupation||[]).map(function(d){return d.value;}) }]
+            series: [{ type: 'bar', barMaxWidth: 16, data: (populationData.occupation||[]).map(function(d){return d.value;}) }]
         });
 
         var diagData = clinicalData.diagnoses || {};
@@ -339,15 +345,8 @@
             }]
         });
 
-        var nameAlias = {
-            '阿坝州': '阿坝藏族羌族自治州', '甘孜州': '甘孜藏族自治州', '凉山州': '凉山彝族自治州',
-            '德阳市': '德阳市', '绵阳市': '绵阳市', '宜宾市': '宜宾市'
-        };
-        function mapRegionName(name) {
-            for (var k in nameAlias) { if (name.indexOf(k.replace('州','')) >= 0 || name === k) return nameAlias[k] || name; }
-            if (name.indexOf('区') > 0) return '成都市';
-            return name;
-        }
+        var nameAlias = {};
+        function mapRegionName(name) { return name; }
 
         function drillDistrict(name) {
             if (!name) return;
@@ -361,15 +360,15 @@
         var mapData = (districtData || []).map(function(d) {
             return { name: mapRegionName(d.name), value: d.value, rawName: d.name };
         });
-        fetch('https://geo.datav.aliyun.com/areas_v3/bound/510000_full.json')
+        fetch('https://geo.datav.aliyun.com/areas_v3/bound/510100_full.json')
             .then(function(r) { return r.json(); })
             .then(function(geo) {
-                echarts.registerMap('sichuan', geo);
+                echarts.registerMap('chengdu', geo);
                 mapChart.setOption({
                     tooltip: { trigger: 'item', formatter: function(p) { return (p.data && p.data.rawName ? p.data.rawName : p.name) + ': ' + (p.value || 0) + '例'; } },
-                    visualMap: { min: 0, max: Math.max.apply(null, mapData.map(function(d){return d.value;}).concat([10])), left: 20, bottom: 20, text: ['高','低'], inRange: { color: ['#e6f4ff','#1677ff'] } },
+                    visualMap: { min: 0, max: Math.max.apply(null, mapData.map(function(d){return d.value;}).concat([10])), left: 8, bottom: 8, itemWidth: 10, itemHeight: 60, text: ['高','低'], textStyle: { fontSize: 10 }, inRange: { color: ['#e6f4ff','#1677ff'] } },
                     series: [{
-                        type: 'map', map: 'sichuan', roam: true, label: { show: false },
+                        type: 'map', map: 'chengdu', roam: true, label: { show: false, fontSize: 9 },
                         data: mapData,
                         emphasis: { label: { show: true } }
                     }]

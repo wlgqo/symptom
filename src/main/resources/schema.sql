@@ -10,6 +10,17 @@ CREATE TABLE IF NOT EXISTS sys_user (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 症状术语配置表
+CREATE TABLE IF NOT EXISTS symptom_term (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    term_name VARCHAR(100) NOT NULL UNIQUE,
+    synonyms TEXT,
+    category VARCHAR(50),
+    status VARCHAR(20) DEFAULT '启用',
+    description TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 -- 症候群配置表
 CREATE TABLE IF NOT EXISTS syndrome_config (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

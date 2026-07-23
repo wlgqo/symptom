@@ -7,10 +7,10 @@ import java.util.*;
 @Service
 public class FilterOptionService {
 
-    private static final List<String> DISTRICTS = Arrays.asList(
-            "锦江区", "青羊区", "武侯区", "成华区", "金牛区", "龙泉驿区",
-            "德阳市", "绵阳市", "宜宾市"
-    );
+    private static final List<String> CHENGDU_DISTRICTS = Collections.unmodifiableList(Arrays.asList(
+            "锦江区", "青羊区", "金牛区", "武侯区", "成华区", "龙泉驿区",
+            "青白江区", "新都区", "温江区", "双流区", "郫都区", "新津区"
+    ));
 
     private static final Map<String, List<String>> HOSPITALS_BY_DISTRICT = new LinkedHashMap<>();
 
@@ -21,13 +21,20 @@ public class FilterOptionService {
         HOSPITALS_BY_DISTRICT.put("成华区", Arrays.asList("成都市第六人民医院", "成华区人民医院"));
         HOSPITALS_BY_DISTRICT.put("金牛区", Arrays.asList("成都市金牛区人民医院"));
         HOSPITALS_BY_DISTRICT.put("龙泉驿区", Arrays.asList("龙泉驿区第一人民医院"));
-        HOSPITALS_BY_DISTRICT.put("德阳市", Arrays.asList("德阳市人民医院"));
-        HOSPITALS_BY_DISTRICT.put("绵阳市", Arrays.asList("绵阳市中心医院"));
-        HOSPITALS_BY_DISTRICT.put("宜宾市", Arrays.asList("宜宾市第一人民医院"));
+        HOSPITALS_BY_DISTRICT.put("青白江区", Arrays.asList("青白江区人民医院"));
+        HOSPITALS_BY_DISTRICT.put("新都区", Arrays.asList("新都区人民医院"));
+        HOSPITALS_BY_DISTRICT.put("温江区", Arrays.asList("温江区人民医院"));
+        HOSPITALS_BY_DISTRICT.put("双流区", Arrays.asList("双流区第一人民医院"));
+        HOSPITALS_BY_DISTRICT.put("郫都区", Arrays.asList("郫都区人民医院"));
+        HOSPITALS_BY_DISTRICT.put("新津区", Arrays.asList("新津区人民医院"));
+    }
+
+    public static List<String> getChengduDistricts() {
+        return CHENGDU_DISTRICTS;
     }
 
     public List<String> getDistricts() {
-        return DISTRICTS;
+        return CHENGDU_DISTRICTS;
     }
 
     public List<String> getHospitals(String district) {

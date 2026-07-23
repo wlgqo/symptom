@@ -10,18 +10,32 @@ DELETE FROM warning_record;
 DELETE FROM case_info;
 DELETE FROM warning_model;
 DELETE FROM syndrome_config;
+DELETE FROM symptom_term;
 DELETE FROM operation_log;
 DELETE FROM sys_user;
 
 -- 重置自增ID
-DELETE FROM sqlite_sequence WHERE name IN ('case_info', 'case_symptom', 'warning_record', 'case_modify_log', 'report_card', 'warning_model', 'syndrome_config', 'operation_log', 'sys_user', 'warning_notification', 'warning_disposal', 'surveillance_event', 'saved_query');
+DELETE FROM sqlite_sequence WHERE name IN ('case_info', 'case_symptom', 'warning_record', 'case_modify_log', 'report_card', 'warning_model', 'syndrome_config', 'symptom_term', 'operation_log', 'sys_user', 'warning_notification', 'warning_disposal', 'surveillance_event', 'saved_query');
 
 -- 用户数据
 INSERT INTO sys_user (username, password, role, real_name, district_scope, hospital_scope) VALUES
 ('admin', 'admin123', '管理员', '系统管理员', NULL, NULL),
-('business', 'business123', '业务人员', '张业务', '武侯区', '成都市第三人民医院'),
-('business_jj', 'business123', '业务人员', '李锦江', '锦江区', '四川省人民医院'),
+('cdc01', 'cdc123', '业务人员', '成都市疾控', '成都市', NULL),
+('cdc02', 'cdc123', '业务人员', '武侯区疾控', '武侯区', NULL),
 ('viewer', 'viewer123', '浏览人员', '李浏览', NULL, NULL);
+
+-- 症状术语配置
+INSERT INTO symptom_term (term_name, synonyms, category, status, description) VALUES
+('发热', '发烧,体温升高,高热', '全身症状', '启用', '体温≥37.3℃或主观发热'),
+('咳嗽', '咳,干咳,阵咳', '呼吸道症状', '启用', '咳嗽为主要呼吸道表现'),
+('咽痛', '喉咙痛,咽喉痛,咽部不适', '呼吸道症状', '启用', '咽部疼痛或不适'),
+('流涕', '流鼻涕,鼻塞,鼻堵', '呼吸道症状', '启用', '鼻部卡他症状'),
+('腹泻', '拉肚子,稀便,水样便', '消化道症状', '启用', '排便次数增多或稀便'),
+('呕吐', '呕,反胃', '消化道症状', '启用', '胃内容物经口排出'),
+('皮疹', '出疹,斑丘疹,疱疹', '皮肤症状', '启用', '皮肤出现异常疹子'),
+('出血', '皮肤出血点,鼻出血,牙龈出血', '出血症状', '启用', '黏膜或皮肤出血表现'),
+('头痛', '头疼,头部胀痛', '神经系统症状', '启用', '头部疼痛'),
+('意识障碍', '昏迷,嗜睡,反应迟钝', '神经系统症状', '启用', '意识水平下降');
 
 -- 预警模型
 INSERT INTO warning_model (model_name, model_type, syndrome_type, config_json, description, enabled) VALUES
@@ -42,9 +56,9 @@ INSERT INTO warning_model (model_name, model_type, syndrome_type, config_json, d
 
 -- 症候群配置
 INSERT INTO syndrome_config (syndrome_name, syndrome_code, definition, symptom_rules_json, risk_rules_json, monitor_model_json, status, description) VALUES
-('发热呼吸道症候群', 'FRI', '以发热（≥37.3℃）为主要表现，伴咳嗽、咽痛、流涕等呼吸道症状之一的病例集合，用于流感、肺炎等呼吸道传染病早期预警。', '{"required":["发热"],"anyOf":["咳嗽","咽痛","流涕","鼻塞","气促","呼吸困难"],"exclude":["腹泻","出血"]}', '{"highRisk":["年龄≥60","基础疾病","持续高热≥39℃","呼吸困难"],"mediumRisk":["持续发热≥3天","影像学肺炎征象"]}', '{"models":["固定阈值模型","移动百分位模型","CUSUM累计和控制图模型","EWMA指数加权移动平均模型","场所聚集性模型"],"indicators":["日报告病例数","三间分布","发热比例","重症率"]}', '启用', '覆盖流感、肺炎等呼吸道传染病监测'),
-('发热伴出血症候群', 'FBH', '以发热伴皮肤黏膜出血、血小板减少等出血倾向为主要表现的病例，重点监测肾综合征出血热等自然疫源性疾病。', '{"required":["发热","出血"],"anyOf":["皮肤出血点","鼻出血","牙龈出血","结膜出血","消化道出血"],"lab":["血小板降低"]}', '{"highRisk":["血小板<50","多部位出血","休克","肾功能不全"],"mediumRisk":["血小板50-100","单一部位出血"]}', '{"models":["出血热重症预警模型","出血热死亡风险模型","固定阈值模型"],"indicators":["重症率","死亡率","血小板均值","地区分布"]}', '启用', '重点监测出血热等自然疫源性疾病'),
-('发热伴腹泻症候群', 'FBD', '以发热伴腹泻（≥3次/日稀便）为主要表现的病例，用于肠道传染病和食源性疾病风险预警。', '{"required":["发热","腹泻"],"anyOf":["水样便","脓血便","腹痛","呕吐","恶心"],"lab":["粪便病原学阳性"]}', '{"highRisk":["高龄或婴幼儿","重度脱水","聚集性疫情","脓血便"],"mediumRisk":["持续腹泻≥3天","食源性暴露史"]}', '{"models":["腹泻聚集性预警模型","腹泻高风险筛查模型","EWMA指数加权移动平均模型"],"indicators":["高风险病例数","聚集性事件","病原检出率"]}', '启用', '覆盖细菌性痢疾、诺如病毒等肠道传染病监测');
+('发热呼吸道症候群', 'FRI', '以发热（≥37.3℃）为主要表现，伴咳嗽、咽痛、流涕等呼吸道症状之一的病例集合，用于流感、肺炎等呼吸道传染病早期预警。', '{"logic":"AND","symptoms":{"required":["发热"],"anyOf":["咳嗽","咽痛","流涕","鼻塞","气促","呼吸困难"]},"signs":{"anyOf":["体温≥37.3℃","呼吸频率增快"]},"exclude":["腹泻","出血"]}', '{"highRisk":["年龄≥60","基础疾病","持续高热≥39℃","呼吸困难"],"mediumRisk":["持续发热≥3天","影像学肺炎征象"]}', '{"models":["固定阈值模型","移动百分位模型","CUSUM累计和控制图模型","EWMA指数加权移动平均模型","场所聚集性模型"],"indicators":["日报告病例数","三间分布","发热比例","重症率"]}', '启用', '覆盖流感、肺炎等呼吸道传染病监测'),
+('发热伴出血症候群', 'FBH', '以发热伴皮肤黏膜出血、血小板减少等出血倾向为主要表现的病例，重点监测肾综合征出血热等自然疫源性疾病。', '{"logic":"AND","symptoms":{"required":["发热","出血"],"anyOf":["皮肤出血点","鼻出血","牙龈出血","结膜出血","消化道出血"]},"signs":{"anyOf":["皮肤瘀斑","血压下降"]},"lab":{"anyOf":["血小板降低"]},"exclude":[]}', '{"highRisk":["血小板<50","多部位出血","休克","肾功能不全"],"mediumRisk":["血小板50-100","单一部位出血"]}', '{"models":["出血热重症预警模型","出血热死亡风险模型","固定阈值模型"],"indicators":["重症率","死亡率","血小板均值","地区分布"]}', '启用', '重点监测出血热等自然疫源性疾病'),
+('发热伴腹泻症候群', 'FBD', '以发热伴腹泻（≥3次/日稀便）为主要表现的病例，用于肠道传染病和食源性疾病风险预警。', '{"logic":"AND","symptoms":{"required":["发热","腹泻"],"anyOf":["水样便","脓血便","腹痛","呕吐","恶心"]},"signs":{"anyOf":["脱水征象","肠鸣音亢进"]},"lab":{"anyOf":["粪便病原学阳性"]},"exclude":[]}', '{"highRisk":["高龄或婴幼儿","重度脱水","聚集性疫情","脓血便"],"mediumRisk":["持续腹泻≥3天","食源性暴露史"]}', '{"models":["腹泻聚集性预警模型","腹泻高风险筛查模型","EWMA指数加权移动平均模型"],"indicators":["高风险病例数","聚集性事件","病原检出率"]}', '启用', '覆盖细菌性痢疾、诺如病毒等肠道传染病监测');
 
 -- 病例数据 - 发热呼吸道症候群
 INSERT INTO case_info (main_index, patient_name, gender, age, occupation, case_type, syndrome_type, address, district, discover_type, diagnosis, outcome, is_severe, is_death, risk_level, risk_reason, report_date, hospital, fever_temp, clinical_json, lab_json, treatment_json) VALUES
@@ -195,8 +209,8 @@ INSERT INTO case_modify_log (case_id, operator, modify_time, change_desc) VALUES
 -- 操作日志
 INSERT INTO operation_log (username, operation, ip, created_at) VALUES
 ('admin', '用户登录', '127.0.0.1', '2026-07-22 08:00:00'),
-('business', '用户登录', '192.168.1.100', '2026-07-22 08:30:00'),
-('business', '查询病例列表', '192.168.1.100', '2026-07-22 09:00:00'),
+('cdc01', '用户登录', '192.168.1.100', '2026-07-22 08:30:00'),
+('cdc02', '查询病例列表', '192.168.1.100', '2026-07-22 09:00:00'),
 ('admin', '运行预警分析', '127.0.0.1', '2026-07-22 09:30:00');
 
 -- 患者画像与原始病历数据补充

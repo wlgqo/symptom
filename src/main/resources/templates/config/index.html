@@ -3,12 +3,61 @@
 <body>
 <div th:fragment="content">
     <div class="tab-nav" id="configTabs">
-        <div class="tab-item active" data-tab="syndrome">症候群主题定义</div>
+        <div class="tab-item active" data-tab="symptom">症状术语配置</div>
+        <div class="tab-item" data-tab="syndrome">症候群识别规则</div>
         <div class="tab-item" data-tab="model">预警模型配置</div>
         <div class="tab-item" data-tab="indicator">监测指标</div>
     </div>
 
-    <div class="tab-content active" id="tab-syndrome">
+    <div class="tab-content active" id="tab-symptom">
+        <div class="grid-2">
+            <div class="card-panel">
+                <h5>症状术语与同义词</h5>
+                <p class="panel-desc">配置标准症状术语及其同义词，用于病例症状归一化与检索匹配。</p>
+                <table class="data-table compact">
+                    <thead><tr><th>标准术语</th><th>同义词</th><th>分类</th><th>状态</th><th>操作</th></tr></thead>
+                    <tbody>
+                        <tr th:each="t : ${symptomTerms}">
+                            <td th:text="${t.termName}"></td>
+                            <td th:text="${t.synonyms}" style="font-size:12px;color:#718096;"></td>
+                            <td th:text="${t.category}"></td>
+                            <td th:text="${t.status}"></td>
+                            <td>
+                                <button type="button" class="btn-outline-sm btn-sm edit-symptom-btn"
+                                        th:data-id="${t.id}" th:data-name="${t.termName}"
+                                        th:data-synonyms="${t.synonyms}" th:data-category="${t.category}"
+                                        th:data-status="${t.status}" th:data-desc="${t.description}">编辑</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-panel">
+                <h5 id="symptomFormTitle">新增症状术语</h5>
+                <form id="symptomForm" onsubmit="return false;">
+                    <input type="hidden" id="symptomTermId">
+                    <div class="form-group"><label>标准术语</label><input type="text" id="termName" class="form-select-sm" style="width:100%;" placeholder="如：发热"></div>
+                    <div class="form-group"><label>同义词（逗号分隔）</label><input type="text" id="termSynonyms" class="form-select-sm" style="width:100%;" placeholder="发烧,体温升高"></div>
+                    <div class="form-group"><label>分类</label><input type="text" id="termCategory" class="form-select-sm" style="width:100%;" placeholder="呼吸道症状"></div>
+                    <div class="form-group"><label>说明</label><textarea id="termDesc" class="form-textarea" rows="2"></textarea></div>
+                    <div class="form-group"><label>状态</label>
+                        <select id="termStatus" class="form-select-sm">
+                            <option value="启用">启用</option>
+                            <option value="停用">停用</option>
+                        </select>
+                    </div>
+                    <div class="btn-group" th:if="${session.currentUser.role == '管理员'}">
+                        <button type="button" class="btn-primary-sm" onclick="saveSymptom()">保存</button>
+                        <button type="button" class="btn-outline-sm" onclick="resetSymptomForm()">重置</button>
+                        <button type="button" class="btn-outline-sm" id="deleteSymptomBtn" style="display:none;" onclick="deleteSymptom()">删除</button>
+                    </div>
+                    <p th:if="${session.currentUser.role != '管理员'}" class="empty-hint">仅管理员可修改症状术语</p>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-content" id="tab-syndrome">
         <div class="grid-2">
             <div class="card-panel">
                 <h5>症候群列表</h5>
@@ -25,11 +74,12 @@
                 </table>
             </div>
             <div class="card-panel" th:if="${selectedSyndrome != null}">
-                <h5>编辑症候群定义</h5>
+                <h5>编辑症候群识别规则</h5>
+                <p class="panel-desc">症候群由<strong>症状 + 体征 + 检验</strong>等条件组合识别，以下为 JSON 规则配置。</p>
                 <form id="syndromeForm">
                     <input type="hidden" id="syndromeId" th:value="${selectedSyndrome.id}">
                     <div class="form-group"><label>定义</label><textarea id="definition" class="form-textarea" th:text="${selectedSyndrome.definition}"></textarea></div>
-                    <div class="form-group"><label>症状规则 JSON</label><textarea id="symptomRules" class="form-textarea code" th:text="${selectedSyndrome.symptomRulesJson}"></textarea></div>
+                    <div class="form-group"><label>识别规则 JSON（symptoms / signs / lab）</label><textarea id="symptomRules" class="form-textarea code" th:text="${selectedSyndrome.symptomRulesJson}"></textarea></div>
                     <div class="form-group"><label>风险规则 JSON</label><textarea id="riskRules" class="form-textarea code" th:text="${selectedSyndrome.riskRulesJson}"></textarea></div>
                     <div class="form-group"><label>状态</label>
                         <select id="syndromeStatus" class="form-select-sm">
@@ -86,6 +136,57 @@
                 document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
             });
         });
+
+        document.querySelectorAll('.edit-symptom-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.getElementById('symptomFormTitle').textContent = '编辑症状术语';
+                document.getElementById('symptomTermId').value = btn.dataset.id;
+                document.getElementById('termName').value = btn.dataset.name || '';
+                document.getElementById('termSynonyms').value = btn.dataset.synonyms || '';
+                document.getElementById('termCategory').value = btn.dataset.category || '';
+                document.getElementById('termStatus').value = btn.dataset.status || '启用';
+                document.getElementById('termDesc').value = btn.dataset.desc || '';
+                document.getElementById('deleteSymptomBtn').style.display = 'inline-flex';
+            });
+        });
+
+        function resetSymptomForm() {
+            document.getElementById('symptomFormTitle').textContent = '新增症状术语';
+            document.getElementById('symptomTermId').value = '';
+            document.getElementById('termName').value = '';
+            document.getElementById('termSynonyms').value = '';
+            document.getElementById('termCategory').value = '';
+            document.getElementById('termStatus').value = '启用';
+            document.getElementById('termDesc').value = '';
+            document.getElementById('deleteSymptomBtn').style.display = 'none';
+        }
+
+        function saveSymptom() {
+            const id = document.getElementById('symptomTermId').value;
+            const data = {
+                id: id ? parseInt(id) : null,
+                termName: document.getElementById('termName').value,
+                synonyms: document.getElementById('termSynonyms').value,
+                category: document.getElementById('termCategory').value,
+                status: document.getElementById('termStatus').value,
+                description: document.getElementById('termDesc').value
+            };
+            fetch('/config/symptom/save', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            }).then(r => r.json()).then(d => { if (d.success) location.reload(); else alert('保存失败'); });
+        }
+
+        function deleteSymptom() {
+            const id = document.getElementById('symptomTermId').value;
+            if (!id || !confirm('确认删除该症状术语？')) return;
+            const formData = new FormData();
+            formData.append('id', id);
+            fetch('/config/symptom/delete', { method: 'POST', body: formData })
+                .then(r => r.json()).then(d => { if (d.success) location.reload(); });
+        }
+
         function saveSyndrome() {
             const data = {
                 id: parseInt(document.getElementById('syndromeId').value),

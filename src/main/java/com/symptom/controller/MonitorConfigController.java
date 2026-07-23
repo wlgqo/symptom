@@ -1,9 +1,11 @@
 package com.symptom.controller;
 
+import com.symptom.entity.SymptomTerm;
 import com.symptom.entity.SyndromeConfig;
 import com.symptom.entity.SysUser;
 import com.symptom.entity.WarningModel;
 import com.symptom.service.SyndromeConfigService;
+import com.symptom.service.SymptomTermService;
 import com.symptom.service.WarningService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -20,11 +22,14 @@ public class MonitorConfigController {
 
     private final SyndromeConfigService syndromeConfigService;
     private final WarningService warningService;
+    private final SymptomTermService symptomTermService;
 
     public MonitorConfigController(SyndromeConfigService syndromeConfigService,
-                                   WarningService warningService) {
+                                   WarningService warningService,
+                                   SymptomTermService symptomTermService) {
         this.syndromeConfigService = syndromeConfigService;
         this.warningService = warningService;
+        this.symptomTermService = symptomTermService;
     }
 
     @GetMapping
@@ -35,6 +40,7 @@ public class MonitorConfigController {
         model.addAttribute("breadcrumb", "症候群配置");
         model.addAttribute("syndromeConfigs", syndromeConfigService.findAll());
         model.addAttribute("models", warningService.getAllModels());
+        model.addAttribute("symptomTerms", symptomTermService.findAll());
 
         SyndromeConfig selectedSyndrome = null;
         if (syndromeId != null) {
@@ -79,6 +85,34 @@ public class MonitorConfigController {
             return result;
         }
         warningService.updateModel(model);
+        result.put("success", true);
+        return result;
+    }
+
+    @PostMapping("/symptom/save")
+    @ResponseBody
+    public Map<String, Object> saveSymptom(@RequestBody SymptomTerm term, HttpSession session) {
+        SysUser user = (SysUser) session.getAttribute("currentUser");
+        Map<String, Object> result = new HashMap<>();
+        if (!"管理员".equals(user.getRole())) {
+            result.put("success", false);
+            return result;
+        }
+        symptomTermService.save(term);
+        result.put("success", true);
+        return result;
+    }
+
+    @PostMapping("/symptom/delete")
+    @ResponseBody
+    public Map<String, Object> deleteSymptom(@RequestParam Integer id, HttpSession session) {
+        SysUser user = (SysUser) session.getAttribute("currentUser");
+        Map<String, Object> result = new HashMap<>();
+        if (!"管理员".equals(user.getRole())) {
+            result.put("success", false);
+            return result;
+        }
+        symptomTermService.delete(id);
         result.put("success", true);
         return result;
     }

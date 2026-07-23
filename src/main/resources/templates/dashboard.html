@@ -161,11 +161,15 @@
         var trendChart = echarts.init(document.getElementById('trendChart'));
         trendChart.setOption({
             tooltip: { trigger: 'axis' },
-            grid: { left: 50, right: 20, top: 30, bottom: 30 },
+            legend: { data: ['病例数', '同比', '环比'], top: 0 },
+            grid: { left: 50, right: 20, top: 36, bottom: 30 },
             xAxis: { type: 'category', data: timeData.labels || [] },
             yAxis: { type: 'value', name: '病例数' },
-            series: [{ name: '病例数', type: 'line', smooth: true, areaStyle: { opacity: 0.08, color: '#1677ff' },
-                itemStyle: { color: '#1677ff' }, data: timeData.values || [] }]
+            series: [
+                { name: '病例数', type: 'bar', barMaxWidth: 22, itemStyle: { color: '#1677ff' }, data: timeData.values || [] },
+                { name: '同比', type: 'line', smooth: true, symbol: 'none', itemStyle: { color: '#52c41a' }, data: timeData.yoy || [] },
+                { name: '环比', type: 'line', smooth: true, symbol: 'none', lineStyle: { type: 'dashed' }, itemStyle: { color: '#faad14' }, data: timeData.mom || [] }
+            ]
         });
 
         var districtChart = echarts.init(document.getElementById('districtChart'));

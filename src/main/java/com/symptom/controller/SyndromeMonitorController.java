@@ -5,7 +5,6 @@ import com.symptom.entity.CaseInfo;
 import com.symptom.entity.SysUser;
 import com.symptom.entity.WarningRecord;
 import com.symptom.service.*;
-import com.symptom.util.QueryParamUtil;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -52,7 +51,7 @@ public class SyndromeMonitorController {
                         @RequestParam(required = false) String hospital,
                         @RequestParam(required = false) String startDate,
                         @RequestParam(required = false) String endDate,
-                        @RequestParam(required = false, defaultValue = "90") Integer days,
+                        @RequestParam(required = false, defaultValue = "365") Integer days,
                         @RequestParam(required = false, defaultValue = "1") Integer casePage,
                         @RequestParam(required = false, defaultValue = "1") Integer warningPage,
                         @RequestParam(required = false) String tab,
@@ -98,7 +97,7 @@ public class SyndromeMonitorController {
                                         @RequestParam(required = false) String hospital,
                                         @RequestParam(required = false) String startDate,
                                         @RequestParam(required = false) String endDate,
-                                        @RequestParam(required = false, defaultValue = "90") Integer days,
+                                        @RequestParam(required = false, defaultValue = "365") Integer days,
                                         HttpSession session,
                                         javax.servlet.http.HttpServletRequest request) {
         String code = resolveCode(request.getRequestURI());

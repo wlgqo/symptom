@@ -20,14 +20,23 @@ public class DataScopeService {
         return user != null && user.getHospitalScope() != null && !user.getHospitalScope().trim().isEmpty();
     }
 
+    public boolean isCityWide(SysUser user) {
+        return hasDistrictScope(user) && "成都市".equals(user.getDistrictScope().trim());
+    }
+
     /**
      * 业务人员仅能查看所属辖区、机构数据；管理员不限制。
+     * district_scope=成都市 表示全市各区县数据。
      */
     public void applyCaseScope(Map<String, Object> params, SysUser user) {
         if (user == null || isAdmin(user)) {
             return;
         }
-        if (hasDistrictScope(user)) {
+        if (isCityWide(user)) {
+            params.put("districtsIn", FilterOptionService.getChengduDistricts());
+            params.remove("district");
+            params.remove("districtScope");
+        } else if (hasDistrictScope(user)) {
             params.put("districtScope", user.getDistrictScope().trim());
             params.remove("district");
         }
@@ -51,10 +60,14 @@ public class DataScopeService {
 
     /**
      * 未传筛选条件时，默认使用用户所属地区、机构。
+     * 全市用户不默认锁定单一区县。
      */
     public String resolveDistrict(String requested, SysUser user) {
         if (requested != null && !requested.trim().isEmpty()) {
             return requested.trim();
+        }
+        if (isCityWide(user)) {
+            return null;
         }
         return scopeDistrict(user);
     }

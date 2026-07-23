@@ -3,6 +3,8 @@ package com.symptom.service;
 import com.symptom.mapper.CaseInfoMapper;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.*;
 
 @Service
@@ -25,9 +27,63 @@ public class AnalysisService {
             labels.add(String.valueOf(item.get("period")));
             values.add(((Number) item.get("cnt")).intValue());
         }
+
+        Map<String, Integer> allCounts = loadHistoricalCounts(filter, groupBy);
+        List<Integer> yoyValues = new ArrayList<>();
+        List<Integer> momValues = new ArrayList<>();
+        for (String label : labels) {
+            yoyValues.add(allCounts.getOrDefault(shiftPeriod(label, groupBy, "yoy"), 0));
+            momValues.add(allCounts.getOrDefault(shiftPeriod(label, groupBy, "mom"), 0));
+        }
+
         result.put("labels", labels);
         result.put("values", values);
+        result.put("yoy", yoyValues);
+        result.put("mom", momValues);
         return result;
+    }
+
+    private Map<String, Integer> loadHistoricalCounts(Map<String, Object> filter, String groupBy) {
+        Map<String, Object> histParams = new HashMap<>(filter);
+        histParams.remove("startDate");
+        histParams.remove("endDate");
+        histParams.remove("days");
+        histParams.put("groupBy", groupBy);
+        Map<String, Integer> allCounts = new HashMap<>();
+        for (Map<String, Object> item : caseInfoMapper.countByDate(histParams)) {
+            allCounts.put(String.valueOf(item.get("period")), ((Number) item.get("cnt")).intValue());
+        }
+        return allCounts;
+    }
+
+    private String shiftPeriod(String period, String groupBy, String mode) {
+        if (period == null || period.isEmpty()) {
+            return "";
+        }
+        try {
+            if ("month".equals(groupBy)) {
+                YearMonth ym = YearMonth.parse(period);
+                return "yoy".equals(mode) ? ym.minusYears(1).toString() : ym.minusMonths(1).toString();
+            }
+            if ("week".equals(groupBy)) {
+                int dash = period.indexOf("-W");
+                int year = Integer.parseInt(period.substring(0, dash));
+                int week = Integer.parseInt(period.substring(dash + 2));
+                if ("yoy".equals(mode)) {
+                    return String.format("%d-W%02d", year - 1, week);
+                }
+                week -= 1;
+                if (week < 0) {
+                    year -= 1;
+                    week = 51;
+                }
+                return String.format("%d-W%02d", year, week);
+            }
+            LocalDate date = LocalDate.parse(period);
+            return "yoy".equals(mode) ? date.minusYears(1).toString() : date.minusDays(1).toString();
+        } catch (Exception e) {
+            return "";
+        }
     }
 
     public List<Map<String, Object>> getDistrictDistribution(Map<String, Object> filter) {

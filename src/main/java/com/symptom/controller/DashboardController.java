@@ -58,7 +58,7 @@ public class DashboardController {
                             @RequestParam(required = false) String hospital,
                             @RequestParam(required = false) String startDate,
                             @RequestParam(required = false) String endDate,
-                            @RequestParam(required = false, defaultValue = "30") Integer days,
+                            @RequestParam(required = false, defaultValue = "90") Integer days,
                             HttpSession session,
                             Model model) {
         SysUser user = (SysUser) session.getAttribute("currentUser");
@@ -95,12 +95,19 @@ public class DashboardController {
         model.addAttribute("syndromeConfigs", syndromeConfigService.findAll());
 
         List<SurveillanceEvent> allEvents = eventService.findAll();
-        String effectiveDistrict = dataScopeService.hasDistrictScope(user)
-                ? user.getDistrictScope() : (String) filter.get("district");
-        if (effectiveDistrict != null && !effectiveDistrict.isEmpty()) {
+        if (dataScopeService.isCityWide(user)) {
+            java.util.Set<String> chengdu = new java.util.HashSet<>(FilterOptionService.getChengduDistricts());
             allEvents = allEvents.stream()
-                    .filter(e -> effectiveDistrict.equals(e.getDistrict()))
+                    .filter(e -> e.getDistrict() != null && chengdu.contains(e.getDistrict()))
                     .collect(Collectors.toList());
+        } else {
+            String effectiveDistrict = dataScopeService.hasDistrictScope(user)
+                    ? user.getDistrictScope() : (String) filter.get("district");
+            if (effectiveDistrict != null && !effectiveDistrict.isEmpty()) {
+                allEvents = allEvents.stream()
+                        .filter(e -> effectiveDistrict.equals(e.getDistrict()))
+                        .collect(Collectors.toList());
+            }
         }
         model.addAttribute("recentEvents", allEvents.isEmpty() ?
                 java.util.Collections.emptyList() :

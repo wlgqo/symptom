@@ -31,10 +31,14 @@
             <if test="status != null and status != ''">
                 AND r.status = #{status}
             </if>
-            <if test="districtScope != null and districtScope != ''">
+            <if test="districtsIn != null and districtsIn.size() > 0">
+                AND r.district IN
+                <foreach collection="districtsIn" item="d" open="(" separator="," close=")">#{d}</foreach>
+            </if>
+            <if test="districtScope != null and districtScope != '' and (districtsIn == null or districtsIn.size() == 0)">
                 AND r.district = #{districtScope}
             </if>
-            <if test="district != null and district != '' and (districtScope == null or districtScope == '')">
+            <if test="district != null and district != '' and (districtScope == null or districtScope == '') and (districtsIn == null or districtsIn.size() == 0)">
                 AND r.district = #{district}
             </if>
             <if test="hospitalScope != null and hospitalScope != ''">

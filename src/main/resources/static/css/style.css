@@ -1642,3 +1642,67 @@ a:hover { color: var(--primary-dark); }
     border-radius: 6px;
     margin-bottom: 12px;
 }
+
+/* ========== 三间分布紧凑布局 ========== */
+.distribution-layout {
+    display: grid;
+    grid-template-columns: 1fr 1.35fr 1fr;
+    grid-template-rows: auto 190px 190px;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.distribution-layout .card-panel {
+    margin-bottom: 0;
+}
+
+.distribution-layout .card-panel h5 {
+    padding: 10px 12px 6px;
+    font-size: 13px;
+    margin: 0;
+}
+
+.dist-time-panel {
+    grid-column: 1 / -1;
+}
+
+.dist-map-panel {
+    grid-column: 2;
+    grid-row: 2 / 4;
+}
+
+.dist-occupation-panel {
+    grid-column: 3;
+    grid-row: 3;
+}
+
+.distribution-layout .chart-compact {
+    height: 150px !important;
+    padding: 4px 8px 8px !important;
+}
+
+.distribution-layout .chart-map {
+    height: 360px !important;
+    padding: 4px 8px 8px !important;
+}
+
+.dist-time-toolbar {
+    display: flex;
+    gap: 6px;
+    padding: 0 12px 4px;
+}
+
+.dist-time-panel .chart-compact {
+    height: 200px !important;
+}
+
+@media (max-width: 1200px) {
+    .distribution-layout {
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: auto;
+    }
+    .dist-time-panel { grid-column: 1 / -1; }
+    .dist-map-panel { grid-column: 1 / -1; grid-row: auto; }
+    .dist-occupation-panel { grid-column: auto; grid-row: auto; }
+    .distribution-layout .chart-map { height: 300px !important; }
+}
