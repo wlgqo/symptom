@@ -75,13 +75,39 @@
             </div>
             <div class="card-panel" th:if="${selectedSyndrome != null}">
                 <h5>编辑症候群识别规则</h5>
-                <p class="panel-desc">症候群由<strong>症状 + 体征 + 检验</strong>等条件组合识别，以下为 JSON 规则配置。</p>
+                <p class="panel-desc">通过勾选和填写条件组合识别症候群，无需编写技术代码。</p>
                 <form id="syndromeForm">
                     <input type="hidden" id="syndromeId" th:value="${selectedSyndrome.id}">
-                    <div class="form-group"><label>定义</label><textarea id="definition" class="form-textarea" th:text="${selectedSyndrome.definition}"></textarea></div>
-                    <div class="form-group"><label>识别规则 JSON（symptoms / signs / lab）</label><textarea id="symptomRules" class="form-textarea code" th:text="${selectedSyndrome.symptomRulesJson}"></textarea></div>
-                    <div class="form-group"><label>风险规则 JSON</label><textarea id="riskRules" class="form-textarea code" th:text="${selectedSyndrome.riskRulesJson}"></textarea></div>
-                    <div class="form-group"><label>监测模型与指标 JSON</label><textarea id="monitorModelJson" class="form-textarea code" th:text="${selectedSyndrome.monitorModelJson}"></textarea></div>
+                    <input type="hidden" id="symptomRulesRaw" th:value="${selectedSyndrome.symptomRulesJson}">
+                    <input type="hidden" id="riskRulesRaw" th:value="${selectedSyndrome.riskRulesJson}">
+                    <input type="hidden" id="monitorModelRaw" th:value="${selectedSyndrome.monitorModelJson}">
+                    <div class="form-group"><label>症候群定义</label><textarea id="definition" class="form-textarea" th:text="${selectedSyndrome.definition}"></textarea></div>
+                    <div class="form-group"><label>条件组合方式</label>
+                        <select id="ruleLogic" class="form-select-sm" style="width:100%;">
+                            <option value="AND">同时满足（AND）</option>
+                            <option value="OR">满足其一（OR）</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>必备症状（逗号分隔）</label>
+                        <input type="text" id="requiredSymptoms" class="form-select-sm" style="width:100%;" placeholder="如：发热、腹泻"></div>
+                    <div class="form-group"><label>可选症状（满足其一，逗号分隔）</label>
+                        <input type="text" id="anySymptoms" class="form-select-sm" style="width:100%;" placeholder="如：咳嗽、咽痛、流涕"></div>
+                    <div class="form-group"><label>体征条件（逗号分隔）</label>
+                        <input type="text" id="anySigns" class="form-select-sm" style="width:100%;" placeholder="如：体温≥37.3℃"></div>
+                    <div class="form-group"><label>检验条件（逗号分隔）</label>
+                        <input type="text" id="anyLab" class="form-select-sm" style="width:100%;" placeholder="如：血小板降低"></div>
+                    <div class="form-group"><label>排除条件（逗号分隔）</label>
+                        <input type="text" id="excludeSymptoms" class="form-select-sm" style="width:100%;" placeholder="如：出血"></div>
+                    <div class="detail-section"><h6>风险分级因素</h6></div>
+                    <div class="form-group"><label>高风险因素（逗号分隔）</label>
+                        <input type="text" id="highRisk" class="form-select-sm" style="width:100%;" placeholder="如：年龄≥60、持续高热"></div>
+                    <div class="form-group"><label>中风险因素（逗号分隔）</label>
+                        <input type="text" id="mediumRisk" class="form-select-sm" style="width:100%;" placeholder="如：持续发热≥3天"></div>
+                    <div class="detail-section"><h6>关联监测模型与指标</h6></div>
+                    <div class="form-group"><label>关联预警模型（逗号分隔）</label>
+                        <input type="text" id="monitorModels" class="form-select-sm" style="width:100%;" placeholder="如：固定阈值模型、移动百分位模型"></div>
+                    <div class="form-group"><label>关联监测指标（逗号分隔）</label>
+                        <input type="text" id="monitorIndicators" class="form-select-sm" style="width:100%;" placeholder="如：日报告病例数、重症率"></div>
                     <div class="form-group"><label>状态</label>
                         <select id="syndromeStatus" class="form-select-sm">
                             <option value="启用" th:selected="${selectedSyndrome.status == '启用'}">启用</option>
@@ -120,6 +146,8 @@
                 <p class="panel-desc" th:text="${selectedModel.description}"></p>
                 <form id="modelForm" onsubmit="return false;">
                     <input type="hidden" id="modelId" th:value="${selectedModel.id}">
+                    <input type="hidden" id="modelLevelRaw" th:value="${selectedModel.levelThresholdJson}">
+                    <input type="hidden" id="modelConfigRaw" th:value="${selectedModel.configJson}">
                     <div class="form-group"><label>预警地区</label>
                         <select id="modelRegion" class="form-select-sm" style="width:100%;">
                             <option th:each="r : ${warningRegions}" th:value="${r}" th:text="${r}"
@@ -132,11 +160,32 @@
                                     th:selected="${t == selectedModel.warningType}"></option>
                         </select>
                     </div>
-                    <div class="form-group"><label>等级阈值 JSON（低/中/高风险 · 病例数、上升比例）</label>
-                        <textarea id="modelLevelThreshold" class="form-textarea code" rows="5" th:text="${selectedModel.levelThresholdJson}"></textarea>
+                    <div class="form-group"><label>预警等级阈值</label>
+                        <div class="level-threshold-grid">
+                            <div class="level-threshold-row level-low">
+                                <label>低风险</label>
+                                <input type="number" id="modelLowCase" class="form-select-sm" placeholder="病例数≥" min="0">
+                                <input type="number" id="modelLowRise" class="form-select-sm" placeholder="上升比例≥%" min="0">
+                            </div>
+                            <div class="level-threshold-row level-mid">
+                                <label>中风险</label>
+                                <input type="number" id="modelMidCase" class="form-select-sm" placeholder="病例数≥" min="0">
+                                <input type="number" id="modelMidRise" class="form-select-sm" placeholder="上升比例≥%" min="0">
+                            </div>
+                            <div class="level-threshold-row level-high">
+                                <label>高风险</label>
+                                <input type="number" id="modelHighCase" class="form-select-sm" placeholder="病例数≥" min="0">
+                                <input type="number" id="modelHighRise" class="form-select-sm" placeholder="上升比例≥%" min="0">
+                            </div>
+                        </div>
                     </div>
                     <div class="form-group"><label>模型说明</label><textarea id="modelDesc" class="form-textarea" rows="3" th:text="${selectedModel.description}"></textarea></div>
-                    <div class="form-group"><label>参数配置 JSON</label><textarea id="modelConfig" class="form-textarea code" rows="6" th:text="${selectedModel.configJson}"></textarea></div>
+                    <div class="form-group">
+                        <label>模型运行参数</label>
+                        <p class="panel-desc" style="margin:0 0 8px;">以参数名和数值填写，系统自动保存。</p>
+                        <div id="modelConfigFields"></div>
+                        <button type="button" class="btn-outline-sm btn-sm" onclick="addConfigKvRow('modelConfigFields')">+ 添加参数</button>
+                    </div>
                     <div class="form-group"><label>状态</label>
                         <select id="modelEnabled" class="form-select-sm">
                             <option value="1" th:selected="${selectedModel.enabled == 1}">启用</option>
@@ -199,7 +248,13 @@
                     <div class="form-group"><label>指标说明</label><textarea id="indicatorDesc" class="form-textarea" rows="2"></textarea></div>
                     <div class="form-group"><label>计算公式</label><input type="text" id="indicatorFormula" class="form-select-sm" style="width:100%;"></div>
                     <div class="form-group"><label>单位</label><input type="text" id="indicatorUnit" class="form-select-sm" style="width:100%;"></div>
-                    <div class="form-group"><label>阈值 JSON</label><textarea id="indicatorThreshold" class="form-textarea code" rows="2" placeholder='{"warning":5,"alert":10}'></textarea></div>
+                    <div class="form-group"><label>预警阈值</label>
+                        <div class="level-threshold-grid" style="grid-template-columns:1fr 1fr 1fr;">
+                            <div><label style="font-size:12px;color:#718096;">关注线</label><input type="number" id="indicatorWarningThreshold" class="form-select-sm" style="width:100%;" placeholder="达到即提示"></div>
+                            <div><label style="font-size:12px;color:#718096;">告警线</label><input type="number" id="indicatorAlertThreshold" class="form-select-sm" style="width:100%;" placeholder="达到即告警"></div>
+                            <div><label style="font-size:12px;color:#718096;">基线值</label><input type="number" id="indicatorBaselineThreshold" class="form-select-sm" style="width:100%;" placeholder="可选"></div>
+                        </div>
+                    </div>
                     <div class="form-group"><label>数据来源</label><input type="text" id="indicatorSource" class="form-select-sm" style="width:100%;"></div>
                     <div class="form-group"><label>排序</label><input type="number" id="indicatorSort" class="form-select-sm" style="width:100%;" value="0"></div>
                     <div class="form-group"><label>状态</label>
@@ -215,6 +270,7 @@
         </div>
     </div>
 
+    <script th:src="@{/js/config-forms.js}"></script>
     <script>
         document.querySelectorAll('#configTabs .tab-item').forEach(tab => {
             tab.addEventListener('click', () => {
@@ -275,13 +331,57 @@
                 .then(r => r.json()).then(d => { if (d.success) location.reload(); });
         }
 
+        function initConfigForms() {
+            var syndromeRules = document.getElementById('symptomRulesRaw');
+            if (syndromeRules && syndromeRules.value) {
+                var sr = parseSyndromeRules(syndromeRules.value);
+                document.getElementById('ruleLogic').value = sr.logic;
+                document.getElementById('requiredSymptoms').value = sr.requiredSymptoms;
+                document.getElementById('anySymptoms').value = sr.anySymptoms;
+                document.getElementById('anySigns').value = sr.anySigns;
+                document.getElementById('anyLab').value = sr.anyLab;
+                document.getElementById('excludeSymptoms').value = sr.exclude;
+            }
+            var riskRules = document.getElementById('riskRulesRaw');
+            if (riskRules && riskRules.value) {
+                var rr = parseRiskRules(riskRules.value);
+                document.getElementById('highRisk').value = rr.highRisk;
+                document.getElementById('mediumRisk').value = rr.mediumRisk;
+            }
+            var monitorRaw = document.getElementById('monitorModelRaw');
+            if (monitorRaw && monitorRaw.value) {
+                var mm = parseMonitorModel(monitorRaw.value);
+                document.getElementById('monitorModels').value = mm.models;
+                document.getElementById('monitorIndicators').value = mm.indicators;
+            }
+            var levelRaw = document.getElementById('modelLevelRaw');
+            if (levelRaw) fillLevelThresholds('model', levelRaw.value);
+            var configRaw = document.getElementById('modelConfigRaw');
+            if (configRaw) renderModelConfigFields('modelConfigFields', configRaw.value);
+        }
+        initConfigForms();
+
         function saveSyndrome() {
+            var syndromeForm = document.getElementById('syndromeForm');
             const data = {
                 id: parseInt(document.getElementById('syndromeId').value),
                 definition: document.getElementById('definition').value,
-                symptomRulesJson: document.getElementById('symptomRules').value,
-                riskRulesJson: document.getElementById('riskRules').value,
-                monitorModelJson: document.getElementById('monitorModelJson').value,
+                symptomRulesJson: buildSyndromeRules({
+                    logic: document.getElementById('ruleLogic'),
+                    requiredSymptoms: document.getElementById('requiredSymptoms'),
+                    anySymptoms: document.getElementById('anySymptoms'),
+                    anySigns: document.getElementById('anySigns'),
+                    anyLab: document.getElementById('anyLab'),
+                    exclude: document.getElementById('excludeSymptoms')
+                }),
+                riskRulesJson: buildRiskRules({
+                    highRisk: document.getElementById('highRisk'),
+                    mediumRisk: document.getElementById('mediumRisk')
+                }),
+                monitorModelJson: buildMonitorModel({
+                    monitorModels: document.getElementById('monitorModels'),
+                    monitorIndicators: document.getElementById('monitorIndicators')
+                }),
                 status: document.getElementById('syndromeStatus').value
             };
             fetch('/config/syndrome/update', {
@@ -296,9 +396,9 @@
                 id: parseInt(document.getElementById('modelId').value),
                 regionScope: document.getElementById('modelRegion').value,
                 warningType: document.getElementById('modelWarningType').value,
-                levelThresholdJson: document.getElementById('modelLevelThreshold').value,
+                levelThresholdJson: buildLevelThresholds('model'),
                 description: document.getElementById('modelDesc').value,
-                configJson: document.getElementById('modelConfig').value,
+                configJson: buildModelConfig('modelConfigFields'),
                 enabled: parseInt(document.getElementById('modelEnabled').value)
             };
             fetch('/config/model/update', {
@@ -317,7 +417,11 @@
                 document.getElementById('indicatorDesc').value = btn.dataset.desc || '';
                 document.getElementById('indicatorFormula').value = btn.dataset.formula || '';
                 document.getElementById('indicatorUnit').value = btn.dataset.unit || '';
-                document.getElementById('indicatorThreshold').value = btn.dataset.threshold || '';
+                fillIndicatorThreshold({
+                    warningThreshold: document.getElementById('indicatorWarningThreshold'),
+                    alertThreshold: document.getElementById('indicatorAlertThreshold'),
+                    baselineThreshold: document.getElementById('indicatorBaselineThreshold')
+                }, btn.dataset.threshold || '');
                 document.getElementById('indicatorSource').value = btn.dataset.source || '';
                 document.getElementById('indicatorStatus').value = btn.dataset.status || '启用';
                 document.getElementById('indicatorSort').value = btn.dataset.sort || 0;
@@ -328,9 +432,12 @@
         function resetIndicatorForm() {
             document.getElementById('indicatorFormTitle').textContent = '新增指标';
             document.getElementById('indicatorId').value = '';
-            ['indicatorCode','indicatorName','indicatorSyndrome','indicatorDesc','indicatorFormula','indicatorUnit','indicatorThreshold','indicatorSource'].forEach(id => {
+            ['indicatorCode','indicatorName','indicatorSyndrome','indicatorDesc','indicatorFormula','indicatorUnit','indicatorSource'].forEach(id => {
                 document.getElementById(id).value = '';
             });
+            document.getElementById('indicatorWarningThreshold').value = '';
+            document.getElementById('indicatorAlertThreshold').value = '';
+            document.getElementById('indicatorBaselineThreshold').value = '';
             document.getElementById('indicatorCategory').value = '规模指标';
             document.getElementById('indicatorStatus').value = '启用';
             document.getElementById('indicatorSort').value = 0;
@@ -348,7 +455,11 @@
                 description: document.getElementById('indicatorDesc').value,
                 formula: document.getElementById('indicatorFormula').value,
                 unit: document.getElementById('indicatorUnit').value,
-                thresholdJson: document.getElementById('indicatorThreshold').value,
+                thresholdJson: buildIndicatorThreshold({
+                    warningThreshold: document.getElementById('indicatorWarningThreshold'),
+                    alertThreshold: document.getElementById('indicatorAlertThreshold'),
+                    baselineThreshold: document.getElementById('indicatorBaselineThreshold')
+                }),
                 dataSource: document.getElementById('indicatorSource').value,
                 status: document.getElementById('indicatorStatus').value,
                 sortOrder: parseInt(document.getElementById('indicatorSort').value) || 0

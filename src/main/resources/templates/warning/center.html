@@ -88,7 +88,7 @@
             </div>
             <div class="detail-section" th:if="${model != null}">
                 <h6>模型参数</h6>
-                <pre class="json-preview" th:text="${model.configJson}"></pre>
+                <pre class="rule-preview" th:text="${T(com.symptom.util.ConfigDisplayHelper).formatModelConfig(model.configJson)}"></pre>
             </div>
             <div class="detail-section">
                 <h6>关联病例 <a href="/case/list" class="panel-action">查看全部 →</a></h6>

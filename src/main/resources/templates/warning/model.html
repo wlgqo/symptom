@@ -44,11 +44,13 @@
                 <p id="modelDescView" th:text="${selected.description}">说明</p>
             </div>
             <div class="detail-section">
-                <h6>等级阈值配置</h6>
-                <pre class="json-preview" th:text="${selected.levelThresholdJson}"></pre>
+                <h6>等级阈值</h6>
+                <p class="panel-desc" th:text="${T(com.symptom.util.ConfigDisplayHelper).formatLevelThreshold(selected.levelThresholdJson)}"></p>
             </div>
             <div class="detail-section" th:if="${session.currentUser.role == '管理员'}">
                 <h6>编辑配置</h6>
+                <input type="hidden" id="modelLevelRaw" th:value="${selected.levelThresholdJson}">
+                <input type="hidden" id="modelConfigRaw" th:value="${selected.configJson}">
                 <div class="form-group"><label>预警地区</label>
                     <select id="modelRegionEdit" class="form-select-sm" style="width:100%;">
                         <option th:each="r : ${warningRegions}" th:value="${r}" th:text="${r}"
@@ -61,14 +63,36 @@
                                 th:selected="${t == selected.warningType}"></option>
                     </select>
                 </div>
-                <div class="form-group"><label>等级阈值 JSON</label><textarea id="modelLevelEdit" class="form-textarea code" rows="4" th:text="${selected.levelThresholdJson}"></textarea></div>
+                <div class="form-group"><label>预警等级阈值</label>
+                    <div class="level-threshold-grid">
+                        <div class="level-threshold-row level-low">
+                            <label>低风险</label>
+                            <input type="number" id="wmLowCase" class="form-select-sm" placeholder="病例数≥" min="0">
+                            <input type="number" id="wmLowRise" class="form-select-sm" placeholder="上升比例≥%" min="0">
+                        </div>
+                        <div class="level-threshold-row level-mid">
+                            <label>中风险</label>
+                            <input type="number" id="wmMidCase" class="form-select-sm" placeholder="病例数≥" min="0">
+                            <input type="number" id="wmMidRise" class="form-select-sm" placeholder="上升比例≥%" min="0">
+                        </div>
+                        <div class="level-threshold-row level-high">
+                            <label>高风险</label>
+                            <input type="number" id="wmHighCase" class="form-select-sm" placeholder="病例数≥" min="0">
+                            <input type="number" id="wmHighRise" class="form-select-sm" placeholder="上升比例≥%" min="0">
+                        </div>
+                    </div>
+                </div>
                 <div class="form-group"><label>模型说明</label><textarea id="modelDescEdit" class="form-textarea" rows="3" th:text="${selected.description}"></textarea></div>
-                <div class="form-group"><label>参数 JSON</label><textarea id="modelConfigEdit" class="form-textarea code" rows="5" th:text="${selected.configJson}"></textarea></div>
+                <div class="form-group">
+                    <label>模型运行参数</label>
+                    <div id="wmConfigFields"></div>
+                    <button type="button" class="btn-outline-sm btn-sm" onclick="addConfigKvRow('wmConfigFields')">+ 添加参数</button>
+                </div>
                 <button class="btn-primary-sm" th:onclick="'saveModelConfig(' + ${selected.id} + ')'">保存配置</button>
             </div>
             <div class="detail-section" th:if="${session.currentUser.role != '管理员'}">
-                <h6>参数配置</h6>
-                <pre class="json-preview" th:text="${selected.configJson}"></pre>
+                <h6>运行参数</h6>
+                <div id="wmConfigView"></div>
             </div>
             <div class="action-btns">
                 <button class="btn-primary-sm" th:onclick="'runModel(' + ${selected.id} + ',\'' + ${selected.syndromeType} + '\')'">运行分析</button>
@@ -91,6 +115,24 @@
         </div>
     </div>
 
+    <script th:src="@{/js/config-forms.js}"></script>
+    <script th:inline="javascript">
+        (function() {
+            var levelRaw = document.getElementById('modelLevelRaw');
+            if (levelRaw) fillLevelThresholds('wm', levelRaw.value);
+            var configRaw = document.getElementById('modelConfigRaw');
+            if (configRaw) {
+                renderModelConfigFields('wmConfigFields', configRaw.value);
+                var view = document.getElementById('wmConfigView');
+                if (view) {
+                    var data = parseModelConfig(configRaw.value);
+                    view.innerHTML = Object.keys(data).map(function(k) {
+                        return '<div class="detail-item"><label>' + k + '</label><span>' + data[k] + '</span></div>';
+                    }).join('') || '<p class="panel-desc">暂无参数</p>';
+                }
+            }
+        })();
+    </script>
     <script>
         function runModel(modelId, syndromeType) {
             fetch('/warning/model/run', {
@@ -117,9 +159,9 @@
                     id: id,
                     regionScope: document.getElementById('modelRegionEdit').value,
                     warningType: document.getElementById('modelWarningTypeEdit').value,
-                    levelThresholdJson: document.getElementById('modelLevelEdit').value,
+                    levelThresholdJson: buildLevelThresholds('wm'),
                     description: document.getElementById('modelDescEdit').value,
-                    configJson: document.getElementById('modelConfigEdit').value,
+                    configJson: buildModelConfig('wmConfigFields'),
                     enabled: 1
                 })
             }).then(r => r.json()).then(d => { alert(d.success ? '配置已保存' : '保存失败'); if (d.success) location.reload(); });

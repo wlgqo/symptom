@@ -26,10 +26,10 @@
             <div class="card-panel">
                 <h5>识别规则（条件树）</h5>
                 <div class="condition-tree-display">
-                    <div class="tree-group"><span class="tree-logic">AND</span> 必要条件</div>
-                    <pre class="json-preview" th:text="${selected.symptomRulesJson}"></pre>
-                    <div class="tree-group"><span class="tree-logic">OR</span> 风险规则</div>
-                    <pre class="json-preview" th:text="${selected.riskRulesJson}"></pre>
+                    <div class="tree-group"><span class="tree-logic">识别</span> 症状与体征条件</div>
+                    <pre class="rule-preview" th:text="${T(com.symptom.util.ConfigDisplayHelper).formatSyndromeRules(selected.symptomRulesJson)}"></pre>
+                    <div class="tree-group"><span class="tree-logic">风险</span> 分级因素</div>
+                    <pre class="rule-preview" th:text="${T(com.symptom.util.ConfigDisplayHelper).formatRiskRules(selected.riskRulesJson)}"></pre>
                 </div>
                 <div class="action-btns">
                     <a th:href="@{/search(syndrome=${selected.syndromeName})}" class="btn-primary-sm">进入条件树分析</a>
