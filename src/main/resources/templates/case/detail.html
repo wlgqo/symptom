@@ -9,6 +9,7 @@
         <a th:if="${caseInfo != null and caseInfo.syndromeType == '发热伴出血症候群'}" href="/hemorrhage" class="quick-link">出血症候群监测</a>
         <a th:if="${caseInfo != null and caseInfo.syndromeType == '发热伴腹泻症候群'}" href="/diarrhea" class="quick-link">腹泻症候群风险</a>
         <a th:href="@{/search}" class="quick-link">主题库检索</a>
+        <a th:if="${session.currentUser.role != '浏览人员'}" th:href="@{/case/edit/{id}(id=${caseInfo.id})}" class="quick-link">修改病例</a>
     </div>
 
     <div class="patient-header card-panel">
@@ -127,12 +128,13 @@
     <div class="card-panel">
         <h5>修改日志</h5>
         <table class="data-table" th:if="${!logs.isEmpty()}">
-            <thead><tr><th>修改时间</th><th>操作人</th><th>修改说明</th></tr></thead>
+            <thead><tr><th>修改时间</th><th>操作人</th><th>修改说明</th><th>修改后快照</th></tr></thead>
             <tbody>
                 <tr th:each="log : ${logs}">
                     <td th:text="${#dates.format(log.modifyTime, 'yyyy-MM-dd HH:mm:ss')}"></td>
                     <td th:text="${log.operator}"></td>
                     <td th:text="${log.changeDesc}"></td>
+                    <td><details th:if="${log.snapshot != null}"><summary class="table-link">查看快照</summary><pre class="json-display" th:text="${log.snapshot}"></pre></details><span th:if="${log.snapshot == null}">-</span></td>
                 </tr>
             </tbody>
         </table>

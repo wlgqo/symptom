@@ -91,48 +91,48 @@ public class ThemeController {
         if (conditions == null || conditions.isEmpty()) {
             return "SELECT id FROM case_info";
         }
-        StringBuilder sql = new StringBuilder();
+        StringBuilder where = new StringBuilder();
         for (int i = 0; i < conditions.size(); i++) {
             Map<String, Object> cond = conditions.get(i);
             String type = (String) cond.get("type");
             String operator = (String) cond.getOrDefault("operator", "=");
             String value = String.valueOf(cond.get("value"));
-            if (i > 0) sql.append(" ").append(logic).append(" ");
+            if (i > 0) where.append(" ").append(logic).append(" ");
             switch (type) {
                 case "symptom":
-                    sql.append("id IN (SELECT case_id FROM case_symptom WHERE symptom_name = '").append(value).append("')");
+                    where.append("id IN (SELECT case_id FROM case_symptom WHERE symptom_name = '").append(value).append("')");
                     break;
                 case "age":
-                    sql.append("age ").append(operator).append(" ").append(value);
+                    where.append("age ").append(operator).append(" ").append(value);
                     break;
                 case "gender":
-                    sql.append("gender = '").append(value).append("'");
+                    where.append("gender = '").append(value).append("'");
                     break;
                 case "district":
-                    sql.append("district LIKE '%").append(value).append("%'");
+                    where.append("district LIKE '%").append(value).append("%'");
                     break;
                 case "syndrome":
-                    sql.append("syndrome_type = '").append(value).append("'");
+                    where.append("syndrome_type = '").append(value).append("'");
                     break;
                 case "fever":
-                    sql.append("fever_temp ").append(operator).append(" ").append(value);
+                    where.append("fever_temp ").append(operator).append(" ").append(value);
                     break;
                 case "risk":
-                    sql.append("risk_level = '").append(value).append("'");
+                    where.append("risk_level = '").append(value).append("'");
                     break;
                 case "date":
-                    sql.append("report_date ").append(operator).append(" '").append(value).append("'");
+                    where.append("report_date ").append(operator).append(" '").append(value).append("'");
                     break;
                 case "diagnosis":
-                    sql.append("diagnosis LIKE '%").append(value).append("%'");
+                    where.append("diagnosis LIKE '%").append(value).append("%'");
                     break;
                 case "hospital":
-                    sql.append("hospital LIKE '%").append(value).append("%'");
+                    where.append("hospital LIKE '%").append(value).append("%'");
                     break;
                 default:
-                    sql.append("1=1");
+                    where.append("1=1");
             }
         }
-        return sql.toString();
+        return "SELECT id FROM case_info WHERE " + where;
     }
 }

@@ -129,6 +129,25 @@
                 <div class="value" th:text="${clinicalData.totalCases}">0</div>
             </div>
         </div>
+        <div class="card-panel" th:if="${highRiskCases != null and !highRiskCases.isEmpty()}">
+            <h5>高风险病例快速筛查</h5>
+            <div class="table-scroll-panel">
+                <table class="data-table compact">
+                    <thead><tr><th>姓名</th><th>年龄</th><th>症状</th><th>诊断</th><th>风险等级</th><th>风险依据</th><th>操作</th></tr></thead>
+                    <tbody>
+                        <tr th:each="c : ${highRiskCases}">
+                            <td th:text="${c.patientName}"></td>
+                            <td th:text="${c.age}"></td>
+                            <td th:text="${c.symptoms != null ? #strings.listJoin(c.symptoms, '、') : ''}"></td>
+                            <td th:text="${c.diagnosis}"></td>
+                            <td><span class="badge-level badge-high" th:text="${c.riskLevel}"></span></td>
+                            <td th:text="${c.riskReason}"></td>
+                            <td><a th:href="@{/case/detail/{id}(id=${c.id})}" class="table-link">病例详情</a></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
         <div class="grid-2 chart-row-compact">
             <div class="card-panel">
                 <h5>诊断结果分布</h5>
@@ -180,6 +199,44 @@
         <div class="grid-2">
             <div class="card-panel"><h5>重症率趋势</h5><div id="severeTrendChart" class="chart-container"></div></div>
             <div class="card-panel"><h5>死亡率趋势</h5><div id="deathTrendChart" class="chart-container"></div></div>
+        </div>
+        <div class="grid-2" th:if="${severeCases != null and !severeCases.isEmpty()}">
+            <div class="card-panel">
+                <h5>重症患者列表</h5>
+                <div class="table-scroll-panel">
+                    <table class="data-table compact">
+                        <thead><tr><th>姓名</th><th>性别</th><th>年龄</th><th>诊断</th><th>地区</th><th>操作</th></tr></thead>
+                        <tbody>
+                            <tr th:each="c : ${severeCases}">
+                                <td th:text="${c.patientName}"></td>
+                                <td th:text="${c.gender}"></td>
+                                <td th:text="${c.age}"></td>
+                                <td th:text="${c.diagnosis}"></td>
+                                <td th:text="${c.district}"></td>
+                                <td><a th:href="@{/case/detail/{id}(id=${c.id})}" class="table-link">病案详情</a></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card-panel">
+                <h5>死亡患者列表</h5>
+                <div class="table-scroll-panel">
+                    <table class="data-table compact">
+                        <thead><tr><th>姓名</th><th>性别</th><th>年龄</th><th>诊断</th><th>死亡日期</th><th>操作</th></tr></thead>
+                        <tbody>
+                            <tr th:each="c : ${deathCases}">
+                                <td th:text="${c.patientName}"></td>
+                                <td th:text="${c.gender}"></td>
+                                <td th:text="${c.age}"></td>
+                                <td th:text="${c.diagnosis}"></td>
+                                <td th:text="${c.deathDate != null ? #dates.format(c.deathDate, 'yyyy-MM-dd') : '-'}"></td>
+                                <td><a th:href="@{/case/detail/{id}(id=${c.id})}" class="table-link">病案详情</a></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 

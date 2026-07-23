@@ -167,6 +167,18 @@ public class SyndromeMonitorController {
         model.addAttribute("cases", casePageResult.getRecords());
         model.addAttribute("casePage", casePageResult);
 
+        model.addAttribute("severeCases", caseService.findSevereCases(meta.syndromeType));
+        model.addAttribute("deathCases", caseService.findDeathCases(meta.syndromeType));
+        if ("发热伴腹泻症候群".equals(meta.syndromeType)) {
+            List<CaseInfo> highRiskCases = new ArrayList<>();
+            for (CaseInfo c : caseService.findByRiskLevel("高风险")) {
+                if (meta.syndromeType.equals(c.getSyndromeType())) {
+                    highRiskCases.add(c);
+                }
+            }
+            model.addAttribute("highRiskCases", highRiskCases);
+        }
+
         return "syndrome/monitor";
     }
 

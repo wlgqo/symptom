@@ -106,12 +106,71 @@ public class CaseController {
     }
 
     @GetMapping("/edit/{id}")
-    public String editPage(@PathVariable Integer id) {
-        return "redirect:/case/detail/" + id;
+    public String editPage(@PathVariable Integer id, Model model, HttpSession session) {
+        CaseInfo caseInfo = caseService.getById(id);
+        SysUser user = (SysUser) session.getAttribute("currentUser");
+        if (caseInfo == null || !canAccessCase(user, caseInfo)) {
+            return "redirect:/case/list";
+        }
+        if (user != null && "浏览人员".equals(user.getRole())) {
+            return "redirect:/case/detail/" + id;
+        }
+        model.addAttribute("caseInfo", caseInfo);
+        model.addAttribute("pageTitle", "修改病例");
+        model.addAttribute("breadcrumb", "修改病例");
+        return "case/edit";
     }
 
     @PostMapping("/update")
-    public String update(@RequestParam Integer id) {
+    public String update(@RequestParam Integer id,
+                         @RequestParam String patientName,
+                         @RequestParam String gender,
+                         @RequestParam Integer age,
+                         @RequestParam(required = false) String occupation,
+                         @RequestParam(required = false) String district,
+                         @RequestParam(required = false) String address,
+                         @RequestParam(required = false) String diagnosis,
+                         @RequestParam(required = false) String outcome,
+                         @RequestParam(required = false) String riskLevel,
+                         @RequestParam(required = false) String hospital,
+                         @RequestParam(required = false) String caseType,
+                         @RequestParam(required = false) String discoverType,
+                         @RequestParam(required = false) Integer isSevere,
+                         @RequestParam(required = false) Integer isDeath,
+                         @RequestParam(required = false) Double feverTemp,
+                         @RequestParam(required = false) String clinicalJson,
+                         @RequestParam(required = false) String labJson,
+                         @RequestParam(required = false) String treatmentJson,
+                         @RequestParam(required = false) String riskReason,
+                         HttpSession session) {
+        SysUser user = (SysUser) session.getAttribute("currentUser");
+        CaseInfo existing = caseService.getById(id);
+        if (existing == null || user == null || !canAccessCase(user, existing)) {
+            return "redirect:/case/list";
+        }
+        if ("浏览人员".equals(user.getRole())) {
+            return "redirect:/case/detail/" + id;
+        }
+        existing.setPatientName(patientName);
+        existing.setGender(gender);
+        existing.setAge(age);
+        existing.setOccupation(occupation);
+        existing.setDistrict(district);
+        existing.setAddress(address);
+        existing.setDiagnosis(diagnosis);
+        existing.setOutcome(outcome);
+        existing.setRiskLevel(riskLevel);
+        existing.setHospital(hospital);
+        existing.setCaseType(caseType);
+        existing.setDiscoverType(discoverType);
+        existing.setIsSevere(isSevere);
+        existing.setIsDeath(isDeath);
+        existing.setFeverTemp(feverTemp);
+        existing.setClinicalJson(clinicalJson);
+        existing.setLabJson(labJson);
+        existing.setTreatmentJson(treatmentJson);
+        existing.setRiskReason(riskReason);
+        caseService.update(existing, user.getRealName());
         return "redirect:/case/detail/" + id;
     }
 
@@ -130,9 +189,10 @@ public class CaseController {
 
         response.setContentType("text/csv;charset=UTF-8");
         response.setHeader("Content-Disposition", "attachment;filename=cases_export.csv");
-        response.getOutputStream().write(new byte[]{(byte) 0xEF, (byte) 0xBB, (byte) 0xBF});
+        response.setCharacterEncoding("UTF-8");
 
         PrintWriter writer = response.getWriter();
+        writer.write(new String(new byte[]{(byte) 0xEF, (byte) 0xBB, (byte) 0xBF}));
         writer.println("主索引号,姓名,性别,年龄,证件号,手机号,病例类型,症候群类型,地区,诊断,风险等级,报告日期");
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         for (CaseInfo c : cases) {
