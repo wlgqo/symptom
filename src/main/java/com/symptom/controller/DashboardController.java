@@ -1,5 +1,6 @@
 package com.symptom.controller;
 
+import com.symptom.entity.SurveillanceEvent;
 import com.symptom.entity.SysUser;
 import com.symptom.mapper.CaseInfoMapper;
 import com.symptom.mapper.WarningRecordMapper;
@@ -56,6 +57,10 @@ public class DashboardController {
         model.addAttribute("deathCases", caseService.findDeathCases(null));
         model.addAttribute("highRiskCases", caseService.findByRiskLevel("高风险"));
         model.addAttribute("pendingEvents", eventService.countPending());
+        java.util.List<SurveillanceEvent> allEvents = eventService.findAll();
+        model.addAttribute("recentEvents", allEvents.isEmpty() ?
+                java.util.Collections.emptyList() :
+                allEvents.subList(0, Math.min(5, allEvents.size())));
         return "dashboard";
     }
 }

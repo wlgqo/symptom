@@ -55,14 +55,15 @@
             <table class="data-table compact">
                 <thead><tr><th>事件</th><th>区域</th><th>状态</th></tr></thead>
                 <tbody>
-                    <tr onclick="location.href='/event?id=1'" style="cursor:pointer">
-                        <td>武侯区玉林街道呼吸道病例聚集</td><td>武侯区</td><td><span class="badge-level badge-orange">调查中</span></td>
+                    <tr th:each="e : ${recentEvents}" th:onclick="|location.href='/event?id=' + ${e.id}|" style="cursor:pointer">
+                        <td th:text="${e.eventName}"></td>
+                        <td th:text="${e.district}"></td>
+                        <td>
+                            <span th:class="${e.status == '处置中' ? 'badge-level badge-red' : (e.status == '待核查' or e.status == '调查中' or e.status == '已确认' ? 'badge-level badge-orange' : 'badge-level badge-low')}" th:text="${e.status}"></span>
+                        </td>
                     </tr>
-                    <tr onclick="location.href='/event?id=2'" style="cursor:pointer">
-                        <td>阿坝州出血热病例异常</td><td>阿坝州</td><td><span class="badge-level badge-red">处置中</span></td>
-                    </tr>
-                    <tr onclick="location.href='/event?id=3'" style="cursor:pointer">
-                        <td>金牛区腹泻高风险聚集</td><td>金牛区</td><td><span class="badge-level badge-orange">待核查</span></td>
+                    <tr th:if="${recentEvents == null or recentEvents.isEmpty()}">
+                        <td colspan="3" style="text-align:center;color:#999">暂无异常事件</td>
                     </tr>
                 </tbody>
             </table>
