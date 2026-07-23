@@ -60,12 +60,14 @@ public class WarningService {
     }
 
     public List<WarningRecord> searchScoped(String syndromeType, String status,
+                                            String district, String hospital,
                                             String startDate, String endDate, SysUser user) {
         Map<String, Object> params = new HashMap<>();
         params.put("syndromeType", syndromeType);
         params.put("status", status);
         params.put("startDate", startDate);
         params.put("endDate", endDate);
+        dataScopeService.putResolvedFilters(params, user, district, hospital);
         dataScopeService.applyWarningScope(params, user);
         return recordMapper.search(params);
     }

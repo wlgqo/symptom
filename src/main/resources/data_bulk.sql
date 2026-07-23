@@ -1329,7 +1329,7 @@ INSERT INTO saved_query (query_name, syndrome_type, condition_json, created_by) 
   ('学龄儿童流感筛查', '发热呼吸道症候群', '{"logic":"AND","conditions":[{"type":"age","operator":"<=","value":"18"},{"type":"symptom","value":"咳嗽"}]}', '张业务');
 
 -- 补充用户
-INSERT INTO sys_user (username, password, role, real_name, district_scope) VALUES
-('analyst', 'analyst123', '业务人员', '王分析', '成华区'),
-('disposer', 'disposer123', '业务人员', '陈处置', '金牛区'),
-('auditor', 'auditor123', '浏览人员', '赵审核', NULL);
+INSERT INTO sys_user (username, password, role, real_name, district_scope, hospital_scope) VALUES
+('analyst', 'analyst123', '业务人员', '王分析', '成华区', '成都市第六人民医院'),
+('disposer', 'disposer123', '业务人员', '陈处置', '金牛区', '成都市金牛区人民医院'),
+('auditor', 'auditor123', '浏览人员', '赵审核', NULL, NULL);

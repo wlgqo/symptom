@@ -5,7 +5,8 @@ import com.symptom.entity.*;
 import com.symptom.service.CaseService;
 import com.symptom.service.DataScopeService;
 import com.symptom.service.WarningService;
-import com.symptom.util.QueryParamUtil;
+import com.symptom.service.FilterOptionService;
+import com.symptom.util.FilterViewHelper;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -22,18 +23,23 @@ public class WarningController {
     private final WarningService warningService;
     private final CaseService caseService;
     private final DataScopeService dataScopeService;
+    private final FilterOptionService filterOptionService;
 
     public WarningController(WarningService warningService, CaseService caseService,
-                             DataScopeService dataScopeService) {
+                             DataScopeService dataScopeService,
+                             FilterOptionService filterOptionService) {
         this.warningService = warningService;
         this.caseService = caseService;
         this.dataScopeService = dataScopeService;
+        this.filterOptionService = filterOptionService;
     }
 
     @GetMapping("/center")
     public String center(@RequestParam(required = false) Integer id,
                          @RequestParam(required = false) String syndromeType,
                          @RequestParam(required = false) String status,
+                         @RequestParam(required = false) String district,
+                         @RequestParam(required = false) String hospital,
                          @RequestParam(required = false) String startDate,
                          @RequestParam(required = false) String endDate,
                          @RequestParam(required = false, defaultValue = "1") Integer page,
@@ -46,6 +52,7 @@ public class WarningController {
         params.put("status", status);
         params.put("startDate", startDate);
         params.put("endDate", endDate);
+        dataScopeService.putResolvedFilters(params, user, district, hospital);
         dataScopeService.applyWarningScope(params, user);
 
         PageResult<WarningRecord> pageResult = warningService.searchPage(params, page, pageSize);
@@ -59,13 +66,12 @@ public class WarningController {
         model.addAttribute("filterStatus", status);
         model.addAttribute("filterStartDate", startDate);
         model.addAttribute("filterEndDate", endDate);
-        model.addAttribute("scopeDistrict", dataScopeService.scopeDistrict(user));
+        FilterViewHelper.addRegionHospitalModel(model, filterOptionService, dataScopeService, user, district, hospital);
 
         WarningRecord selected = null;
         if (id != null) {
             selected = warningService.getRecordById(id);
-            if (selected != null && dataScopeService.hasDistrictScope(user)
-                    && !user.getDistrictScope().equals(selected.getDistrict())) {
+            if (selected != null && !canAccessWarning(user, selected)) {
                 selected = null;
             }
         } else if (!records.isEmpty()) {
@@ -76,18 +82,33 @@ public class WarningController {
         if (selected != null) {
             model.addAttribute("notifications", warningService.getNotifications(selected.getId()));
             model.addAttribute("disposals", warningService.getDisposals(selected.getId()));
-            Map<String, Object> caseFilter = QueryParamUtil.baseFilter(selected.getSyndromeType(), null, null, null, null);
-            dataScopeService.applyCaseScope(caseFilter, user);
+            Map<String, Object> caseFilter = FilterViewHelper.buildScopedFilter(dataScopeService, user,
+                    selected.getSyndromeType(), selected.getDistrict(), selected.getHospital(), null, null, null);
             model.addAttribute("relatedCases", caseService.searchLimited(caseFilter, 5));
             if (selected.getModelId() != null) {
                 model.addAttribute("model", warningService.getModelById(selected.getModelId()));
             }
         }
 
-        Map<String, Object> pendingScope = new HashMap<>();
-        dataScopeService.applyWarningScope(pendingScope, user);
+        Map<String, Object> pendingScope = new HashMap<>(params);
         model.addAttribute("pendingCount", warningService.countScopedPending(pendingScope));
         return "warning/center";
+    }
+
+    private boolean canAccessWarning(SysUser user, WarningRecord record) {
+        if (dataScopeService.isAdmin(user)) {
+            return true;
+        }
+        if (dataScopeService.hasDistrictScope(user)
+                && !user.getDistrictScope().equals(record.getDistrict())) {
+            return false;
+        }
+        if (dataScopeService.hasHospitalScope(user)
+                && record.getHospital() != null
+                && !user.getHospitalScope().equals(record.getHospital())) {
+            return false;
+        }
+        return true;
     }
 
     @PostMapping("/action")

@@ -37,6 +37,12 @@
             <if test="district != null and district != '' and (districtScope == null or districtScope == '')">
                 AND r.district = #{district}
             </if>
+            <if test="hospitalScope != null and hospitalScope != ''">
+                AND r.hospital = #{hospitalScope}
+            </if>
+            <if test="hospital != null and hospital != '' and (hospitalScope == null or hospitalScope == '')">
+                AND r.hospital = #{hospital}
+            </if>
             <if test="startDate != null and startDate != ''">
                 AND date(r.warning_time) &gt;= #{startDate}
             </if>

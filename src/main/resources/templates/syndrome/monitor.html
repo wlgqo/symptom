@@ -12,31 +12,23 @@
         <span class="step">查看处置结果</span>
     </div>
 
-    <div class="scope-hint" th:if="${scopeDistrict != null}">
-        当前数据范围：<strong th:text="${scopeDistrict}">辖区</strong>（业务人员仅可查看所属辖区数据）
+    <div class="scope-hint" th:if="${scopeDistrict != null or scopeHospital != null}">
+        当前数据范围：
+        <strong th:if="${scopeDistrict != null}" th:text="${scopeDistrict}">辖区</strong>
+        <span th:if="${scopeDistrict != null and scopeHospital != null}"> · </span>
+        <strong th:if="${scopeHospital != null}" th:text="${scopeHospital}">机构</strong>
     </div>
 
     <div class="filter-bar">
         <form method="get" th:action="@{'/' + ${syndromeCode}}" class="filter-form">
             <input type="hidden" name="tab" th:value="${activeTab}">
+            <th:block th:replace="~{fragments/region-hospital-filter :: regionHospital(${filterDistrict}, ${filterHospital}, ${districtOptions}, ${hospitalOptions}, ${scopeDistrict}, ${scopeHospital})}"></th:block>
             <th:block th:replace="~{fragments/date-range :: dateRange(${filterStartDate}, ${filterEndDate})}"></th:block>
             <select name="days" class="form-select-sm" th:if="${filterStartDate == null or filterStartDate == ''}">
                 <option value="30" th:selected="${filterDays == 30}">近30天</option>
                 <option value="90" th:selected="${filterDays == 90}">近90天</option>
                 <option value="180" th:selected="${filterDays == 180}">近半年</option>
                 <option value="365" th:selected="${filterDays == 365}">近一年</option>
-            </select>
-            <select name="district" class="form-select-sm" th:if="${scopeDistrict == null}">
-                <option value="">全部区域</option>
-                <option value="锦江区" th:selected="${filterDistrict == '锦江区'}">锦江区</option>
-                <option value="青羊区" th:selected="${filterDistrict == '青羊区'}">青羊区</option>
-                <option value="武侯区" th:selected="${filterDistrict == '武侯区'}">武侯区</option>
-                <option value="成华区" th:selected="${filterDistrict == '成华区'}">成华区</option>
-                <option value="金牛区" th:selected="${filterDistrict == '金牛区'}">金牛区</option>
-                <option value="龙泉驿区" th:selected="${filterDistrict == '龙泉驿区'}">龙泉驿区</option>
-                <option value="德阳市" th:selected="${filterDistrict == '德阳市'}">德阳市</option>
-                <option value="绵阳市" th:selected="${filterDistrict == '绵阳市'}">绵阳市</option>
-                <option value="宜宾市" th:selected="${filterDistrict == '宜宾市'}">宜宾市</option>
             </select>
             <button type="submit" class="btn-primary-sm">查询</button>
             <a th:href="@{'/' + ${syndromeCode}}" class="btn-outline-sm">重置</a>
@@ -427,6 +419,7 @@
             });
         });
     </script>
+    <script th:inline="javascript">window.__hospitalMap = /*[[${hospitalMap}]]*/ {};</script>
 </div>
 </body>
 </html>

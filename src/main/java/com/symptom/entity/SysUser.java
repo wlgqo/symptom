@@ -9,6 +9,7 @@ public class SysUser {
     private String role;
     private String realName;
     private String districtScope;
+    private String hospitalScope;
     private Date createdAt;
 
     public Integer getId() { return id; }
@@ -23,6 +24,8 @@ public class SysUser {
     public void setRealName(String realName) { this.realName = realName; }
     public String getDistrictScope() { return districtScope; }
     public void setDistrictScope(String districtScope) { this.districtScope = districtScope; }
+    public String getHospitalScope() { return hospitalScope; }
+    public void setHospitalScope(String hospitalScope) { this.hospitalScope = hospitalScope; }
     public Date getCreatedAt() { return createdAt; }
     public void setCreatedAt(Date createdAt) { this.createdAt = createdAt; }
 }

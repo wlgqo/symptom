@@ -12,6 +12,9 @@
         <result column="id_card" property="idCard"/>
         <result column="phone" property="phone"/>
         <result column="ethnicity" property="ethnicity"/>
+        <result column="nationality" property="nationality"/>
+        <result column="registered_address" property="registeredAddress"/>
+        <result column="population_category" property="populationCategory"/>
         <result column="case_type" property="caseType"/>
         <result column="syndrome_type" property="syndromeType"/>
         <result column="address" property="address"/>
@@ -61,6 +64,12 @@
             </if>
             <if test="district != null and district != '' and (districtScope == null or districtScope == '')">
                 AND district = #{district}
+            </if>
+            <if test="hospitalScope != null and hospitalScope != ''">
+                AND hospital = #{hospitalScope}
+            </if>
+            <if test="hospital != null and hospital != '' and (hospitalScope == null or hospitalScope == '')">
+                AND hospital = #{hospital}
             </if>
             <if test="caseType != null and caseType != ''">
                 AND case_type = #{caseType}
@@ -148,6 +157,12 @@
             </if>
             <if test="district != null and district != '' and (districtScope == null or districtScope == '')">
                 AND district = #{district}
+            </if>
+            <if test="hospitalScope != null and hospitalScope != ''">
+                AND hospital = #{hospitalScope}
+            </if>
+            <if test="hospital != null and hospital != '' and (hospitalScope == null or hospitalScope == '')">
+                AND hospital = #{hospital}
             </if>
             <if test="startDate != null and startDate != ''">
                 AND report_date &gt;= #{startDate}

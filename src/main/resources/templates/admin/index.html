@@ -31,13 +31,14 @@
         <div class="card-panel">
             <h5>用户列表</h5>
             <table class="data-table">
-                <thead><tr><th>用户名</th><th>姓名</th><th>角色</th><th>数据辖区</th><th>操作</th></tr></thead>
+                <thead><tr><th>用户名</th><th>姓名</th><th>角色</th><th>数据辖区</th><th>所属机构</th><th>操作</th></tr></thead>
                 <tbody>
                     <tr th:each="u : ${users}">
                         <td th:text="${u.username}"></td>
                         <td th:text="${u.realName}"></td>
                         <td><span class="badge-level badge-blue" th:text="${u.role}"></span></td>
                         <td th:text="${u.districtScope != null ? u.districtScope : '全部'}">全部</td>
+                        <td th:text="${u.hospitalScope != null ? u.hospitalScope : '全部'}">全部</td>
                         <td>
                             <a th:if="${u.username != 'admin'}" th:href="@{/admin/user/delete/{id}(id=${u.id})}"
                                style="color:#c53030;font-size:12px;" onclick="return confirm('确认删除？')">删除</a>
@@ -63,8 +64,11 @@
                     <div><label>数据辖区</label>
                         <input type="text" name="districtScope" placeholder="管理员留空=全部；业务人员填区县名">
                     </div>
+                    <div><label>所属机构</label>
+                        <input type="text" name="hospitalScope" placeholder="管理员留空=全部；业务人员填机构名">
+                    </div>
                 </div>
-                <p class="panel-desc" style="margin-bottom:12px;">演示账号：admin/admin123（管理员）、business/business123（武侯区）、business_jj/business123（锦江区）</p>
+                <p class="panel-desc" style="margin-bottom:12px;">演示账号：admin/admin123（管理员）、business/business123（武侯区·成都市第三人民医院）、business_jj/business123（锦江区·四川省人民医院）</p>
                 <button type="submit" class="btn-primary-custom">添加用户</button>
             </form>
         </div>

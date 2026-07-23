@@ -35,9 +35,25 @@
 
     <div class="grid-2">
         <div class="card-panel">
+            <h5>基本信息</h5>
+            <div class="detail-grid">
+                <div class="detail-item"><span class="label">国籍</span><span class="value" th:text="${caseInfo.nationality != null ? caseInfo.nationality : '中国'}">中国</span></div>
+                <div class="detail-item"><span class="label">性别</span><span class="value" th:text="${caseInfo.gender}">-</span></div>
+                <div class="detail-item"><span class="label">民族</span><span class="value" th:text="${caseInfo.ethnicity != null ? caseInfo.ethnicity : '-'}">-</span></div>
+                <div class="detail-item"><span class="label">人群分类</span><span class="value" th:text="${caseInfo.populationCategory != null ? caseInfo.populationCategory : '-'}">-</span></div>
+                <div class="detail-item full-width"><span class="label">现住址</span><span class="value" th:text="${caseInfo.address}">-</span></div>
+                <div class="detail-item full-width"><span class="label">户籍地</span><span class="value" th:text="${caseInfo.registeredAddress != null ? caseInfo.registeredAddress : '-'}">-</span></div>
+                <div class="detail-item"><span class="label">现住址行政区划</span><span class="value" th:text="${caseInfo.district}">-</span></div>
+                <div class="detail-item"><span class="label">就诊机构</span><span class="value" th:text="${caseInfo.hospital}">-</span></div>
+            </div>
+        </div>
+        <div class="card-panel">
             <h5>患者画像</h5>
             <div id="patientProfileContent"><p class="empty-state">加载中...</p></div>
         </div>
+    </div>
+
+    <div class="grid-2">
         <div class="card-panel">
             <h5>症候群识别信息</h5>
             <div class="detail-grid">

@@ -17,11 +17,11 @@ DELETE FROM sys_user;
 DELETE FROM sqlite_sequence WHERE name IN ('case_info', 'case_symptom', 'warning_record', 'case_modify_log', 'report_card', 'warning_model', 'syndrome_config', 'operation_log', 'sys_user', 'warning_notification', 'warning_disposal', 'surveillance_event', 'saved_query');
 
 -- 用户数据
-INSERT INTO sys_user (username, password, role, real_name, district_scope) VALUES
-('admin', 'admin123', '管理员', '系统管理员', NULL),
-('business', 'business123', '业务人员', '张业务', '武侯区'),
-('business_jj', 'business123', '业务人员', '李锦江', '锦江区'),
-('viewer', 'viewer123', '浏览人员', '李浏览', NULL);
+INSERT INTO sys_user (username, password, role, real_name, district_scope, hospital_scope) VALUES
+('admin', 'admin123', '管理员', '系统管理员', NULL, NULL),
+('business', 'business123', '业务人员', '张业务', '武侯区', '成都市第三人民医院'),
+('business_jj', 'business123', '业务人员', '李锦江', '锦江区', '四川省人民医院'),
+('viewer', 'viewer123', '浏览人员', '李浏览', NULL, NULL);
 
 -- 预警模型
 INSERT INTO warning_model (model_name, model_type, syndrome_type, config_json, description, enabled) VALUES
@@ -243,3 +243,9 @@ UPDATE case_info SET id_card='510104198108151201', phone='13812481345', ethnicit
 UPDATE case_info SET id_card='510104195403151678', phone='13701115678', ethnicity='汉族', admission_date='2026-03-09', discharge_date=NULL, death_date='2026-03-16', profile_json='{"bloodType": "A型", "maritalStatus": "丧偶", "chronicDiseases": ["高血压", "2型糖尿病"], "allergies": ["头孢类"], "vaccination": ["流感疫苗(2025-10)"], "tags": ["高龄", "死亡病例"], "portrait": "72岁女性，艰难梭菌感染死亡。"}', medical_record_json='{"department": "消化内科", "bedNo": "22床", "chiefComplaint": "腹泻加重伴发热5天", "presentIllness": "抗生素使用后严重腹泻。", "physicalExam": "脱水貌，腹部压痛。", "visits": [{"date": "2026-03-09", "type": "急诊", "dept": "急诊科"}], "examinations": [{"date": "2026-03-10", "item": "结肠镜", "result": "假膜性结肠炎"}], "labTests": [{"date": "2026-03-10", "item": "粪便毒素", "result": "艰难梭菌毒素阳性"}], "deathInfo": {"deathDate": "2026-03-16", "deathCause": "艰难梭菌感染、重度脱水、感染性休克", "deathPlace": "成都市第三人民医院ICU"}}' WHERE main_index='IDX202603202';
 UPDATE case_info SET id_card='510104198303151203', phone='13812506035', ethnicity='汉族', admission_date='2026-03-06', discharge_date='2026-03-11', death_date=NULL, profile_json='{"bloodType": "AB型", "maritalStatus": "丧偶", "chronicDiseases": [], "allergies": ["青霉素"], "vaccination": [], "tags": ["呼吸道监测"], "portrait": "症候群监测病例（发热呼吸道症候群），发热伴咳嗽。"}', medical_record_json='{"department": "呼吸内科", "bedNo": "24床", "chiefComplaint": "发热伴咳嗽", "presentIllness": "患者因发热伴咳嗽就诊，匹配发热呼吸道症候群识别规则。", "physicalExam": "专科查体见相关阳性体征。", "visits": [{"date": "2026-03-06", "type": "门诊", "dept": "呼吸内科"}], "examinations": [{"date": "2026-03-07", "item": "胸部X线/CT", "result": "见报告"}], "labTests": [{"date": "2026-03-07", "item": "血常规", "result": "详见检验单"}]}' WHERE main_index='IDX202603203';
 UPDATE case_info SET id_card='510104198404151204', phone='13812518380', ethnicity='汉族', admission_date='2026-03-07', discharge_date='2026-03-12', death_date=NULL, profile_json='{"bloodType": "A型", "maritalStatus": "已婚", "chronicDiseases": [], "allergies": [], "vaccination": ["流感疫苗(2025-10)"], "tags": ["呼吸道监测"], "portrait": "症候群监测病例（发热呼吸道症候群），发热伴咳嗽。"}', medical_record_json='{"department": "呼吸内科", "bedNo": "25床", "chiefComplaint": "发热伴咳嗽", "presentIllness": "患者因发热伴咳嗽就诊，匹配发热呼吸道症候群识别规则。", "physicalExam": "专科查体见相关阳性体征。", "visits": [{"date": "2026-03-07", "type": "门诊", "dept": "呼吸内科"}], "examinations": [{"date": "2026-03-08", "item": "胸部X线/CT", "result": "见报告"}], "labTests": [{"date": "2026-03-08", "item": "血常规", "result": "详见检验单"}]}' WHERE main_index='IDX202603204';
+
+UPDATE case_info SET
+  nationality = COALESCE(nationality, '中国'),
+  registered_address = COALESCE(registered_address, district || '户籍地址'),
+  population_category = COALESCE(population_category,
+    CASE WHEN age < 3 THEN '婴幼儿' WHEN age < 18 THEN '儿童' WHEN age >= 60 THEN '老年人' ELSE '成年人' END);

@@ -13,6 +13,9 @@ public class CaseInfo {
     private String idCard;
     private String phone;
     private String ethnicity;
+    private String nationality;
+    private String registeredAddress;
+    private String populationCategory;
     private String caseType;
     private String syndromeType;
     private String address;
@@ -57,6 +60,12 @@ public class CaseInfo {
     public void setPhone(String phone) { this.phone = phone; }
     public String getEthnicity() { return ethnicity; }
     public void setEthnicity(String ethnicity) { this.ethnicity = ethnicity; }
+    public String getNationality() { return nationality; }
+    public void setNationality(String nationality) { this.nationality = nationality; }
+    public String getRegisteredAddress() { return registeredAddress; }
+    public void setRegisteredAddress(String registeredAddress) { this.registeredAddress = registeredAddress; }
+    public String getPopulationCategory() { return populationCategory; }
+    public void setPopulationCategory(String populationCategory) { this.populationCategory = populationCategory; }
     public String getCaseType() { return caseType; }
     public void setCaseType(String caseType) { this.caseType = caseType; }
     public String getSyndromeType() { return syndromeType; }

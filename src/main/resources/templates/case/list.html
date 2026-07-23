@@ -2,8 +2,12 @@
 <html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout('主动监测病例管理', ~{::content})}">
 <body>
 <div th:fragment="content" class="list-page-content">
-    <div class="scope-hint" th:if="${scopeDistrict != null}">
-        当前数据范围：<strong th:text="${scopeDistrict}">辖区</strong>（业务人员仅可查看所属辖区数据）
+    <div class="scope-hint" th:if="${scopeDistrict != null or scopeHospital != null}">
+        当前数据范围：
+        <strong th:if="${scopeDistrict != null}" th:text="${scopeDistrict}">辖区</strong>
+        <span th:if="${scopeDistrict != null and scopeHospital != null}"> · </span>
+        <strong th:if="${scopeHospital != null}" th:text="${scopeHospital}">机构</strong>
+        （业务人员仅可查看所属辖区、机构数据）
     </div>
 
     <div class="quick-links">
@@ -23,7 +27,9 @@
                     <option value="女" th:selected="${params.gender == '女'}">女</option>
                 </select>
             </div>
-            <div th:if="${scopeDistrict == null}"><label>现住址行政区划</label><input type="text" name="district" th:value="${params.district}"></div>
+        </div>
+        <div class="form-row">
+            <th:block th:replace="~{fragments/region-hospital-filter :: regionHospital(${params.district}, ${params.hospital}, ${districtOptions}, ${hospitalOptions}, ${scopeDistrict}, ${scopeHospital})}"></th:block>
         </div>
         <div class="form-row">
             <div><label>病例类型</label>
@@ -106,14 +112,15 @@
             <span>第 <span th:text="${pageResult.page}">1</span> / <span th:text="${pageResult.totalPages}">1</span> 页</span>
             <div class="pagination-links">
                 <a th:if="${pageResult.page > 1}"
-                   th:href="@{/case/list(page=${pageResult.page - 1}, pageSize=${pageResult.pageSize}, patientName=${params.patientName}, mainIndex=${params.mainIndex}, gender=${params.gender}, district=${params.district}, caseType=${params.caseType}, syndromeType=${params.syndromeType}, ageMin=${params.ageMin}, ageMax=${params.ageMax}, discoverType=${params.discoverType}, startDate=${params.startDate}, endDate=${params.endDate})}"
+                   th:href="@{/case/list(page=${pageResult.page - 1}, pageSize=${pageResult.pageSize}, patientName=${params.patientName}, mainIndex=${params.mainIndex}, gender=${params.gender}, district=${params.district}, hospital=${params.hospital}, caseType=${params.caseType}, syndromeType=${params.syndromeType}, ageMin=${params.ageMin}, ageMax=${params.ageMax}, discoverType=${params.discoverType}, startDate=${params.startDate}, endDate=${params.endDate})}"
                    class="page-link">上一页</a>
                 <a th:if="${pageResult.page < pageResult.totalPages}"
-                   th:href="@{/case/list(page=${pageResult.page + 1}, pageSize=${pageResult.pageSize}, patientName=${params.patientName}, mainIndex=${params.mainIndex}, gender=${params.gender}, district=${params.district}, caseType=${params.caseType}, syndromeType=${params.syndromeType}, ageMin=${params.ageMin}, ageMax=${params.ageMax}, discoverType=${params.discoverType}, startDate=${params.startDate}, endDate=${params.endDate})}"
+                   th:href="@{/case/list(page=${pageResult.page + 1}, pageSize=${pageResult.pageSize}, patientName=${params.patientName}, mainIndex=${params.mainIndex}, gender=${params.gender}, district=${params.district}, hospital=${params.hospital}, caseType=${params.caseType}, syndromeType=${params.syndromeType}, ageMin=${params.ageMin}, ageMax=${params.ageMax}, discoverType=${params.discoverType}, startDate=${params.startDate}, endDate=${params.endDate})}"
                    class="page-link">下一页</a>
             </div>
         </div>
     </div>
+    <script th:inline="javascript">window.__hospitalMap = /*[[${hospitalMap}]]*/ {};</script>
 </div>
 </body>
 </html>

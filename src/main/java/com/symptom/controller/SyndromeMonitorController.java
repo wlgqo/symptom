@@ -32,20 +32,24 @@ public class SyndromeMonitorController {
     private final WarningService warningService;
     private final SyndromeConfigService syndromeConfigService;
     private final DataScopeService dataScopeService;
+    private final FilterOptionService filterOptionService;
 
     public SyndromeMonitorController(CaseService caseService, AnalysisService analysisService,
                                      WarningService warningService,
                                      SyndromeConfigService syndromeConfigService,
-                                     DataScopeService dataScopeService) {
+                                     DataScopeService dataScopeService,
+                                     FilterOptionService filterOptionService) {
         this.caseService = caseService;
         this.analysisService = analysisService;
         this.warningService = warningService;
         this.syndromeConfigService = syndromeConfigService;
         this.dataScopeService = dataScopeService;
+        this.filterOptionService = filterOptionService;
     }
 
     @GetMapping({"/respiratory", "/hemorrhage", "/diarrhea", "/rash", "/encephalitis", "/fuo"})
     public String index(@RequestParam(required = false) String district,
+                        @RequestParam(required = false) String hospital,
                         @RequestParam(required = false) String startDate,
                         @RequestParam(required = false) String endDate,
                         @RequestParam(required = false, defaultValue = "90") Integer days,
@@ -56,7 +60,7 @@ public class SyndromeMonitorController {
                         Model model,
                         javax.servlet.http.HttpServletRequest request) {
         String code = resolveCode(request.getRequestURI());
-        return renderMonitor(code, district, startDate, endDate, days, casePage, warningPage, tab, session, model);
+        return renderMonitor(code, district, hospital, startDate, endDate, days, casePage, warningPage, tab, session, model);
     }
 
     @PostMapping({"/respiratory/warning/run", "/hemorrhage/warning/run", "/diarrhea/warning/run",
@@ -91,6 +95,7 @@ public class SyndromeMonitorController {
     @ResponseBody
     public Map<String, Object> timeData(@RequestParam(defaultValue = "day") String groupBy,
                                         @RequestParam(required = false) String district,
+                                        @RequestParam(required = false) String hospital,
                                         @RequestParam(required = false) String startDate,
                                         @RequestParam(required = false) String endDate,
                                         @RequestParam(required = false, defaultValue = "90") Integer days,
@@ -98,11 +103,11 @@ public class SyndromeMonitorController {
                                         javax.servlet.http.HttpServletRequest request) {
         String code = resolveCode(request.getRequestURI());
         SyndromeMeta meta = SYNDROMES.get(code);
-        Map<String, Object> filter = buildFilter(session, meta.syndromeType, district, startDate, endDate, days);
+        Map<String, Object> filter = buildFilter(session, meta.syndromeType, district, hospital, startDate, endDate, days);
         return analysisService.getTimeDistribution(filter, groupBy);
     }
 
-    private String renderMonitor(String code, String district, String startDate, String endDate, Integer days,
+    private String renderMonitor(String code, String district, String hospital, String startDate, String endDate, Integer days,
                                  Integer casePage, Integer warningPage, String tab,
                                  HttpSession session, Model model) {
         SyndromeMeta meta = SYNDROMES.get(code);
@@ -110,18 +115,17 @@ public class SyndromeMonitorController {
             return "redirect:/";
         }
         SysUser user = (SysUser) session.getAttribute("currentUser");
-        Map<String, Object> filter = buildFilter(session, meta.syndromeType, district, startDate, endDate, days);
+        Map<String, Object> filter = buildFilter(session, meta.syndromeType, district, hospital, startDate, endDate, days);
 
         model.addAttribute("pageTitle", meta.syndromeType + "监测预警");
         model.addAttribute("breadcrumb", meta.syndromeType);
         model.addAttribute("syndromeCode", code);
         model.addAttribute("syndromeType", meta.syndromeType);
         model.addAttribute("activeMenu", code);
-        model.addAttribute("filterDistrict", district);
+        com.symptom.util.FilterViewHelper.addRegionHospitalModel(model, filterOptionService, dataScopeService, user, district, hospital);
         model.addAttribute("filterStartDate", startDate);
         model.addAttribute("filterEndDate", endDate);
         model.addAttribute("filterDays", days);
-        model.addAttribute("scopeDistrict", dataScopeService.scopeDistrict(user));
         model.addAttribute("activeTab", tab != null ? tab : "distribution");
 
         model.addAttribute("timeDataDay", analysisService.getTimeDistribution(filter, "day"));
@@ -148,11 +152,10 @@ public class SyndromeMonitorController {
     }
 
     private Map<String, Object> buildFilter(HttpSession session, String syndromeType, String district,
-                                            String startDate, String endDate, Integer days) {
+                                            String hospital, String startDate, String endDate, Integer days) {
         SysUser user = (SysUser) session.getAttribute("currentUser");
-        Map<String, Object> filter = QueryParamUtil.baseFilter(syndromeType, district, startDate, endDate, days);
-        dataScopeService.applyCaseScope(filter, user);
-        return filter;
+        return com.symptom.util.FilterViewHelper.buildScopedFilter(dataScopeService, user,
+                syndromeType, district, hospital, startDate, endDate, days);
     }
 
     private String resolveCode(String uri) {

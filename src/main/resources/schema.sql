@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS sys_user (
     role VARCHAR(20) NOT NULL,
     real_name VARCHAR(50),
     district_scope VARCHAR(50),
+    hospital_scope VARCHAR(100),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -33,6 +34,9 @@ CREATE TABLE IF NOT EXISTS case_info (
     id_card VARCHAR(20),
     phone VARCHAR(20),
     ethnicity VARCHAR(20),
+    nationality VARCHAR(20) DEFAULT '中国',
+    registered_address VARCHAR(200),
+    population_category VARCHAR(50),
     case_type VARCHAR(50),
     syndrome_type VARCHAR(50),
     address VARCHAR(200),

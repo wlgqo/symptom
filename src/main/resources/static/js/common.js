@@ -27,7 +27,33 @@ document.addEventListener('DOMContentLoaded', function() {
             btn.setAttribute('aria-expanded', group.classList.contains('expanded'));
         });
     });
+
+    initRegionHospitalCascade();
 });
+
+function initRegionHospitalCascade() {
+    var hospitalMap = window.__hospitalMap || {};
+    document.querySelectorAll('.region-select').forEach(function(regionSel) {
+        if (regionSel.dataset.cascadeBound) return;
+        regionSel.dataset.cascadeBound = '1';
+        regionSel.addEventListener('change', function() {
+            var form = regionSel.closest('form');
+            var hospitalSel = form ? form.querySelector('.hospital-select') : null;
+            if (!hospitalSel || hospitalSel.disabled) return;
+            var district = regionSel.value;
+            var hospitals = hospitalMap[district] || [];
+            var current = hospitalSel.value;
+            hospitalSel.innerHTML = '<option value="">全部机构</option>';
+            hospitals.forEach(function(h) {
+                var opt = document.createElement('option');
+                opt.value = h;
+                opt.textContent = h;
+                if (h === current) opt.selected = true;
+                hospitalSel.appendChild(opt);
+            });
+        });
+    });
+}
 
 function renderMedicalRecordSummary(medicalJson) {
     var el = document.getElementById('medicalRecordSummary');

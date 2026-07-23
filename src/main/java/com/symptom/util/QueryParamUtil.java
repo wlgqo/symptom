@@ -8,7 +8,7 @@ public final class QueryParamUtil {
     private QueryParamUtil() {
     }
 
-    public static Map<String, Object> baseFilter(String syndromeType, String district,
+    public static Map<String, Object> baseFilter(String syndromeType, String district, String hospital,
                                                   String startDate, String endDate, Integer days) {
         Map<String, Object> params = new HashMap<>();
         if (syndromeType != null && !syndromeType.isEmpty()) {
@@ -16,6 +16,9 @@ public final class QueryParamUtil {
         }
         if (district != null && !district.isEmpty()) {
             params.put("district", district);
+        }
+        if (hospital != null && !hospital.isEmpty()) {
+            params.put("hospital", hospital);
         }
         if (startDate != null && !startDate.isEmpty()) {
             params.put("startDate", startDate);
@@ -27,6 +30,11 @@ public final class QueryParamUtil {
             params.put("days", days);
         }
         return params;
+    }
+
+    public static Map<String, Object> baseFilter(String syndromeType, String district,
+                                                  String startDate, String endDate, Integer days) {
+        return baseFilter(syndromeType, district, null, startDate, endDate, days);
     }
 
     public static void applyPagination(Map<String, Object> params, Integer page, Integer pageSize) {
