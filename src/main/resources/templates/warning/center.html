@@ -1,7 +1,10 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout('预警中心', ~{::content})}">
 <body>
-<div th:fragment="content">
+<div th:fragment="content" class="list-page-content">
+    <div class="scope-hint" th:if="${scopeDistrict != null}">
+        当前数据范围：<strong th:text="${scopeDistrict}">辖区</strong>（业务人员仅可查看所属辖区数据）
+    </div>
     <div class="filter-bar">
         <form method="get" action="/warning/center" class="filter-form">
             <select name="syndromeType" class="form-select-sm">
@@ -11,6 +14,7 @@
                 <option value="发热伴腹泻症候群" th:selected="${filterSyndrome == '发热伴腹泻症候群'}">发热伴腹泻症候群</option>
                 <option value="发热出疹症候群" th:selected="${filterSyndrome == '发热出疹症候群'}">发热出疹症候群</option>
                 <option value="脑炎脑膜炎症候群" th:selected="${filterSyndrome == '脑炎脑膜炎症候群'}">脑炎脑膜炎症候群</option>
+                <option value="不明原因发热症候群" th:selected="${filterSyndrome == '不明原因发热症候群'}">不明原因发热症候群</option>
             </select>
             <select name="status" class="form-select-sm">
                 <option value="">全部状态</option>
@@ -20,16 +24,17 @@
                 <option value="已完成" th:selected="${filterStatus == '已完成'}">已完成</option>
                 <option value="已关闭" th:selected="${filterStatus == '已关闭'}">已关闭</option>
             </select>
+            <th:block th:replace="~{fragments/date-range :: dateRange(${filterStartDate}, ${filterEndDate})}"></th:block>
             <button type="submit" class="btn-primary-sm">筛选</button>
             <a href="/warning/center" class="btn-outline-sm">重置</a>
         </form>
         <div class="filter-meta">待处置预警 <strong th:text="${pendingCount}">0</strong> 条</div>
     </div>
 
-    <div class="workbench-3col">
+    <div class="workbench-3col" style="flex:1;min-height:0;">
         <!-- 左：预警列表 -->
         <div class="workbench-col workbench-list">
-            <div class="col-header">预警列表</div>
+            <div class="col-header">预警列表（<span th:text="${pageResult.total}">0</span>）</div>
             <div class="warning-list">
                 <a th:each="r : ${records}"
                    th:href="@{/warning/center(id=${r.id}, syndromeType=${filterSyndrome}, status=${filterStatus})}"
@@ -46,6 +51,17 @@
                     </div>
                 </a>
                 <div th:if="${records == null or records.isEmpty()}" class="empty-state">暂无预警记录</div>
+            </div>
+            <div class="pagination-bar" th:if="${pageResult != null and pageResult.total > 0}">
+                <div class="pagination-links">
+                    <a th:if="${pageResult.page > 1}"
+                       th:href="@{/warning/center(page=${pageResult.page - 1}, syndromeType=${filterSyndrome}, status=${filterStatus}, startDate=${filterStartDate}, endDate=${filterEndDate}, id=${selected != null ? selected.id : null})}"
+                       class="page-link">上一页</a>
+                    <span class="page-link active" th:text="${pageResult.page} + '/' + ${pageResult.totalPages}">1/1</span>
+                    <a th:if="${pageResult.page < pageResult.totalPages}"
+                       th:href="@{/warning/center(page=${pageResult.page + 1}, syndromeType=${filterSyndrome}, status=${filterStatus}, startDate=${filterStartDate}, endDate=${filterEndDate})}"
+                       class="page-link">下一页</a>
+                </div>
             </div>
         </div>
 
@@ -149,10 +165,14 @@
         const warningId = /*[[${selected != null ? selected.id : null}]]*/ null;
         const filterSyndrome = /*[[${filterSyndrome}]]*/ '';
         const filterStatus = /*[[${filterStatus}]]*/ '';
+        const filterStartDate = /*[[${filterStartDate}]]*/ '';
+        const filterEndDate = /*[[${filterEndDate}]]*/ '';
         function warningUrl() {
             var q = '/warning/center?id=' + warningId;
             if (filterSyndrome) q += '&syndromeType=' + encodeURIComponent(filterSyndrome);
             if (filterStatus) q += '&status=' + encodeURIComponent(filterStatus);
+            if (filterStartDate) q += '&startDate=' + encodeURIComponent(filterStartDate);
+            if (filterEndDate) q += '&endDate=' + encodeURIComponent(filterEndDate);
             return q;
         }
         function doAction(action) {

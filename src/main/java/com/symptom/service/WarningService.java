@@ -1,7 +1,9 @@
 package com.symptom.service;
 
+import com.symptom.common.PageResult;
 import com.symptom.entity.*;
 import com.symptom.mapper.*;
+import com.symptom.util.QueryParamUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,16 +17,19 @@ public class WarningService {
     private final WarningNotificationMapper notificationMapper;
     private final WarningDisposalMapper disposalMapper;
     private final CaseInfoMapper caseInfoMapper;
+    private final DataScopeService dataScopeService;
 
     public WarningService(WarningModelMapper modelMapper, WarningRecordMapper recordMapper,
                           WarningNotificationMapper notificationMapper,
                           WarningDisposalMapper disposalMapper,
-                          CaseInfoMapper caseInfoMapper) {
+                          CaseInfoMapper caseInfoMapper,
+                          DataScopeService dataScopeService) {
         this.modelMapper = modelMapper;
         this.recordMapper = recordMapper;
         this.notificationMapper = notificationMapper;
         this.disposalMapper = disposalMapper;
         this.caseInfoMapper = caseInfoMapper;
+        this.dataScopeService = dataScopeService;
     }
 
     public List<WarningModel> getAllModels() {
@@ -48,10 +53,32 @@ public class WarningService {
     }
 
     public List<WarningRecord> searchRecords(String syndromeType, String status) {
-        if ((syndromeType == null || syndromeType.isEmpty()) && (status == null || status.isEmpty())) {
-            return recordMapper.findAll();
+        Map<String, Object> params = new HashMap<>();
+        params.put("syndromeType", syndromeType);
+        params.put("status", status);
+        return recordMapper.search(params);
+    }
+
+    public List<WarningRecord> searchScoped(String syndromeType, String status,
+                                            String startDate, String endDate, SysUser user) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("syndromeType", syndromeType);
+        params.put("status", status);
+        params.put("startDate", startDate);
+        params.put("endDate", endDate);
+        dataScopeService.applyWarningScope(params, user);
+        return recordMapper.search(params);
+    }
+
+    public PageResult<WarningRecord> searchPage(Map<String, Object> params, Integer page, Integer pageSize) {
+        Map<String, Object> query = new HashMap<>(params);
+        QueryParamUtil.applyPagination(query, page, pageSize);
+        long total = recordMapper.count(query);
+        if (total == 0) {
+            return PageResult.empty((Integer) query.get("page"), (Integer) query.get("pageSize"));
         }
-        return recordMapper.search(syndromeType, status);
+        return new PageResult<>(recordMapper.search(query), total,
+                (Integer) query.get("page"), (Integer) query.get("pageSize"));
     }
 
     public List<WarningRecord> getRecordsBySyndrome(String syndromeType) {
@@ -76,6 +103,10 @@ public class WarningService {
 
     public int countPending() {
         return recordMapper.countPending();
+    }
+
+    public int countScopedPending(Map<String, Object> params) {
+        return recordMapper.countScoped(params);
     }
 
     public Map<String, Object> getModelStats() {
@@ -145,7 +176,10 @@ public class WarningService {
             return Collections.emptyList();
         }
 
-        List<Map<String, Object>> dailyData = caseInfoMapper.countByDate(syndromeType, "day", null, null);
+        Map<String, Object> filter = new HashMap<>();
+        filter.put("syndromeType", syndromeType);
+        filter.put("groupBy", "day");
+        List<Map<String, Object>> dailyData = caseInfoMapper.countByDate(filter);
         List<WarningRecord> newWarnings = new ArrayList<>();
 
         if (dailyData.isEmpty()) {

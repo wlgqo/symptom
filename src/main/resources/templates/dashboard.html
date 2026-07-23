@@ -13,7 +13,7 @@
                 <option value="脑炎脑膜炎症候群" th:selected="${filterSyndrome == '脑炎脑膜炎症候群'}">脑炎脑膜炎症候群</option>
                 <option value="不明原因发热症候群" th:selected="${filterSyndrome == '不明原因发热症候群'}">不明原因发热症候群</option>
             </select>
-            <select name="district" class="form-select-sm">
+            <select name="district" class="form-select-sm" th:if="${scopeDistrict == null}">
                 <option value="">全部区域</option>
                 <option value="锦江区" th:selected="${filterDistrict == '锦江区'}">锦江区</option>
                 <option value="青羊区" th:selected="${filterDistrict == '青羊区'}">青羊区</option>
@@ -25,7 +25,8 @@
                 <option value="甘孜州" th:selected="${filterDistrict == '甘孜州'}">甘孜州</option>
                 <option value="凉山州" th:selected="${filterDistrict == '凉山州'}">凉山州</option>
             </select>
-            <select name="days" class="form-select-sm">
+            <th:block th:replace="~{fragments/date-range :: dateRange(${filterStartDate}, ${filterEndDate})}"></th:block>
+            <select name="days" class="form-select-sm" th:if="${filterStartDate == null or filterStartDate == ''}">
                 <option value="7" th:selected="${filterDays == 7}">近7天</option>
                 <option value="30" th:selected="${filterDays == 30}">近30天</option>
                 <option value="90" th:selected="${filterDays == 90}">近90天</option>
@@ -34,6 +35,10 @@
             <button type="submit" class="btn-primary-sm">筛选</button>
             <a href="/" class="btn-outline-sm">重置</a>
         </form>
+    </div>
+
+    <div class="scope-hint" th:if="${scopeDistrict != null}">
+        当前数据范围：<strong th:text="${scopeDistrict}">辖区</strong>
     </div>
 
     <div class="stat-cards">
@@ -136,6 +141,7 @@
 
     <div class="card-panel">
         <h5>最新预警信号 <span class="panel-action"><a href="/warning/center">预警中心 →</a></span></h5>
+        <div class="table-scroll-panel" style="max-height:280px;">
         <table class="data-table">
             <thead>
                 <tr><th>时间</th><th>症候群</th><th>级别</th><th>内容</th><th>状态</th><th>操作</th></tr>
@@ -153,6 +159,7 @@
                 </tr>
             </tbody>
         </table>
+        </div>
     </div>
 
     <script th:inline="javascript">

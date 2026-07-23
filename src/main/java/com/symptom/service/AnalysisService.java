@@ -14,14 +14,11 @@ public class AnalysisService {
         this.caseInfoMapper = caseInfoMapper;
     }
 
-    public Map<String, Object> getTimeDistribution(String syndromeType, String groupBy) {
-        return getTimeDistribution(syndromeType, groupBy, null, null);
-    }
-
-    public Map<String, Object> getTimeDistribution(String syndromeType, String groupBy,
-                                                   String district, Integer days) {
+    public Map<String, Object> getTimeDistribution(Map<String, Object> filter, String groupBy) {
+        Map<String, Object> params = new HashMap<>(filter);
+        params.put("groupBy", groupBy);
         Map<String, Object> result = new HashMap<>();
-        List<Map<String, Object>> data = caseInfoMapper.countByDate(syndromeType, groupBy, district, days);
+        List<Map<String, Object>> data = caseInfoMapper.countByDate(params);
         List<String> labels = new ArrayList<>();
         List<Integer> values = new ArrayList<>();
         for (Map<String, Object> item : data) {
@@ -33,39 +30,35 @@ public class AnalysisService {
         return result;
     }
 
-    public List<Map<String, Object>> getDistrictDistribution(String syndromeType) {
-        return getDistrictDistribution(syndromeType, null, null);
+    public List<Map<String, Object>> getDistrictDistribution(Map<String, Object> filter) {
+        return caseInfoMapper.countByDistrict(filter);
     }
 
-    public List<Map<String, Object>> getDistrictDistribution(String syndromeType, String district, Integer days) {
-        return caseInfoMapper.countByDistrict(syndromeType, district, days);
-    }
-
-    public Map<String, Object> getPopulationDistribution(String syndromeType) {
+    public Map<String, Object> getPopulationDistribution(Map<String, Object> filter) {
         Map<String, Object> result = new HashMap<>();
-        result.put("age", caseInfoMapper.countByAgeGroup(syndromeType));
-        result.put("gender", caseInfoMapper.countByGender(syndromeType));
-        result.put("occupation", caseInfoMapper.countByOccupation(syndromeType));
+        result.put("age", caseInfoMapper.countByAgeGroup(filter));
+        result.put("gender", caseInfoMapper.countByGender(filter));
+        result.put("occupation", caseInfoMapper.countByOccupation(filter));
         return result;
     }
 
-    public Map<String, Object> getSevereDeathStats(String syndromeType) {
-        Map<String, Object> result = new HashMap<>();
-        List<com.symptom.entity.CaseInfo> all = caseInfoMapper.findBySyndromeType(syndromeType);
+    public Map<String, Object> getSevereDeathStats(Map<String, Object> filter) {
+        Map<String, Object> params = new HashMap<>(filter);
+        params.put("limit", 5000);
+        params.put("offset", 0);
+        List<com.symptom.entity.CaseInfo> all = caseInfoMapper.search(params);
         int total = all.size();
         int severe = (int) all.stream().filter(c -> c.getIsSevere() != null && c.getIsSevere() == 1).count();
         int death = (int) all.stream().filter(c -> c.getIsDeath() != null && c.getIsDeath() == 1).count();
 
+        Map<String, Object> result = new HashMap<>();
         result.put("total", total);
         result.put("severe", severe);
         result.put("death", death);
         result.put("severeRate", total > 0 ? String.format("%.1f", severe * 100.0 / total) : "0.0");
         result.put("deathRate", total > 0 ? String.format("%.1f", death * 100.0 / total) : "0.0");
 
-        List<Map<String, Object>> severeTrend = new ArrayList<>();
-        List<Map<String, Object>> deathTrend = new ArrayList<>();
         Map<String, int[]> monthlyStats = new TreeMap<>();
-
         for (com.symptom.entity.CaseInfo c : all) {
             if (c.getReportDate() != null) {
                 Calendar cal = Calendar.getInstance();
@@ -78,6 +71,8 @@ public class AnalysisService {
             }
         }
 
+        List<Map<String, Object>> severeTrend = new ArrayList<>();
+        List<Map<String, Object>> deathTrend = new ArrayList<>();
         for (Map.Entry<String, int[]> entry : monthlyStats.entrySet()) {
             Map<String, Object> sItem = new HashMap<>();
             sItem.put("month", entry.getKey());
@@ -91,14 +86,16 @@ public class AnalysisService {
                     String.format("%.1f", entry.getValue()[2] * 100.0 / entry.getValue()[0]) : "0.0");
             deathTrend.add(dItem);
         }
-
         result.put("severeTrend", severeTrend);
         result.put("deathTrend", deathTrend);
         return result;
     }
 
-    public Map<String, Object> getClinicalFeatures(String syndromeType) {
-        List<com.symptom.entity.CaseInfo> cases = caseInfoMapper.findBySyndromeType(syndromeType);
+    public Map<String, Object> getClinicalFeatures(Map<String, Object> filter) {
+        Map<String, Object> params = new HashMap<>(filter);
+        params.put("limit", 5000);
+        params.put("offset", 0);
+        List<com.symptom.entity.CaseInfo> cases = caseInfoMapper.search(params);
         Map<String, Object> result = new HashMap<>();
 
         int feverCount = 0;
@@ -119,7 +116,26 @@ public class AnalysisService {
         result.put("avgTemp", feverCount > 0 ? String.format("%.1f", totalTemp / feverCount) : "0");
         result.put("totalCases", cases.size());
         result.put("diagnoses", diagnoses);
+        return result;
+    }
 
+    public Map<String, Object> getRiskStats(Map<String, Object> filter) {
+        Map<String, Object> params = new HashMap<>(filter);
+        params.put("limit", 5000);
+        params.put("offset", 0);
+        List<com.symptom.entity.CaseInfo> cases = caseInfoMapper.search(params);
+        Map<String, Integer> riskMap = new LinkedHashMap<>();
+        riskMap.put("高风险", 0);
+        riskMap.put("中风险", 0);
+        riskMap.put("低风险", 0);
+        riskMap.put("待评估", 0);
+        for (com.symptom.entity.CaseInfo c : cases) {
+            String level = c.getRiskLevel() != null ? c.getRiskLevel() : "待评估";
+            riskMap.merge(level, 1, Integer::sum);
+        }
+        Map<String, Object> result = new HashMap<>();
+        result.put("riskDistribution", riskMap);
+        result.put("totalCases", cases.size());
         return result;
     }
 }

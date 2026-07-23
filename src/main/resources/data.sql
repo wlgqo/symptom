@@ -17,10 +17,11 @@ DELETE FROM sys_user;
 DELETE FROM sqlite_sequence WHERE name IN ('case_info', 'case_symptom', 'warning_record', 'case_modify_log', 'report_card', 'warning_model', 'syndrome_config', 'operation_log', 'sys_user', 'warning_notification', 'warning_disposal', 'surveillance_event', 'saved_query');
 
 -- 用户数据
-INSERT INTO sys_user (username, password, role, real_name) VALUES
-('admin', 'admin123', '管理员', '系统管理员'),
-('business', 'business123', '业务人员', '张业务'),
-('viewer', 'viewer123', '浏览人员', '李浏览');
+INSERT INTO sys_user (username, password, role, real_name, district_scope) VALUES
+('admin', 'admin123', '管理员', '系统管理员', NULL),
+('business', 'business123', '业务人员', '张业务', '武侯区'),
+('business_jj', 'business123', '业务人员', '李锦江', '锦江区'),
+('viewer', 'viewer123', '浏览人员', '李浏览', NULL);
 
 -- 预警模型
 INSERT INTO warning_model (model_name, model_type, syndrome_type, config_json, description, enabled) VALUES

@@ -8,10 +8,10 @@
         SELECT * FROM sys_user ORDER BY id
     </select>
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO sys_user (username, password, role, real_name) VALUES (#{username}, #{password}, #{role}, #{realName})
+        INSERT INTO sys_user (username, password, role, real_name, district_scope) VALUES (#{username}, #{password}, #{role}, #{realName}, #{districtScope})
     </insert>
     <update id="update">
-        UPDATE sys_user SET password = #{password}, role = #{role}, real_name = #{realName} WHERE id = #{id}
+        UPDATE sys_user SET password = #{password}, role = #{role}, real_name = #{realName}, district_scope = #{districtScope} WHERE id = #{id}
     </update>
     <delete id="delete">
         DELETE FROM sys_user WHERE id = #{id}

@@ -13,6 +13,20 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     });
+
+    document.getElementById('sidebarToggle')?.addEventListener('click', function() {
+        document.getElementById('sidebar').classList.toggle('collapsed');
+    });
+
+    document.querySelectorAll('.nav-group-title').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var group = btn.closest('.nav-group');
+            if (!group) return;
+            group.classList.toggle('collapsed');
+            group.classList.toggle('expanded');
+            btn.setAttribute('aria-expanded', group.classList.contains('expanded'));
+        });
+    });
 });
 
 function renderMedicalRecordSummary(medicalJson) {

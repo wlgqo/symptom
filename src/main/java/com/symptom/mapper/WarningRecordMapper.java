@@ -1,18 +1,20 @@
 package com.symptom.mapper;
 
 import com.symptom.entity.WarningRecord;
-import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
+import java.util.Map;
 
 public interface WarningRecordMapper {
     List<WarningRecord> findAll();
-    List<WarningRecord> findBySyndromeType(@Param("syndromeType") String syndromeType);
-    WarningRecord findById(@Param("id") Integer id);
+    List<WarningRecord> findBySyndromeType(String syndromeType);
+    WarningRecord findById(Integer id);
     int insert(WarningRecord record);
     int update(WarningRecord record);
-    List<WarningRecord> findByStatus(@Param("status") String status);
-    List<WarningRecord> findByModelId(@Param("modelId") Integer modelId);
-    List<WarningRecord> search(@Param("syndromeType") String syndromeType, @Param("status") String status);
+    List<WarningRecord> findByStatus(String status);
+    List<WarningRecord> findByModelId(Integer modelId);
+    List<WarningRecord> search(Map<String, Object> params);
+    int count(Map<String, Object> params);
     int countPending();
+    int countScoped(Map<String, Object> params);
 }

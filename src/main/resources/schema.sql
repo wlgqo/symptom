@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS sys_user (
     password VARCHAR(100) NOT NULL,
     role VARCHAR(20) NOT NULL,
     real_name VARCHAR(50),
+    district_scope VARCHAR(50),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 

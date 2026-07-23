@@ -1,8 +1,9 @@
 package com.symptom.service;
 
-import com.alibaba.fastjson.JSON;
+import com.symptom.common.PageResult;
 import com.symptom.entity.*;
 import com.symptom.mapper.*;
+import com.symptom.util.QueryParamUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,10 +27,26 @@ public class CaseService {
 
     public List<CaseInfo> search(Map<String, Object> params) {
         List<CaseInfo> cases = caseInfoMapper.search(params);
+        attachSymptoms(cases);
+        return cases;
+    }
+
+    public PageResult<CaseInfo> searchPage(Map<String, Object> params, Integer page, Integer pageSize) {
+        Map<String, Object> query = new HashMap<>(params);
+        QueryParamUtil.applyPagination(query, page, pageSize);
+        long total = caseInfoMapper.count(query);
+        if (total == 0) {
+            return PageResult.empty((Integer) query.get("page"), (Integer) query.get("pageSize"));
+        }
+        List<CaseInfo> records = caseInfoMapper.search(query);
+        attachSymptoms(records);
+        return new PageResult<>(records, total, (Integer) query.get("page"), (Integer) query.get("pageSize"));
+    }
+
+    private void attachSymptoms(List<CaseInfo> cases) {
         for (CaseInfo c : cases) {
             c.setSymptoms(caseSymptomMapper.findByCaseId(c.getId()));
         }
-        return cases;
     }
 
     public CaseInfo getById(Integer id) {
@@ -47,7 +64,7 @@ public class CaseService {
             CaseModifyLog log = new CaseModifyLog();
             log.setCaseId(caseInfo.getId());
             log.setOperator(operator);
-            log.setSnapshot(JSON.toJSONString(old));
+            log.setSnapshot(com.alibaba.fastjson.JSON.toJSONString(old));
             log.setChangeDesc("修改病例信息");
             modifyLogMapper.insert(log);
         }
@@ -63,11 +80,9 @@ public class CaseService {
     }
 
     public List<CaseInfo> findBySyndromeType(String syndromeType) {
-        List<CaseInfo> cases = caseInfoMapper.findBySyndromeType(syndromeType);
-        for (CaseInfo c : cases) {
-            c.setSymptoms(caseSymptomMapper.findByCaseId(c.getId()));
-        }
-        return cases;
+        Map<String, Object> params = new HashMap<>();
+        params.put("syndromeType", syndromeType);
+        return search(params);
     }
 
     public List<CaseInfo> findSevereCases(String syndromeType) {
@@ -80,18 +95,16 @@ public class CaseService {
 
     public List<CaseInfo> findByRiskLevel(String riskLevel) {
         List<CaseInfo> cases = caseInfoMapper.findByRiskLevel(riskLevel);
-        for (CaseInfo c : cases) {
-            c.setSymptoms(caseSymptomMapper.findByCaseId(c.getId()));
-        }
+        attachSymptoms(cases);
         return cases;
     }
 
-    public Map<String, Object> getDashboardStats() {
-        return getDashboardStats(null, null, null);
+    public Map<String, Object> getDashboardStats(String syndromeType, String district, Integer days,
+                                                 String startDate, String endDate) {
+        return getDashboardStats(buildFilterParams(syndromeType, district, days, startDate, endDate));
     }
 
-    public Map<String, Object> getDashboardStats(String syndromeType, String district, Integer days) {
-        Map<String, Object> filter = buildFilterParams(syndromeType, district, days);
+    public Map<String, Object> getDashboardStats(Map<String, Object> filter) {
         Map<String, Object> stats = new HashMap<>();
         stats.put("totalCases", caseInfoMapper.count(filter));
         stats.put("todayCases", caseInfoMapper.countToday());
@@ -104,36 +117,19 @@ public class CaseService {
         Map<String, Object> deathFilter = new HashMap<>(filter);
         deathFilter.put("isDeath", 1);
         stats.put("deathCases", caseInfoMapper.count(deathFilter));
-        stats.put("respiratoryCases", caseInfoMapper.countBySyndromeType("发热呼吸道症候群"));
-        stats.put("hemorrhageCases", caseInfoMapper.countBySyndromeType("发热伴出血症候群"));
-        stats.put("diarrheaCases", caseInfoMapper.countBySyndromeType("发热伴腹泻症候群"));
         return stats;
     }
 
     public List<CaseInfo> searchLimited(Map<String, Object> params, int limit) {
-        List<CaseInfo> cases = search(params);
-        if (cases.size() > limit) {
-            return cases.subList(0, limit);
-        }
-        return cases;
+        Map<String, Object> query = new HashMap<>(params);
+        query.put("limit", limit);
+        query.put("offset", 0);
+        return caseInfoMapper.search(query);
     }
 
-    private Map<String, Object> buildFilterParams(String syndromeType, String district, Integer days) {
-        Map<String, Object> params = new HashMap<>();
-        if (syndromeType != null && !syndromeType.isEmpty()) {
-            params.put("syndromeType", syndromeType);
-        }
-        if (district != null && !district.isEmpty()) {
-            params.put("district", district);
-        }
-        if (days != null && days > 0) {
-            params.put("days", days);
-        }
-        return params;
-    }
-
-    public Map<String, Object> buildFilterParamsPublic(String syndromeType, String district, Integer days) {
-        return buildFilterParams(syndromeType, district, days);
+    public Map<String, Object> buildFilterParams(String syndromeType, String district, Integer days,
+                                                  String startDate, String endDate) {
+        return QueryParamUtil.baseFilter(syndromeType, district, startDate, endDate, days);
     }
 
     public int countBySyndromeType(String syndromeType) {
@@ -145,9 +141,7 @@ public class CaseService {
             return Collections.emptyList();
         }
         List<CaseInfo> cases = caseInfoMapper.searchByConditionTree(conditionSql);
-        for (CaseInfo c : cases) {
-            c.setSymptoms(caseSymptomMapper.findByCaseId(c.getId()));
-        }
+        attachSymptoms(cases);
         return cases;
     }
 }

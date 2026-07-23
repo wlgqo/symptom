@@ -1,7 +1,11 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout('主动监测病例管理', ~{::content})}">
 <body>
-<div th:fragment="content">
+<div th:fragment="content" class="list-page-content">
+    <div class="scope-hint" th:if="${scopeDistrict != null}">
+        当前数据范围：<strong th:text="${scopeDistrict}">辖区</strong>（业务人员仅可查看所属辖区数据）
+    </div>
+
     <div class="quick-links">
         <a href="/" class="quick-link">监测工作台</a>
         <a href="/respiratory" class="quick-link">呼吸道监测</a>
@@ -19,7 +23,7 @@
                     <option value="女" th:selected="${params.gender == '女'}">女</option>
                 </select>
             </div>
-            <div><label>现住址行政区划</label><input type="text" name="district" th:value="${params.district}"></div>
+            <div th:if="${scopeDistrict == null}"><label>现住址行政区划</label><input type="text" name="district" th:value="${params.district}"></div>
         </div>
         <div class="form-row">
             <div><label>病例类型</label>
@@ -56,43 +60,59 @@
                 </select>
             </div>
         </div>
+        <div class="form-row">
+            <th:block th:replace="~{fragments/date-range :: dateRange(${params.startDate}, ${params.endDate})}"></th:block>
+        </div>
         <div>
             <button type="submit" class="btn-primary-custom">查询</button>
             <a href="/case/export" class="btn-outline-custom" style="text-decoration:none;margin-left:8px;">导出数据</a>
         </div>
     </form>
 
-    <div class="card-panel">
-        <h5>病例列表（共 <span th:text="${cases.size()}">0</span> 条）</h5>
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>主索引号</th><th>姓名</th><th>性别</th><th>年龄</th>
-                    <th>症候群类型</th><th>地区</th><th>诊断</th><th>风险等级</th><th>报告日期</th><th>操作</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr th:each="c : ${cases}">
-                    <td th:text="${c.mainIndex}"></td>
-                    <td th:text="${c.patientName}"></td>
-                    <td th:text="${c.gender}"></td>
-                    <td th:text="${c.age}"></td>
-                    <td th:text="${c.syndromeType}"></td>
-                    <td th:text="${c.district}"></td>
-                    <td th:text="${c.diagnosis}"></td>
-                    <td>
-                        <span th:if="${c.riskLevel}"
-                              th:class="${c.riskLevel == '高风险' ? 'badge-level badge-high' : (c.riskLevel == '中风险' ? 'badge-level badge-medium' : 'badge-level badge-low')}"
-                              th:text="${c.riskLevel}"></span>
-                    </td>
-                    <td th:text="${#dates.format(c.reportDate, 'yyyy-MM-dd')}"></td>
-                    <td>
-                        <a th:href="@{/case/detail/{id}(id=${c.id})}" class="table-link">原始病历</a>
-                        <a th:if="${session.currentUser.role != '浏览人员'}" th:href="@{/case/edit/{id}(id=${c.id})}" class="table-link" style="margin-left:8px;color:#d69e2e;">修改</a>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+    <div class="card-panel flex-grow">
+        <h5>病例列表（共 <span th:text="${pageResult.total}">0</span> 条）</h5>
+        <div class="table-scroll-panel">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>主索引号</th><th>姓名</th><th>性别</th><th>年龄</th>
+                        <th>症候群类型</th><th>地区</th><th>诊断</th><th>风险等级</th><th>报告日期</th><th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="c : ${cases}">
+                        <td th:text="${c.mainIndex}"></td>
+                        <td th:text="${c.patientName}"></td>
+                        <td th:text="${c.gender}"></td>
+                        <td th:text="${c.age}"></td>
+                        <td th:text="${c.syndromeType}"></td>
+                        <td th:text="${c.district}"></td>
+                        <td th:text="${c.diagnosis}"></td>
+                        <td>
+                            <span th:if="${c.riskLevel}"
+                                  th:class="${c.riskLevel == '高风险' ? 'badge-level badge-high' : (c.riskLevel == '中风险' ? 'badge-level badge-medium' : 'badge-level badge-low')}"
+                                  th:text="${c.riskLevel}"></span>
+                        </td>
+                        <td th:text="${#dates.format(c.reportDate, 'yyyy-MM-dd')}"></td>
+                        <td>
+                            <a th:href="@{/case/detail/{id}(id=${c.id})}" class="table-link">原始病历</a>
+                            <a th:if="${session.currentUser.role != '浏览人员'}" th:href="@{/case/edit/{id}(id=${c.id})}" class="table-link" style="margin-left:8px;color:#d69e2e;">修改</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="pagination-bar" th:if="${pageResult.total > 0}">
+            <span>第 <span th:text="${pageResult.page}">1</span> / <span th:text="${pageResult.totalPages}">1</span> 页</span>
+            <div class="pagination-links">
+                <a th:if="${pageResult.page > 1}"
+                   th:href="@{/case/list(page=${pageResult.page - 1}, pageSize=${pageResult.pageSize}, patientName=${params.patientName}, mainIndex=${params.mainIndex}, gender=${params.gender}, district=${params.district}, caseType=${params.caseType}, syndromeType=${params.syndromeType}, ageMin=${params.ageMin}, ageMax=${params.ageMax}, discoverType=${params.discoverType}, startDate=${params.startDate}, endDate=${params.endDate})}"
+                   class="page-link">上一页</a>
+                <a th:if="${pageResult.page < pageResult.totalPages}"
+                   th:href="@{/case/list(page=${pageResult.page + 1}, pageSize=${pageResult.pageSize}, patientName=${params.patientName}, mainIndex=${params.mainIndex}, gender=${params.gender}, district=${params.district}, caseType=${params.caseType}, syndromeType=${params.syndromeType}, ageMin=${params.ageMin}, ageMax=${params.ageMax}, discoverType=${params.discoverType}, startDate=${params.startDate}, endDate=${params.endDate})}"
+                   class="page-link">下一页</a>
+            </div>
+        </div>
     </div>
 </div>
 </body>

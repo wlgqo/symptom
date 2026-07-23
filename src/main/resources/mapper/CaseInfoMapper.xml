@@ -46,9 +46,7 @@
         SELECT * FROM case_info WHERE id = #{id}
     </select>
 
-    <select id="search" resultMap="BaseResultMap" parameterType="map">
-        SELECT * FROM case_info
-        <where>
+    <sql id="caseFilterWhere">
             <if test="patientName != null and patientName != ''">
                 AND patient_name LIKE '%' || #{patientName} || '%'
             </if>
@@ -58,8 +56,11 @@
             <if test="gender != null and gender != ''">
                 AND gender = #{gender}
             </if>
-            <if test="district != null and district != ''">
-                AND district LIKE '%' || #{district} || '%'
+            <if test="districtScope != null and districtScope != ''">
+                AND district = #{districtScope}
+            </if>
+            <if test="district != null and district != '' and (districtScope == null or districtScope == '')">
+                AND district = #{district}
             </if>
             <if test="caseType != null and caseType != ''">
                 AND case_type = #{caseType}
@@ -79,7 +80,13 @@
             <if test="riskLevel != null and riskLevel != ''">
                 AND risk_level = #{riskLevel}
             </if>
-            <if test="days != null">
+            <if test="startDate != null and startDate != ''">
+                AND report_date &gt;= #{startDate}
+            </if>
+            <if test="endDate != null and endDate != ''">
+                AND report_date &lt;= #{endDate}
+            </if>
+            <if test="days != null and (startDate == null or startDate == '')">
                 AND report_date &gt;= date('now', '-' || #{days} || ' days')
             </if>
             <if test="isSevere != null">
@@ -88,34 +95,23 @@
             <if test="isDeath != null">
                 AND is_death = #{isDeath}
             </if>
+    </sql>
+
+    <select id="search" resultMap="BaseResultMap" parameterType="map">
+        SELECT * FROM case_info
+        <where>
+            <include refid="caseFilterWhere"/>
         </where>
         ORDER BY report_date DESC
+        <if test="limit != null">
+            LIMIT #{limit} OFFSET #{offset}
+        </if>
     </select>
 
     <select id="count" resultType="int" parameterType="map">
         SELECT COUNT(*) FROM case_info
         <where>
-            <if test="patientName != null and patientName != ''">
-                AND patient_name LIKE '%' || #{patientName} || '%'
-            </if>
-            <if test="syndromeType != null and syndromeType != ''">
-                AND syndrome_type = #{syndromeType}
-            </if>
-            <if test="district != null and district != ''">
-                AND district = #{district}
-            </if>
-            <if test="days != null">
-                AND report_date &gt;= date('now', '-' || #{days} || ' days')
-            </if>
-            <if test="riskLevel != null and riskLevel != ''">
-                AND risk_level = #{riskLevel}
-            </if>
-            <if test="isSevere != null">
-                AND is_severe = #{isSevere}
-            </if>
-            <if test="isDeath != null">
-                AND is_death = #{isDeath}
-            </if>
+            <include refid="caseFilterWhere"/>
         </where>
     </select>
 
@@ -143,76 +139,57 @@
         SELECT * FROM case_info WHERE risk_level = #{riskLevel} ORDER BY report_date DESC
     </select>
 
-    <select id="countByDate" resultType="map">
+    <sql id="analyticsWhere">
+            <if test="syndromeType != null and syndromeType != ''">
+                AND syndrome_type = #{syndromeType}
+            </if>
+            <if test="districtScope != null and districtScope != ''">
+                AND district = #{districtScope}
+            </if>
+            <if test="district != null and district != '' and (districtScope == null or districtScope == '')">
+                AND district = #{district}
+            </if>
+            <if test="startDate != null and startDate != ''">
+                AND report_date &gt;= #{startDate}
+            </if>
+            <if test="endDate != null and endDate != ''">
+                AND report_date &lt;= #{endDate}
+            </if>
+            <if test="days != null and (startDate == null or startDate == '')">
+                AND report_date &gt;= date('now', '-' || #{days} || ' days')
+            </if>
+    </sql>
+
+    <select id="countByDate" resultType="map" parameterType="map">
         <choose>
             <when test="groupBy == 'week'">
                 SELECT strftime('%Y-W%W', report_date) as period, COUNT(*) as cnt
                 FROM case_info
-                <where>
-                    <if test="syndromeType != null and syndromeType != ''">
-                        AND syndrome_type = #{syndromeType}
-                    </if>
-                    <if test="district != null and district != ''">
-                        AND district = #{district}
-                    </if>
-                    <if test="days != null">
-                        AND report_date &gt;= date('now', '-' || #{days} || ' days')
-                    </if>
-                </where>
+                <where><include refid="analyticsWhere"/></where>
                 GROUP BY period ORDER BY period
             </when>
             <when test="groupBy == 'month'">
                 SELECT strftime('%Y-%m', report_date) as period, COUNT(*) as cnt
                 FROM case_info
-                <where>
-                    <if test="syndromeType != null and syndromeType != ''">
-                        AND syndrome_type = #{syndromeType}
-                    </if>
-                    <if test="district != null and district != ''">
-                        AND district = #{district}
-                    </if>
-                    <if test="days != null">
-                        AND report_date &gt;= date('now', '-' || #{days} || ' days')
-                    </if>
-                </where>
+                <where><include refid="analyticsWhere"/></where>
                 GROUP BY period ORDER BY period
             </when>
             <otherwise>
                 SELECT report_date as period, COUNT(*) as cnt
                 FROM case_info
-                <where>
-                    <if test="syndromeType != null and syndromeType != ''">
-                        AND syndrome_type = #{syndromeType}
-                    </if>
-                    <if test="district != null and district != ''">
-                        AND district = #{district}
-                    </if>
-                    <if test="days != null">
-                        AND report_date &gt;= date('now', '-' || #{days} || ' days')
-                    </if>
-                </where>
+                <where><include refid="analyticsWhere"/></where>
                 GROUP BY report_date ORDER BY report_date
             </otherwise>
         </choose>
     </select>
 
-    <select id="countByDistrict" resultType="map">
+    <select id="countByDistrict" resultType="map" parameterType="map">
         SELECT district as name, COUNT(*) as value FROM case_info
-        <where>
-            <if test="syndromeType != null and syndromeType != ''">
-                AND syndrome_type = #{syndromeType}
-            </if>
-            <if test="district != null and district != ''">
-                AND district = #{district}
-            </if>
-            <if test="days != null">
-                AND report_date &gt;= date('now', '-' || #{days} || ' days')
-            </if>
-        </where>
+        <where><include refid="analyticsWhere"/></where>
         GROUP BY district ORDER BY value DESC
     </select>
 
-    <select id="countByAgeGroup" resultType="map">
+    <select id="countByAgeGroup" resultType="map" parameterType="map">
         SELECT
             CASE
                 WHEN age &lt; 18 THEN '0-17岁'
@@ -222,26 +199,20 @@
             END as name,
             COUNT(*) as value
         FROM case_info
-        <if test="syndromeType != null and syndromeType != ''">
-            WHERE syndrome_type = #{syndromeType}
-        </if>
+        <where><include refid="analyticsWhere"/></where>
         GROUP BY name
     </select>
 
-    <select id="countByGender" resultType="map">
+    <select id="countByGender" resultType="map" parameterType="map">
         SELECT gender as name, COUNT(*) as value FROM case_info
-        <if test="syndromeType != null and syndromeType != ''">
-            WHERE syndrome_type = #{syndromeType}
-        </if>
+        <where><include refid="analyticsWhere"/></where>
         GROUP BY gender
     </select>
 
-    <select id="countByOccupation" resultType="map">
+    <select id="countByOccupation" resultType="map" parameterType="map">
         SELECT occupation as name, COUNT(*) as value FROM case_info
-        <if test="syndromeType != null and syndromeType != ''">
-            WHERE syndrome_type = #{syndromeType}
-        </if>
-        GROUP BY occupation ORDER BY value DESC
+        <where><include refid="analyticsWhere"/></where>
+        GROUP BY occupation ORDER BY value DESC LIMIT 10
     </select>
 
     <select id="countToday" resultType="int">

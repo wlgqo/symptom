@@ -1497,3 +1497,148 @@ a:hover { color: var(--primary-dark); }
     .grid-2, .grid-3 { grid-template-columns: 1fr; }
     .app-footer { flex-direction: column; gap: 4px; text-align: center; }
 }
+
+/* ========== 侧栏分组折叠 ========== */
+.nav-group { margin-bottom: 2px; }
+
+.nav-group-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 14px 20px 6px;
+    border: none;
+    background: transparent;
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 500;
+    cursor: pointer;
+    text-align: left;
+}
+
+.nav-group-title:hover { color: var(--primary); }
+
+.nav-group-chevron {
+    width: 12px;
+    height: 12px;
+    transition: transform 0.2s;
+    opacity: 0.6;
+}
+
+.nav-group.collapsed .nav-group-chevron { transform: rotate(-90deg); }
+.nav-group.collapsed .nav-group-body { display: none; }
+
+/* ========== 日期区间 / 分页 / 表格滚动 ========== */
+.date-range-fields {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.date-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.form-input-date {
+    height: 32px;
+    padding: 0 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 13px;
+    color: var(--text);
+    background: #fff;
+}
+
+.table-scroll-panel {
+    max-height: 420px;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+
+.table-scroll-panel .data-table { margin: 0; }
+.table-scroll-panel .data-table thead th {
+    position: sticky;
+    top: 0;
+    background: #fafbfc;
+    z-index: 1;
+}
+
+.pagination-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0 0;
+    font-size: 13px;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+}
+
+.pagination-links { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.page-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    height: 32px;
+    padding: 0 8px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-secondary);
+    font-size: 13px;
+    text-decoration: none !important;
+}
+
+.page-link:hover { border-color: var(--primary); color: var(--primary); }
+.page-link.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+}
+
+.list-page-content {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 180px);
+    min-height: 480px;
+    overflow: hidden;
+}
+
+.list-page-content .card-panel.flex-grow {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    margin-bottom: 0;
+}
+
+.list-page-content .table-scroll-panel { flex: 1; max-height: none; }
+
+.workbench-list .warning-list,
+.workbench-detail .detail-section-scroll {
+    max-height: calc(100vh - 280px);
+    overflow-y: auto;
+}
+
+.map-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    font-size: 13px;
+}
+
+.map-breadcrumb a { color: var(--primary); }
+.map-breadcrumb .sep { color: var(--text-muted); }
+
+.scope-hint {
+    font-size: 12px;
+    color: var(--primary);
+    padding: 6px 12px;
+    background: var(--primary-light);
+    border-radius: 6px;
+    margin-bottom: 12px;
+}

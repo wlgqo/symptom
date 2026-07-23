@@ -8,6 +8,7 @@ public class SysUser {
     private String password;
     private String role;
     private String realName;
+    private String districtScope;
     private Date createdAt;
 
     public Integer getId() { return id; }
@@ -20,6 +21,8 @@ public class SysUser {
     public void setRole(String role) { this.role = role; }
     public String getRealName() { return realName; }
     public void setRealName(String realName) { this.realName = realName; }
+    public String getDistrictScope() { return districtScope; }
+    public void setDistrictScope(String districtScope) { this.districtScope = districtScope; }
     public Date getCreatedAt() { return createdAt; }
     public void setCreatedAt(Date createdAt) { this.createdAt = createdAt; }
 }

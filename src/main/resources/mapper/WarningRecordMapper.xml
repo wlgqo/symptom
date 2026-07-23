@@ -23,19 +23,55 @@
         WHERE r.status = #{status}
         ORDER BY r.warning_time DESC
     </select>
-    <select id="search" resultType="WarningRecord">
-        SELECT r.*, m.model_name as modelName FROM warning_record r
-        LEFT JOIN warning_model m ON r.model_id = m.id
-        <where>
+
+    <sql id="warningFilterWhere">
             <if test="syndromeType != null and syndromeType != ''">
                 AND r.syndrome_type = #{syndromeType}
             </if>
             <if test="status != null and status != ''">
                 AND r.status = #{status}
             </if>
+            <if test="districtScope != null and districtScope != ''">
+                AND r.district = #{districtScope}
+            </if>
+            <if test="district != null and district != '' and (districtScope == null or districtScope == '')">
+                AND r.district = #{district}
+            </if>
+            <if test="startDate != null and startDate != ''">
+                AND date(r.warning_time) &gt;= #{startDate}
+            </if>
+            <if test="endDate != null and endDate != ''">
+                AND date(r.warning_time) &lt;= #{endDate}
+            </if>
+    </sql>
+
+    <select id="search" resultType="WarningRecord" parameterType="map">
+        SELECT r.*, m.model_name as modelName FROM warning_record r
+        LEFT JOIN warning_model m ON r.model_id = m.id
+        <where>
+            <include refid="warningFilterWhere"/>
         </where>
         ORDER BY r.warning_time DESC
+        <if test="limit != null">
+            LIMIT #{limit} OFFSET #{offset}
+        </if>
     </select>
+
+    <select id="count" resultType="int" parameterType="map">
+        SELECT COUNT(*) FROM warning_record r
+        <where>
+            <include refid="warningFilterWhere"/>
+        </where>
+    </select>
+
+    <select id="countScoped" resultType="int" parameterType="map">
+        SELECT COUNT(*) FROM warning_record r
+        <where>
+            AND r.status IN ('待研判', '已确认', '处置中', '待处置')
+            <include refid="warningFilterWhere"/>
+        </where>
+    </select>
+
     <select id="findByModelId" resultType="WarningRecord">
         SELECT r.*, m.model_name as modelName FROM warning_record r
         LEFT JOIN warning_model m ON r.model_id = m.id
