@@ -105,6 +105,9 @@ CREATE TABLE IF NOT EXISTS warning_model (
     model_name VARCHAR(100) NOT NULL,
     model_type VARCHAR(50) NOT NULL,
     syndrome_type VARCHAR(50),
+    region_scope VARCHAR(50),
+    warning_type VARCHAR(50),
+    level_threshold_json TEXT,
     config_json TEXT,
     description TEXT,
     enabled INTEGER DEFAULT 1

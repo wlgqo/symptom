@@ -24,12 +24,15 @@ public class DataScopeService {
         return hasDistrictScope(user) && "成都市".equals(user.getDistrictScope().trim());
     }
 
+    public boolean isProvincial(SysUser user) {
+        return hasDistrictScope(user) && "四川省".equals(user.getDistrictScope().trim());
+    }
+
     /**
-     * 业务人员仅能查看所属辖区、机构数据；管理员不限制。
-     * district_scope=成都市 表示全市各区县数据。
+     * 业务人员仅能查看所属辖区、机构数据；管理员/省级不限制。
      */
     public void applyCaseScope(Map<String, Object> params, SysUser user) {
-        if (user == null || isAdmin(user)) {
+        if (user == null || isAdmin(user) || isProvincial(user)) {
             return;
         }
         if (isCityWide(user)) {
@@ -58,15 +61,11 @@ public class DataScopeService {
         return hasHospitalScope(user) ? user.getHospitalScope().trim() : null;
     }
 
-    /**
-     * 未传筛选条件时，默认使用用户所属地区、机构。
-     * 全市用户不默认锁定单一区县。
-     */
     public String resolveDistrict(String requested, SysUser user) {
         if (requested != null && !requested.trim().isEmpty()) {
             return requested.trim();
         }
-        if (isCityWide(user)) {
+        if (isCityWide(user) || isProvincial(user)) {
             return null;
         }
         return scopeDistrict(user);

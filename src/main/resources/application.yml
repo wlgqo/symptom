@@ -21,7 +21,7 @@ spring:
     init:
       mode: always
       schema-locations: classpath:schema.sql
-      data-locations: classpath:data.sql,classpath:data_bulk.sql
+      data-locations: classpath:data.sql,classpath:data_bulk.sql,classpath:data_provincial.sql
       encoding: UTF-8
 
 mybatis:

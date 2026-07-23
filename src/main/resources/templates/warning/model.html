@@ -32,6 +32,8 @@
             <div class="detail-grid">
                 <div class="detail-item"><label>模型类型</label><span th:text="${selected.modelType}"></span></div>
                 <div class="detail-item"><label>监测主题</label><span th:text="${selected.syndromeType}"></span></div>
+                <div class="detail-item"><label>预警地区</label><span th:text="${selected.regionScope != null ? selected.regionScope : '—'}"></span></div>
+                <div class="detail-item"><label>预警类型</label><span th:text="${selected.warningType != null ? selected.warningType : '—'}"></span></div>
                 <div class="detail-item"><label>运行状态</label>
                     <span th:class="${selected.enabled == 1 ? 'badge-level badge-green' : 'badge-level badge-low'}"
                           th:text="${selected.enabled == 1 ? '运行中' : '已停用'}"></span>
@@ -41,8 +43,25 @@
                 <h6>模型说明</h6>
                 <p id="modelDescView" th:text="${selected.description}">说明</p>
             </div>
+            <div class="detail-section">
+                <h6>等级阈值配置</h6>
+                <pre class="json-preview" th:text="${selected.levelThresholdJson}"></pre>
+            </div>
             <div class="detail-section" th:if="${session.currentUser.role == '管理员'}">
                 <h6>编辑配置</h6>
+                <div class="form-group"><label>预警地区</label>
+                    <select id="modelRegionEdit" class="form-select-sm" style="width:100%;">
+                        <option th:each="r : ${warningRegions}" th:value="${r}" th:text="${r}"
+                                th:selected="${r == selected.regionScope}"></option>
+                    </select>
+                </div>
+                <div class="form-group"><label>预警类型</label>
+                    <select id="modelWarningTypeEdit" class="form-select-sm" style="width:100%;">
+                        <option th:each="t : ${warningTypes}" th:value="${t}" th:text="${t}"
+                                th:selected="${t == selected.warningType}"></option>
+                    </select>
+                </div>
+                <div class="form-group"><label>等级阈值 JSON</label><textarea id="modelLevelEdit" class="form-textarea code" rows="4" th:text="${selected.levelThresholdJson}"></textarea></div>
                 <div class="form-group"><label>模型说明</label><textarea id="modelDescEdit" class="form-textarea" rows="3" th:text="${selected.description}"></textarea></div>
                 <div class="form-group"><label>参数 JSON</label><textarea id="modelConfigEdit" class="form-textarea code" rows="5" th:text="${selected.configJson}"></textarea></div>
                 <button class="btn-primary-sm" th:onclick="'saveModelConfig(' + ${selected.id} + ')'">保存配置</button>
@@ -96,6 +115,9 @@
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({
                     id: id,
+                    regionScope: document.getElementById('modelRegionEdit').value,
+                    warningType: document.getElementById('modelWarningTypeEdit').value,
+                    levelThresholdJson: document.getElementById('modelLevelEdit').value,
                     description: document.getElementById('modelDescEdit').value,
                     configJson: document.getElementById('modelConfigEdit').value,
                     enabled: 1

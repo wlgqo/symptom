@@ -36,7 +36,7 @@ public final class FilterViewHelper {
         String resolvedHospital = dataScopeService.resolveHospital(hospital, user);
         model.addAttribute("filterDistrict", resolvedDistrict);
         model.addAttribute("filterHospital", resolvedHospital);
-        model.addAttribute("districtOptions", filterOptionService.getDistricts());
+        model.addAttribute("districtOptions", filterOptionService.getDistrictsForUser(user, dataScopeService));
         model.addAttribute("hospitalOptions", filterOptionService.getHospitals(resolvedDistrict));
         model.addAttribute("scopeDistrict", dataScopeService.scopeDistrict(user));
         model.addAttribute("scopeHospital", dataScopeService.scopeHospital(user));

@@ -138,6 +138,13 @@ public class SyndromeMonitorController {
         model.addAttribute("syndromeConfig", syndromeConfigService.findByName(meta.syndromeType));
         model.addAttribute("models", warningService.getModelsBySyndrome(meta.syndromeType));
 
+        List<com.symptom.entity.WarningModel> syndromeModels = warningService.getModelsBySyndrome(meta.syndromeType);
+        String levelThresholdJson = syndromeModels.isEmpty() ? null : syndromeModels.get(0).getLevelThresholdJson();
+        model.addAttribute("historicalTrend", analysisService.getHistoricalTrend(filter, levelThresholdJson));
+        model.addAttribute("indicatorEval", analysisService.evaluateIndicators(filter, meta.syndromeType));
+        model.addAttribute("warningRegions", FilterOptionService.WARNING_REGIONS);
+        model.addAttribute("warningTypes", FilterOptionService.WARNING_TYPES);
+
         Map<String, Object> warningFilter = new HashMap<>(filter);
         PageResult<WarningRecord> warningPageResult = warningService.searchPage(warningFilter, warningPage, 10);
         model.addAttribute("warnings", warningPageResult.getRecords());

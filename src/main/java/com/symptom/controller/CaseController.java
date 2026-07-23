@@ -105,24 +105,13 @@ public class CaseController {
     }
 
     @GetMapping("/edit/{id}")
-    public String editPage(@PathVariable Integer id, Model model, HttpSession session) {
-        SysUser user = (SysUser) session.getAttribute("currentUser");
-        if ("浏览人员".equals(user.getRole())) {
-            return "redirect:/case/detail/" + id;
-        }
-        CaseInfo caseInfo = caseService.getById(id);
-        if (caseInfo != null && !canAccessCase(user, caseInfo)) {
-            return "redirect:/case/list";
-        }
-        model.addAttribute("caseInfo", caseInfo);
-        return "case/edit";
+    public String editPage(@PathVariable Integer id) {
+        return "redirect:/case/detail/" + id;
     }
 
     @PostMapping("/update")
-    public String update(CaseInfo caseInfo, HttpSession session) {
-        SysUser user = (SysUser) session.getAttribute("currentUser");
-        caseService.update(caseInfo, user.getRealName());
-        return "redirect:/case/detail/" + caseInfo.getId();
+    public String update(@RequestParam Integer id) {
+        return "redirect:/case/detail/" + id;
     }
 
     @GetMapping("/export")
@@ -156,7 +145,7 @@ public class CaseController {
     }
 
     private boolean canAccessCase(SysUser user, CaseInfo caseInfo) {
-        if (dataScopeService.isAdmin(user)) {
+        if (dataScopeService.isAdmin(user) || dataScopeService.isProvincial(user)) {
             return true;
         }
         if (dataScopeService.isCityWide(user)) {

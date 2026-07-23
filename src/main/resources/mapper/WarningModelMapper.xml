@@ -13,8 +13,13 @@
     <update id="update">
         UPDATE warning_model SET
             model_name = #{modelName},
-            description = #{description},
+            model_type = #{modelType},
+            syndrome_type = #{syndromeType},
+            region_scope = #{regionScope},
+            warning_type = #{warningType},
+            level_threshold_json = #{levelThresholdJson},
             config_json = #{configJson},
+            description = #{description},
             enabled = #{enabled}
         WHERE id = #{id}
     </update>

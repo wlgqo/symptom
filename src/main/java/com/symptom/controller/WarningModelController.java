@@ -38,6 +38,8 @@ public class WarningModelController {
             selected = models.get(0);
         }
         model.addAttribute("selected", selected);
+        model.addAttribute("warningRegions", com.symptom.service.FilterOptionService.WARNING_REGIONS);
+        model.addAttribute("warningTypes", com.symptom.service.FilterOptionService.WARNING_TYPES);
         if (selected != null) {
             model.addAttribute("modelWarnings", warningService.getRecordsByModelId(selected.getId()));
         }
@@ -86,9 +88,12 @@ public class WarningModelController {
         }
         WarningModel existing = warningService.getModelById(model.getId());
         if (existing != null) {
-            existing.setDescription(model.getDescription());
-            existing.setConfigJson(model.getConfigJson());
-            existing.setEnabled(model.getEnabled());
+            if (model.getDescription() != null) existing.setDescription(model.getDescription());
+            if (model.getConfigJson() != null) existing.setConfigJson(model.getConfigJson());
+            if (model.getRegionScope() != null) existing.setRegionScope(model.getRegionScope());
+            if (model.getWarningType() != null) existing.setWarningType(model.getWarningType());
+            if (model.getLevelThresholdJson() != null) existing.setLevelThresholdJson(model.getLevelThresholdJson());
+            if (model.getEnabled() != null) existing.setEnabled(model.getEnabled());
             warningService.updateModel(existing);
         }
         result.put("success", true);

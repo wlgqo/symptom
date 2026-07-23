@@ -102,7 +102,6 @@
                         <td th:text="${#dates.format(c.reportDate, 'yyyy-MM-dd')}"></td>
                         <td>
                             <a th:href="@{/case/detail/{id}(id=${c.id})}" class="table-link">原始病历</a>
-                            <a th:if="${session.currentUser.role != '浏览人员'}" th:href="@{/case/edit/{id}(id=${c.id})}" class="table-link" style="margin-left:8px;color:#d69e2e;">修改</a>
                         </td>
                     </tr>
                 </tbody>

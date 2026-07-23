@@ -120,6 +120,21 @@
                 <p class="panel-desc" th:text="${selectedModel.description}"></p>
                 <form id="modelForm" onsubmit="return false;">
                     <input type="hidden" id="modelId" th:value="${selectedModel.id}">
+                    <div class="form-group"><label>预警地区</label>
+                        <select id="modelRegion" class="form-select-sm" style="width:100%;">
+                            <option th:each="r : ${warningRegions}" th:value="${r}" th:text="${r}"
+                                    th:selected="${r == selectedModel.regionScope}"></option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>预警类型</label>
+                        <select id="modelWarningType" class="form-select-sm" style="width:100%;">
+                            <option th:each="t : ${warningTypes}" th:value="${t}" th:text="${t}"
+                                    th:selected="${t == selectedModel.warningType}"></option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>等级阈值 JSON（低/中/高风险 · 病例数、上升比例）</label>
+                        <textarea id="modelLevelThreshold" class="form-textarea code" rows="5" th:text="${selectedModel.levelThresholdJson}"></textarea>
+                    </div>
                     <div class="form-group"><label>模型说明</label><textarea id="modelDesc" class="form-textarea" rows="3" th:text="${selectedModel.description}"></textarea></div>
                     <div class="form-group"><label>参数配置 JSON</label><textarea id="modelConfig" class="form-textarea code" rows="6" th:text="${selectedModel.configJson}"></textarea></div>
                     <div class="form-group"><label>状态</label>
@@ -279,6 +294,9 @@
         function saveModel() {
             const data = {
                 id: parseInt(document.getElementById('modelId').value),
+                regionScope: document.getElementById('modelRegion').value,
+                warningType: document.getElementById('modelWarningType').value,
+                levelThresholdJson: document.getElementById('modelLevelThreshold').value,
                 description: document.getElementById('modelDesc').value,
                 configJson: document.getElementById('modelConfig').value,
                 enabled: parseInt(document.getElementById('modelEnabled').value)

@@ -95,18 +95,20 @@ public class DashboardController {
         model.addAttribute("syndromeConfigs", syndromeConfigService.findAll());
 
         List<SurveillanceEvent> allEvents = eventService.findAll();
-        if (dataScopeService.isCityWide(user)) {
-            java.util.Set<String> chengdu = new java.util.HashSet<>(FilterOptionService.getChengduDistricts());
-            allEvents = allEvents.stream()
-                    .filter(e -> e.getDistrict() != null && chengdu.contains(e.getDistrict()))
-                    .collect(Collectors.toList());
-        } else {
-            String effectiveDistrict = dataScopeService.hasDistrictScope(user)
-                    ? user.getDistrictScope() : (String) filter.get("district");
-            if (effectiveDistrict != null && !effectiveDistrict.isEmpty()) {
+        if (!dataScopeService.isAdmin(user) && !dataScopeService.isProvincial(user)) {
+            if (dataScopeService.isCityWide(user)) {
+                java.util.Set<String> chengdu = new java.util.HashSet<>(FilterOptionService.getChengduDistricts());
                 allEvents = allEvents.stream()
-                        .filter(e -> effectiveDistrict.equals(e.getDistrict()))
+                        .filter(e -> e.getDistrict() != null && chengdu.contains(e.getDistrict()))
                         .collect(Collectors.toList());
+            } else {
+                String effectiveDistrict = dataScopeService.hasDistrictScope(user)
+                        ? user.getDistrictScope() : (String) filter.get("district");
+                if (effectiveDistrict != null && !effectiveDistrict.isEmpty()) {
+                    allEvents = allEvents.stream()
+                            .filter(e -> effectiveDistrict.equals(e.getDistrict()))
+                            .collect(Collectors.toList());
+                }
             }
         }
         model.addAttribute("recentEvents", allEvents.isEmpty() ?

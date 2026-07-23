@@ -193,15 +193,60 @@
     <!-- 预警模型 -->
     <div class="tab-content" th:classappend="${activeTab == 'warning' ? ' active' : ''}" id="tab-warning">
         <div class="card-panel">
+            <h5>历史发病趋势 <span class="panel-action">历史至今 · 预警核心指标</span></h5>
+            <div class="warning-trend-summary" th:if="${historicalTrend != null}">
+                <span>累计病例：<strong th:text="${historicalTrend.total}">0</strong></span>
+                <span>当前风险：
+                    <span class="badge-level"
+                          th:classappend="${historicalTrend.latestLevel == '高风险' ? ' badge-red' : (historicalTrend.latestLevel == '中风险' ? ' badge-orange' : (historicalTrend.latestLevel == '低风险' ? ' badge-green' : ' badge-blue'))}"
+                          th:text="${historicalTrend.latestLevel}">正常</span>
+                </span>
+                <span>环比变化：<strong th:text="${historicalTrend.latestRise + '%'}">0%</strong></span>
+            </div>
+            <div id="historicalTrendChart" class="chart-container"></div>
+        </div>
+
+        <div class="card-panel">
+            <h5>监测指标实时评估 <span class="panel-action">异常高亮</span></h5>
+            <div class="table-scroll-panel">
+                <table class="data-table compact" id="indicatorEvalTable">
+                    <thead><tr><th>指标</th><th>分类</th><th>当前值</th><th>状态</th></tr></thead>
+                    <tbody>
+                        <tr th:each="ind : ${indicatorEval}"
+                            th:style="${ind.abnormal ? 'background:' + ind.bgColor : ''}">
+                            <td th:text="${ind.name}" th:style="${ind.abnormal ? 'color:' + ind.color + ';font-weight:600' : ''}"></td>
+                            <td><span class="badge-level badge-blue" th:text="${ind.category}"></span></td>
+                            <td th:style="${ind.abnormal ? 'color:' + ind.color + ';font-weight:600' : ''}">
+                                <span th:text="${ind.value}"></span><span th:text="${ind.unit}" style="font-size:11px;color:#718096;margin-left:2px;"></span>
+                            </td>
+                            <td>
+                                <span class="badge-level"
+                                      th:classappend="${ind.status == '严重异常' ? ' badge-red' : (ind.status == '异常' ? ' badge-orange' : ' badge-green')}"
+                                      th:text="${ind.status}"></span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card-panel">
             <h5>预置预警模型</h5>
             <div class="table-scroll-panel">
                 <table class="data-table">
-                    <thead><tr><th>模型名称</th><th>模型类型</th><th>说明</th><th>状态</th><th>操作</th></tr></thead>
+                    <thead><tr><th>模型名称</th><th>预警地区</th><th>预警类型</th><th>等级阈值</th><th>状态</th><th>操作</th></tr></thead>
                     <tbody>
                         <tr th:each="m : ${models}">
-                            <td th:text="${m.modelName}"></td>
-                            <td th:text="${m.modelType}"></td>
-                            <td th:text="${m.description}"></td>
+                            <td>
+                                <div th:text="${m.modelName}" style="font-weight:500;"></div>
+                                <div th:text="${m.modelType}" style="font-size:11px;color:#718096;"></div>
+                            </td>
+                            <td th:text="${m.regionScope != null ? m.regionScope : '—'}"></td>
+                            <td th:text="${m.warningType != null ? m.warningType : '—'}"></td>
+                            <td style="font-size:11px;max-width:280px;">
+                                <span th:if="${m.levelThresholdJson != null}" th:utext="${#strings.replace(#strings.replace(m.levelThresholdJson, '},{', '},<br/>{'), '[{', '[<br/>{')}"></span>
+                                <span th:if="${m.levelThresholdJson == null}">—</span>
+                            </td>
                             <td th:text="${m.enabled == 1 ? '启用' : '禁用'}"></td>
                             <td><button type="button" class="btn-primary-custom btn-sm run-model-btn" th:data-id="${m.id}">运行分析</button></td>
                         </tr>
@@ -265,6 +310,7 @@
         var clinicalData = /*[[${clinicalData}]]*/ {};
         var severeDeathData = /*[[${severeDeathData}]]*/ {};
         var riskData = /*[[${riskData}]]*/ {};
+        var historicalTrend = /*[[${historicalTrend}]]*/ {};
 
         document.querySelectorAll('#mainTabs .tab-item').forEach(function(tab) {
             tab.addEventListener('click', function() {
@@ -414,6 +460,40 @@
                     title: { text: '地图加载失败，请使用柱状图下钻', left: 'center', top: 'middle', textStyle: { fontSize: 14, color: '#999' } }
                 });
             });
+
+        if (document.getElementById('historicalTrendChart')) {
+            var histChart = trackChart(echarts.init(document.getElementById('historicalTrendChart')));
+            var histLabels = historicalTrend.labels || [];
+            var histValues = historicalTrend.values || [];
+            var histColors = historicalTrend.colors || [];
+            histChart.setOption({
+                tooltip: {
+                    trigger: 'axis',
+                    formatter: function(params) {
+                        var idx = params[0].dataIndex;
+                        var rise = (historicalTrend.risePercents || [])[idx] || 0;
+                        var level = (historicalTrend.levels || [])[idx] || '正常';
+                        return params[0].name + '<br/>病例数: ' + params[0].value
+                            + '<br/>环比: ' + rise + '%<br/>风险: ' + level;
+                    }
+                },
+                legend: { data: ['月发病数'], top: 0, right: 8, textStyle: { fontSize: 11 } },
+                grid: { left: 42, right: 16, top: 32, bottom: 48 },
+                xAxis: { type: 'category', data: histLabels, axisLabel: { fontSize: 10, rotate: histLabels.length > 12 ? 35 : 0 } },
+                yAxis: { type: 'value', name: '病例数', nameTextStyle: { fontSize: 11 } },
+                series: [{
+                    name: '月发病数', type: 'bar', barMaxWidth: 22,
+                    data: histValues.map(function(v, i) {
+                        return { value: v, itemStyle: { color: histColors[i] || '#1677ff' } };
+                    }),
+                    markLine: {
+                        silent: true,
+                        lineStyle: { type: 'dashed', color: '#faad14' },
+                        data: [{ type: 'average', name: '均值' }]
+                    }
+                }]
+            });
+        }
 
         window.addEventListener('resize', function() { charts.forEach(function(c){ try { c.resize(); } catch(e){} }); });
 

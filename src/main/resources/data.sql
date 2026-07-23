@@ -23,6 +23,7 @@ INSERT INTO sys_user (username, password, role, real_name, district_scope, hospi
 ('admin', 'admin123', '管理员', '系统管理员', NULL, NULL),
 ('cdc01', 'cdc123', '业务人员', '成都市疾控', '成都市', NULL),
 ('cdc02', 'cdc123', '业务人员', '武侯区疾控', '武侯区', NULL),
+('cdc_prov', 'cdc123', '业务人员', '四川省疾控', '四川省', NULL),
 ('viewer', 'viewer123', '浏览人员', '李浏览', NULL, NULL);
 
 -- 症状术语配置
@@ -61,21 +62,21 @@ INSERT INTO monitor_indicator (indicator_code, indicator_name, category, syndrom
 ('PATHOGEN_RATE', '病原检出率', '临床指标', '发热伴腹泻症候群', '粪便病原学检测阳性病例占比。', '阳性数/检测数×100%', '%', '{"warning":20}', '检验数据', '启用', 62);
 
 -- 预警模型
-INSERT INTO warning_model (model_name, model_type, syndrome_type, config_json, description, enabled) VALUES
-('固定阈值模型', '固定阈值模型', '发热呼吸道症候群', '{"threshold":5}', '根据业务设定阈值判断异常', 1),
-('移动百分位模型', '移动百分位模型', '发热呼吸道症候群', '{"percentile":90,"window":7}', '基于历史周期数据计算动态阈值', 1),
-('CUSUM累计和控制图模型', 'CUSUM累计和控制图模型', '发热呼吸道症候群', '{"k":0.5,"h":4}', '检测持续性异常变化', 1),
-('移动流行区间模型', '移动流行区间模型', '发热呼吸道症候群', '{"baseline":3,"multiplier":1.5}', '判断是否超过流行水平', 1),
-('EWMA指数加权移动平均模型', 'EWMA指数加权移动平均模型', '发热呼吸道症候群', '{"alpha":0.3,"threshold":1.2}', '平滑分析近期趋势', 1),
-('ARIMA模型', 'ARIMA模型', '发热呼吸道症候群', '{"p":1,"d":1,"q":1}', '基于时间序列预测异常', 1),
-('场所聚集性模型', '场所聚集性模型', '发热呼吸道症候群', '{"radius":5,"minCases":3}', '分析病例空间聚集情况', 1);
+INSERT INTO warning_model (model_name, model_type, syndrome_type, region_scope, warning_type, level_threshold_json, config_json, description, enabled) VALUES
+('固定阈值模型', '固定阈值模型', '发热呼吸道症候群', '四川省', '病例数异常', '{"levels":[{"level":"低风险","caseCount":5,"risePercent":30,"color":"#52c41a"},{"level":"中风险","caseCount":10,"risePercent":60,"color":"#faad14"},{"level":"高风险","caseCount":20,"risePercent":100,"color":"#ff4d4f"}]}', '{"threshold":5}', '当监测周期内报告病例数超过设定阈值时触发预警，适用于基线明确的症候群。', 1),
+('移动百分位模型', '移动百分位模型', '发热呼吸道症候群', '成都市', '趋势异常', '{"levels":[{"level":"低风险","caseCount":8,"risePercent":40,"color":"#52c41a"},{"level":"中风险","caseCount":15,"risePercent":70,"color":"#faad14"},{"level":"高风险","caseCount":25,"risePercent":120,"color":"#ff4d4f"}]}', '{"percentile":90,"window":7}', '基于近7日历史数据第90百分位计算动态阈值，识别趋势性上升。', 1),
+('CUSUM累计和控制图模型', 'CUSUM累计和控制图模型', '发热呼吸道症候群', '四川省', '趋势异常', '{"levels":[{"level":"低风险","caseCount":6,"risePercent":35,"color":"#52c41a"},{"level":"中风险","caseCount":12,"risePercent":65,"color":"#faad14"},{"level":"高风险","caseCount":18,"risePercent":90,"color":"#ff4d4f"}]}', '{"k":0.5,"h":4}', '检测病例数持续性偏移，对缓慢上升趋势敏感。', 1),
+('移动流行区间模型', '移动流行区间模型', '发热呼吸道症候群', '成都市', '同比异常', '{"levels":[{"level":"低风险","caseCount":10,"risePercent":50,"color":"#52c41a"},{"level":"中风险","caseCount":18,"risePercent":80,"color":"#faad14"},{"level":"高风险","caseCount":30,"risePercent":150,"color":"#ff4d4f"}]}', '{"baseline":3,"multiplier":1.5}', '判断当前病例水平是否超过历史流行区间上限。', 1),
+('EWMA指数加权移动平均模型', 'EWMA指数加权移动平均模型', '发热呼吸道症候群', '四川省', '环比异常', '{"levels":[{"level":"低风险","caseCount":7,"risePercent":45,"color":"#52c41a"},{"level":"中风险","caseCount":14,"risePercent":75,"color":"#faad14"},{"level":"高风险","caseCount":22,"risePercent":110,"color":"#ff4d4f"}]}', '{"alpha":0.3,"threshold":1.2}', '对近期数据赋予更高权重，平滑识别短期异常波动。', 1),
+('ARIMA模型', 'ARIMA模型', '发热呼吸道症候群', '四川省', '趋势异常', '{"levels":[{"level":"低风险","caseCount":9,"risePercent":40,"color":"#52c41a"},{"level":"中风险","caseCount":16,"risePercent":70,"color":"#faad14"},{"level":"高风险","caseCount":28,"risePercent":100,"color":"#ff4d4f"}]}', '{"p":1,"d":1,"q":1}', '基于时间序列预测期望值，实际值显著偏离预测时预警。', 1),
+('场所聚集性模型', '场所聚集性模型', '发热呼吸道症候群', '成都市', '聚集性异常', '{"levels":[{"level":"低风险","caseCount":3,"risePercent":0,"color":"#52c41a"},{"level":"中风险","caseCount":5,"risePercent":0,"color":"#faad14"},{"level":"高风险","caseCount":8,"risePercent":0,"color":"#ff4d4f"}]}', '{"radius":5,"minCases":3}', '识别同一场所或社区短时间内多例报告的聚集疫情。', 1);
 
 -- 出血/腹泻症候群预警模型
-INSERT INTO warning_model (model_name, model_type, syndrome_type, config_json, description, enabled) VALUES
-('出血热重症预警模型', '固定阈值模型', '发热伴出血症候群', '{"severeRateThreshold":30,"plateletThreshold":50}', '监测出血症候群重症率与血小板异常', 1),
-('出血热死亡风险模型', 'CUSUM累计和控制图模型', '发热伴出血症候群', '{"k":0.5,"h":3.5}', '检测出血热死亡病例异常波动', 1),
-('腹泻聚集性预警模型', '场所聚集性模型', '发热伴腹泻症候群', '{"radius":3,"minCases":2,"timeWindow":7}', '识别食源性腹泻聚集疫情', 1),
-('腹泻高风险筛查模型', 'EWMA指数加权移动平均模型', '发热伴腹泻症候群', '{"alpha":0.25,"highRiskWeight":0.6}', '动态评估腹泻症候群高风险病例趋势', 1);
+INSERT INTO warning_model (model_name, model_type, syndrome_type, region_scope, warning_type, level_threshold_json, config_json, description, enabled) VALUES
+('出血热重症预警模型', '固定阈值模型', '发热伴出血症候群', '四川省', '重症异常', '{"levels":[{"level":"低风险","caseCount":2,"risePercent":20,"color":"#52c41a"},{"level":"中风险","caseCount":4,"risePercent":50,"color":"#faad14"},{"level":"高风险","caseCount":6,"risePercent":80,"color":"#ff4d4f"}]}', '{"severeRateThreshold":30,"plateletThreshold":50}', '监测出血症候群重症率与血小板异常，超过阈值分级预警。', 1),
+('出血热死亡风险模型', 'CUSUM累计和控制图模型', '发热伴出血症候群', '四川省', '死亡异常', '{"levels":[{"level":"低风险","caseCount":1,"risePercent":0,"color":"#52c41a"},{"level":"中风险","caseCount":2,"risePercent":50,"color":"#faad14"},{"level":"高风险","caseCount":3,"risePercent":100,"color":"#ff4d4f"}]}', '{"k":0.5,"h":3.5}', '检测出血热死亡病例异常波动。', 1),
+('腹泻聚集性预警模型', '场所聚集性模型', '发热伴腹泻症候群', '成都市', '聚集性异常', '{"levels":[{"level":"低风险","caseCount":2,"risePercent":0,"color":"#52c41a"},{"level":"中风险","caseCount":4,"risePercent":0,"color":"#faad14"},{"level":"高风险","caseCount":6,"risePercent":0,"color":"#ff4d4f"}]}', '{"radius":3,"minCases":2,"timeWindow":7}', '识别食源性腹泻聚集疫情。', 1),
+('腹泻高风险筛查模型', 'EWMA指数加权移动平均模型', '发热伴腹泻症候群', '成都市', '病例数异常', '{"levels":[{"level":"低风险","caseCount":5,"risePercent":35,"color":"#52c41a"},{"level":"中风险","caseCount":9,"risePercent":60,"color":"#faad14"},{"level":"高风险","caseCount":15,"risePercent":100,"color":"#ff4d4f"}]}', '{"alpha":0.25,"highRiskWeight":0.6}', '动态评估腹泻症候群高风险病例趋势。', 1);
 
 -- 症候群配置
 INSERT INTO syndrome_config (syndrome_name, syndrome_code, definition, symptom_rules_json, risk_rules_json, monitor_model_json, status, description) VALUES
