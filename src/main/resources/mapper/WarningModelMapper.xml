@@ -11,6 +11,11 @@
         SELECT * FROM warning_model WHERE syndrome_type = #{syndromeType} OR syndrome_type IS NULL ORDER BY id
     </select>
     <update id="update">
-        UPDATE warning_model SET config_json = #{configJson}, enabled = #{enabled} WHERE id = #{id}
+        UPDATE warning_model SET
+            model_name = #{modelName},
+            description = #{description},
+            config_json = #{configJson},
+            enabled = #{enabled}
+        WHERE id = #{id}
     </update>
 </mapper>

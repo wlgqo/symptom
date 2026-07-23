@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.symptom.mapper.MonitorIndicatorMapper">
+
+    <select id="findAll" resultType="MonitorIndicator">
+        SELECT id, indicator_code as indicatorCode, indicator_name as indicatorName, category,
+               syndrome_type as syndromeType, description, formula, unit, threshold_json as thresholdJson,
+               data_source as dataSource, status, sort_order as sortOrder
+        FROM monitor_indicator ORDER BY category, sort_order, indicator_code
+    </select>
+
+    <select id="findBySyndromeType" resultType="MonitorIndicator">
+        SELECT id, indicator_code as indicatorCode, indicator_name as indicatorName, category,
+               syndrome_type as syndromeType, description, formula, unit, threshold_json as thresholdJson,
+               data_source as dataSource, status, sort_order as sortOrder
+        FROM monitor_indicator
+        WHERE syndrome_type IS NULL OR syndrome_type = '' OR syndrome_type = #{syndromeType}
+        ORDER BY category, sort_order
+    </select>
+
+    <select id="findById" resultType="MonitorIndicator">
+        SELECT id, indicator_code as indicatorCode, indicator_name as indicatorName, category,
+               syndrome_type as syndromeType, description, formula, unit, threshold_json as thresholdJson,
+               data_source as dataSource, status, sort_order as sortOrder
+        FROM monitor_indicator WHERE id = #{id}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO monitor_indicator (indicator_code, indicator_name, category, syndrome_type, description,
+            formula, unit, threshold_json, data_source, status, sort_order)
+        VALUES (#{indicatorCode}, #{indicatorName}, #{category}, #{syndromeType}, #{description},
+            #{formula}, #{unit}, #{thresholdJson}, #{dataSource}, #{status}, #{sortOrder})
+    </insert>
+
+    <update id="update">
+        UPDATE monitor_indicator SET
+            indicator_code = #{indicatorCode}, indicator_name = #{indicatorName}, category = #{category},
+            syndrome_type = #{syndromeType}, description = #{description}, formula = #{formula},
+            unit = #{unit}, threshold_json = #{thresholdJson}, data_source = #{dataSource},
+            status = #{status}, sort_order = #{sortOrder}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM monitor_indicator WHERE id = #{id}
+    </delete>
+</mapper>

@@ -39,9 +39,15 @@
             </div>
             <div class="detail-section">
                 <h6>模型说明</h6>
-                <p th:text="${selected.description}">说明</p>
+                <p id="modelDescView" th:text="${selected.description}">说明</p>
             </div>
-            <div class="detail-section">
+            <div class="detail-section" th:if="${session.currentUser.role == '管理员'}">
+                <h6>编辑配置</h6>
+                <div class="form-group"><label>模型说明</label><textarea id="modelDescEdit" class="form-textarea" rows="3" th:text="${selected.description}"></textarea></div>
+                <div class="form-group"><label>参数 JSON</label><textarea id="modelConfigEdit" class="form-textarea code" rows="5" th:text="${selected.configJson}"></textarea></div>
+                <button class="btn-primary-sm" th:onclick="'saveModelConfig(' + ${selected.id} + ')'">保存配置</button>
+            </div>
+            <div class="detail-section" th:if="${session.currentUser.role != '管理员'}">
                 <h6>参数配置</h6>
                 <pre class="json-preview" th:text="${selected.configJson}"></pre>
             </div>
@@ -83,6 +89,18 @@
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({id, enabled})
             }).then(r => r.json()).then(d => { if (d.success) location.reload(); });
+        }
+        function saveModelConfig(id) {
+            fetch('/warning/model/update', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    id: id,
+                    description: document.getElementById('modelDescEdit').value,
+                    configJson: document.getElementById('modelConfigEdit').value,
+                    enabled: 1
+                })
+            }).then(r => r.json()).then(d => { alert(d.success ? '配置已保存' : '保存失败'); if (d.success) location.reload(); });
         }
     </script>
 </div>

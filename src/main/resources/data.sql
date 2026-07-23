@@ -11,11 +11,12 @@ DELETE FROM case_info;
 DELETE FROM warning_model;
 DELETE FROM syndrome_config;
 DELETE FROM symptom_term;
+DELETE FROM monitor_indicator;
 DELETE FROM operation_log;
 DELETE FROM sys_user;
 
 -- 重置自增ID
-DELETE FROM sqlite_sequence WHERE name IN ('case_info', 'case_symptom', 'warning_record', 'case_modify_log', 'report_card', 'warning_model', 'syndrome_config', 'symptom_term', 'operation_log', 'sys_user', 'warning_notification', 'warning_disposal', 'surveillance_event', 'saved_query');
+DELETE FROM sqlite_sequence WHERE name IN ('case_info', 'case_symptom', 'warning_record', 'case_modify_log', 'report_card', 'warning_model', 'syndrome_config', 'symptom_term', 'monitor_indicator', 'operation_log', 'sys_user', 'warning_notification', 'warning_disposal', 'surveillance_event', 'saved_query');
 
 -- 用户数据
 INSERT INTO sys_user (username, password, role, real_name, district_scope, hospital_scope) VALUES
@@ -36,6 +37,28 @@ INSERT INTO symptom_term (term_name, synonyms, category, status, description) VA
 ('出血', '皮肤出血点,鼻出血,牙龈出血', '出血症状', '启用', '黏膜或皮肤出血表现'),
 ('头痛', '头疼,头部胀痛', '神经系统症状', '启用', '头部疼痛'),
 ('意识障碍', '昏迷,嗜睡,反应迟钝', '神经系统症状', '启用', '意识水平下降');
+
+-- 监测指标体系
+INSERT INTO monitor_indicator (indicator_code, indicator_name, category, syndrome_type, description, formula, unit, threshold_json, data_source, status, sort_order) VALUES
+('CASE_DAILY', '日报告病例数', '规模指标', NULL, '当日新报告纳入监测的病例总数，反映疫情活跃程度。', 'COUNT(报告日期=当日)', '例', '{"warning":5,"alert":10}', '病例信息表', '启用', 1),
+('CASE_TOTAL', '累计病例数', '规模指标', NULL, '统计周期内累计报告的病例总数。', 'COUNT(报告日期∈周期)', '例', '{}', '病例信息表', '启用', 2),
+('CASE_NEW_7D', '近7日新增', '规模指标', NULL, '近7个自然日内新报告病例数，用于短期波动监测。', 'COUNT(报告日期≥T-7)', '例', '{"warning":20}', '病例信息表', '启用', 3),
+('TREND_YOY', '同比增长率', '趋势指标', NULL, '与去年同期相比病例数增长百分比。', '(本期-去年同期)/去年同期×100%', '%', '{"warning":30}', '时间序列聚合', '启用', 10),
+('TREND_MOM', '环比增长率', '趋势指标', NULL, '与上一统计周期相比病例数增长百分比。', '(本期-上期)/上期×100%', '%', '{"warning":25}', '时间序列聚合', '启用', 11),
+('TREND_MA7', '7日移动平均', '趋势指标', NULL, '近7日病例数移动平均值，平滑短期波动。', 'AVG(近7日病例数)', '例/日', '{}', '时间序列聚合', '启用', 12),
+('RISK_HIGH_CNT', '高风险病例数', '风险指标', NULL, '风险等级为「高风险」的病例数量。', 'COUNT(风险等级=高风险)', '例', '{"warning":3}', '病例信息表', '启用', 20),
+('WARN_CNT', '预警数量', '风险指标', NULL, '当前待处置及处置中的预警信号数量。', 'COUNT(预警状态∈待研判,处置中)', '条', '{"warning":5}', '预警记录表', '启用', 21),
+('ANOMALY_IDX', '异常指数', '风险指标', NULL, '综合病例增长、重症率等计算的异常程度指数(0-100)。', '加权综合评分', '分', '{"warning":60,"alert":80}', '预警模型输出', '启用', 22),
+('SEVERE_CNT', '重症病例数', '重症指标', NULL, '标记为重症的病例数量。', 'COUNT(是否重症=1)', '例', '{}', '病例信息表', '启用', 30),
+('SEVERE_RATE', '重症率', '重症指标', NULL, '重症病例占报告病例总数的比例。', '重症数/病例总数×100%', '%', '{"warning":15}', '病例信息表', '启用', 31),
+('SEVERE_TREND', '重症率变化', '重症指标', NULL, '本期重症率与上期重症率之差。', '本期重症率-上期重症率', '百分点', '{"warning":5}', '病例信息表', '启用', 32),
+('DEATH_CNT', '死亡病例数', '死亡指标', NULL, '标记为死亡的病例数量。', 'COUNT(是否死亡=1)', '例', '{}', '病例信息表', '启用', 40),
+('DEATH_RATE', '死亡率', '死亡指标', NULL, '死亡病例占报告病例总数的比例。', '死亡数/病例总数×100%', '%', '{"warning":3}', '病例信息表', '启用', 41),
+('DISTRICT_CASE', '区域病例数', '空间指标', NULL, '按区县统计的病例数量。', 'GROUP BY 区县 COUNT', '例', '{}', '病例信息表', '启用', 50),
+('DISTRICT_IR', '区域发病率', '空间指标', NULL, '区县病例数/常住人口×10万。', '病例数/人口×100000', '例/10万', '{"warning":50}', '病例+人口数据', '启用', 51),
+('FEVER_RATE', '发热比例', '临床指标', '发热呼吸道症候群', '体温>37.3℃病例占该症候群病例比例。', '发热病例/症候群病例×100%', '%', '{"baseline":80}', '病例信息表', '启用', 60),
+('PLATELET_AVG', '血小板均值', '临床指标', '发热伴出血症候群', '出血症候群病例血小板检验均值。', 'AVG(血小板)', '×10⁹/L', '{"warning":100}', '检验数据', '启用', 61),
+('PATHOGEN_RATE', '病原检出率', '临床指标', '发热伴腹泻症候群', '粪便病原学检测阳性病例占比。', '阳性数/检测数×100%', '%', '{"warning":20}', '检验数据', '启用', 62);
 
 -- 预警模型
 INSERT INTO warning_model (model_name, model_type, syndrome_type, config_json, description, enabled) VALUES

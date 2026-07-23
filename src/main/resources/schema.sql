@@ -21,6 +21,23 @@ CREATE TABLE IF NOT EXISTS symptom_term (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 监测指标配置表
+CREATE TABLE IF NOT EXISTS monitor_indicator (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    indicator_code VARCHAR(30) NOT NULL UNIQUE,
+    indicator_name VARCHAR(100) NOT NULL,
+    category VARCHAR(50),
+    syndrome_type VARCHAR(50),
+    description TEXT,
+    formula TEXT,
+    unit VARCHAR(30),
+    threshold_json TEXT,
+    data_source VARCHAR(100),
+    status VARCHAR(20) DEFAULT '启用',
+    sort_order INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 -- 症候群配置表
 CREATE TABLE IF NOT EXISTS syndrome_config (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

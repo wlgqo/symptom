@@ -173,13 +173,10 @@
         });
 
         var districtChart = echarts.init(document.getElementById('districtChart'));
-        districtChart.setOption({
-            tooltip: { trigger: 'item' },
-            color: ['#1677ff', '#52c41a', '#faad14', '#13c2c2', '#722ed1', '#ff4d4f'],
-            series: [{ type: 'pie', radius: ['42%', '68%'],
-                data: (districtData || []).map(function(d) { return { name: d.name, value: d.value }; })
-            }]
-        });
+        districtChart.setOption(buildLabeledPieOption(
+            (districtData || []).map(function(d) { return { name: d.name, value: d.value }; }),
+            { radius: ['38%', '62%'], showLegend: true }
+        ));
 
         districtChart.on('click', function(p) {
             if (p.name) location.href = '/respiratory?district=' + encodeURIComponent(p.name);

@@ -8,6 +8,7 @@ import com.symptom.entity.SysUser;
 import com.symptom.service.CaseService;
 import com.symptom.service.DataScopeService;
 import com.symptom.service.FilterOptionService;
+import com.symptom.util.CaseMedicalRecordBuilder;
 import com.symptom.util.FilterViewHelper;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -92,6 +93,10 @@ public class CaseController {
         List<CaseModifyLog> logs = caseService.getModifyLogs(id);
         List<ReportCard> cards = caseService.getReportCards(id);
         model.addAttribute("caseInfo", caseInfo);
+        if (caseInfo != null) {
+            model.addAttribute("displayProfileJson", CaseMedicalRecordBuilder.effectiveProfileJson(caseInfo));
+            model.addAttribute("displayMedicalJson", CaseMedicalRecordBuilder.effectiveMedicalRecordJson(caseInfo));
+        }
         model.addAttribute("logs", logs);
         model.addAttribute("cards", cards);
         model.addAttribute("pageTitle", "病例360°画像");
@@ -153,6 +158,10 @@ public class CaseController {
     private boolean canAccessCase(SysUser user, CaseInfo caseInfo) {
         if (dataScopeService.isAdmin(user)) {
             return true;
+        }
+        if (dataScopeService.isCityWide(user)) {
+            return caseInfo.getDistrict() != null
+                    && FilterOptionService.getChengduDistricts().contains(caseInfo.getDistrict());
         }
         if (dataScopeService.hasDistrictScope(user)
                 && !user.getDistrictScope().equals(caseInfo.getDistrict())) {

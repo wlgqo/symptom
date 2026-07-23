@@ -116,9 +116,15 @@
                 <div class="value" th:text="${clinicalData.totalCases}">0</div>
             </div>
         </div>
-        <div class="card-panel">
-            <h5>诊断结果分布</h5>
-            <div id="diagnosisChart" class="chart-container"></div>
+        <div class="grid-2 chart-row-compact">
+            <div class="card-panel">
+                <h5>诊断结果分布</h5>
+                <div id="diagnosisChart" class="chart-container chart-pie-compact"></div>
+            </div>
+            <div class="card-panel">
+                <h5>风险等级概览</h5>
+                <div id="clinicalRiskChart" class="chart-container chart-pie-compact"></div>
+            </div>
         </div>
         <div class="card-panel flex-grow">
             <h5>病例临床信息列表 <span class="panel-action"><a th:href="@{/case/list(syndromeType=${syndromeType})}">全部病例 →</a></span></h5>
@@ -169,7 +175,19 @@
         <div class="stat-cards">
             <div class="stat-card"><div class="label">病例总数</div><div class="value" th:text="${riskData.totalCases}">0</div></div>
         </div>
-        <div class="card-panel"><h5>风险等级分布</h5><div id="riskChart" class="chart-container"></div></div>
+        <div class="grid-2 chart-row-compact">
+            <div class="card-panel">
+                <h5>风险等级分布</h5>
+                <div id="riskChart" class="chart-container chart-pie-compact"></div>
+            </div>
+            <div class="card-panel">
+                <h5>风险等级明细</h5>
+                <table class="data-table compact" id="riskDetailTable">
+                    <thead><tr><th>等级</th><th>病例数</th><th>占比</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
     <!-- 预警模型 -->
@@ -287,40 +305,45 @@
 
         var districtChart = trackChart(echarts.init(document.getElementById('districtChart')));
         districtChart.setOption({
-            tooltip: { trigger: 'axis' },
-            grid: { left: 40, right: 8, top: 12, bottom: 48 },
+            tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+            grid: { left: 40, right: 8, top: 28, bottom: 48 },
             xAxis: { type: 'category', data: (districtData||[]).map(function(d){return d.name;}), axisLabel: { rotate: 35, fontSize: 10 } },
             yAxis: { type: 'value' },
-            series: [{ type: 'bar', barMaxWidth: 16, itemStyle: { color: '#52c41a' }, data: (districtData||[]).map(function(d){return d.value;}) }]
+            series: [{ type: 'bar', barMaxWidth: 16, itemStyle: { color: '#52c41a' },
+                label: { show: true, position: 'top', fontSize: 10, color: '#4a5568' },
+                data: (districtData||[]).map(function(d){return d.value;})
+            }]
         });
         districtChart.on('click', function(p) { drillDistrict(p.name); });
 
-        function makePieChart(id, data) {
+        function makePieChart(id, data, compact) {
             var chart = trackChart(echarts.init(document.getElementById(id)));
-            chart.setOption({
-                tooltip: { trigger: 'item' },
-                series: [{ type: 'pie', radius: '65%', data: (data||[]).map(function(d){return {name:d.name,value:d.value};}) }]
-            });
+            chart.setOption(buildLabeledPieOption((data||[]).map(function(d){return {name:d.name,value:d.value};}), { compact: compact, showLegend: !compact }));
             return chart;
         }
-        trackChart(makePieChart('ageChart', populationData.age));
-        trackChart(makePieChart('genderChart', populationData.gender));
+        trackChart(makePieChart('ageChart', populationData.age, true));
+        trackChart(makePieChart('genderChart', populationData.gender, true));
         var occupationChart = trackChart(echarts.init(document.getElementById('occupationChart')));
         occupationChart.setOption({
             tooltip: { trigger: 'axis' },
             grid: { left: 36, right: 8, top: 12, bottom: 48 },
             xAxis: { type: 'category', data: (populationData.occupation||[]).map(function(d){return d.name;}), axisLabel: { rotate: 35, fontSize: 10 } },
             yAxis: { type: 'value' },
-            series: [{ type: 'bar', barMaxWidth: 16, data: (populationData.occupation||[]).map(function(d){return d.value;}) }]
+            series: [{ type: 'bar', barMaxWidth: 16,
+                label: { show: true, position: 'top', fontSize: 10, color: '#4a5568' },
+                data: (populationData.occupation||[]).map(function(d){return d.value;})
+            }]
         });
 
         var diagData = clinicalData.diagnoses || {};
-        trackChart(echarts.init(document.getElementById('diagnosisChart'))).setOption({
-            tooltip: { trigger: 'item' },
-            series: [{ type: 'pie', radius: ['30%','60%'],
-                data: Object.keys(diagData).map(function(k){ return {name:k, value:diagData[k]}; })
-            }]
-        });
+        trackChart(echarts.init(document.getElementById('diagnosisChart'))).setOption(
+            buildLabeledPieOption(mapObjectToPieData(diagData), { compact: false, showLegend: true })
+        );
+
+        var riskDistClinical = riskData.riskDistribution || {};
+        trackChart(echarts.init(document.getElementById('clinicalRiskChart'))).setOption(
+            buildLabeledPieOption(mapObjectToPieData(riskDistClinical), { compact: false, showLegend: true })
+        );
 
         var severeTrend = severeDeathData.severeTrend || [];
         trackChart(echarts.init(document.getElementById('severeTrendChart'))).setOption({
@@ -338,12 +361,20 @@
         });
 
         var riskDist = riskData.riskDistribution || {};
-        trackChart(echarts.init(document.getElementById('riskChart'))).setOption({
-            tooltip: { trigger: 'item' },
-            series: [{ type: 'pie', radius: '60%',
-                data: Object.keys(riskDist).map(function(k){ return {name:k, value:riskDist[k]}; })
-            }]
-        });
+        trackChart(echarts.init(document.getElementById('riskChart'))).setOption(
+            buildLabeledPieOption(mapObjectToPieData(riskDist), { compact: false, showLegend: true })
+        );
+        (function() {
+            var tbody = document.querySelector('#riskDetailTable tbody');
+            if (!tbody) return;
+            var total = riskData.totalCases || 0;
+            var rows = Object.keys(riskDist).map(function(k) {
+                var v = riskDist[k] || 0;
+                var pct = total > 0 ? (v * 100 / total).toFixed(1) : '0.0';
+                return '<tr><td>' + k + '</td><td>' + v + '</td><td>' + pct + '%</td></tr>';
+            }).join('');
+            tbody.innerHTML = rows || '<tr><td colspan="3" style="text-align:center;color:#999;">暂无数据</td></tr>';
+        })();
 
         var nameAlias = {};
         function mapRegionName(name) { return name; }

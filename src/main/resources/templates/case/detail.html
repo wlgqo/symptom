@@ -142,12 +142,13 @@
 
     <script th:inline="javascript">
         document.addEventListener('DOMContentLoaded', function() {
-            var profileJson = /*[[${caseInfo.profileJson}]]*/ null;
-            var medicalJson = /*[[${caseInfo.medicalRecordJson}]]*/ null;
+            var profileJson = /*[[${displayProfileJson}]]*/ null;
+            var medicalJson = /*[[${displayMedicalJson}]]*/ null;
             var clinicalJson = /*[[${caseInfo.clinicalJson}]]*/ null;
             var labJson = /*[[${caseInfo.labJson}]]*/ null;
+            var treatmentJson = /*[[${caseInfo.treatmentJson}]]*/ null;
             renderPatientProfile(profileJson, medicalJson);
-            renderMedicalRecordSummary(medicalJson);
+            renderMedicalRecordSummary(medicalJson, treatmentJson);
             renderClinicalJson(clinicalJson, /*[[${caseInfo.syndromeType}]]*/ '');
             renderLabJson(labJson);
         });

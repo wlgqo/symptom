@@ -74,4 +74,24 @@ public class WarningModelController {
         result.put("success", true);
         return result;
     }
+
+    @PostMapping("/update")
+    @ResponseBody
+    public Map<String, Object> updateConfig(@RequestBody WarningModel model, HttpSession session) {
+        SysUser user = (SysUser) session.getAttribute("currentUser");
+        Map<String, Object> result = new HashMap<>();
+        if (!"管理员".equals(user.getRole())) {
+            result.put("success", false);
+            return result;
+        }
+        WarningModel existing = warningService.getModelById(model.getId());
+        if (existing != null) {
+            existing.setDescription(model.getDescription());
+            existing.setConfigJson(model.getConfigJson());
+            existing.setEnabled(model.getEnabled());
+            warningService.updateModel(existing);
+        }
+        result.put("success", true);
+        return result;
+    }
 }
