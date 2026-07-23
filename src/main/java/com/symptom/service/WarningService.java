@@ -192,8 +192,8 @@ public class WarningService {
             record.setThresholdValue(threshold);
             record.setAnomalyDegree(latestCount > threshold * 1.5 ? "严重" : "中等");
             record.setAnomalyType("异常增长");
-            record.setDistrict("朝阳区");
-            record.setHospital("市第三人民医院");
+            record.setDistrict("武侯区");
+            record.setHospital("成都市第三人民医院");
             recordMapper.insert(record);
             newWarnings.add(record);
 
